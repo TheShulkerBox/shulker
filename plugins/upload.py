@@ -5,7 +5,7 @@ import os
 
 from beet import Context
 
-SERVER_ID = "196eb03f"
+SERVER_ID = os.environ["BLOOM_SERVER_ID"]
 PACK = "shulkerbox_data_pack.zip"
 TARGET = f"/TheShulkerBox/datapacks/{PACK}"
 URL = f"https://mc.bloom.host/api/client/servers/{SERVER_ID}/"
