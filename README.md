@@ -16,6 +16,13 @@ We use [beet](https://mcbeet.dev/) to manage building our packs for release.
 uv run beet
 ```
 
-## Push to Server
+## Push to Bloom
 
-This requires a valid bloom key
+First, you'll need to grab a bloom api key and your server id and set it to the following environment variables:
+- `BLOOM_API_KEY`
+- `BLOOM_SERVER_ID`
+
+Then,
+```bash
+uv run beet -p beet-upload.yaml
+```
