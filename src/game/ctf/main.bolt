@@ -1,0 +1,20 @@
+# from bolt_expressions import Scoreboard
+# from ./items import team_flag
+
+# state = Scoreboard("ctf.state")
+# glow_timer = Scoreboard("ctf.glow_timer")
+
+# team_1 = state["team_1"]
+# team_2 = state["team_2"]
+
+
+# function ~/start:
+#     team_1 = 0
+#     team_2 = 0
+
+#     # TODO: Map init code
+
+
+
+# function ~/loop:
+#     # 

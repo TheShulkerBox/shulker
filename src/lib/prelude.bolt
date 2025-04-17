@@ -1,0 +1,11 @@
+"""
+These variables are available throughout the entire project since they are commonly used everywhere.
+"""
+
+from bolt_expressions import Scoreboard, Data
+from lib:text import theme
+from sys:main import clock
+
+from typing import Any
+
+temp = Scoreboard("temp")

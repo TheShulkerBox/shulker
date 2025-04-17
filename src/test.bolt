@@ -1,0 +1,16 @@
+from lib:item import item, weapon_item, armor_item
+
+class op_sword(weapon_item):
+    id = "minecraft:stone_sword"
+    item_name = "taco sauce"
+    lore = ["taco", "sauce"]
+
+
+class op_helmet(armor_item):
+    id = "minecraft:diamond_helmet"
+    item_name = "matador"
+    lore = ["taco", "sauce"]
+
+
+class lol(op_helmet):
+    ...

@@ -1,0 +1,36 @@
+"""
+Handles the spawn markers used by builders to easily tp people back to... spawn
+"""
+
+MARKER_TAG = "sys.spawn_marker"
+
+append function sys:tick/player:
+    execute
+        unless entity @s[team=builder]  # ignore builders
+        if entity @e[type=marker, tag=MARKER_TAG, distance=..0.75, limit=1]
+        run function event:on_leave_game
+
+
+append function clock("4t"):
+    at @e[type=marker, tag=MARKER_TAG] particle portal ~ ~0.5 ~ 0 0 0 0.4 5
+
+
+function tools:spawn_marker/create:
+    execute
+        unless entity @s[team=builder]
+        return run
+        tellraw @s {text: "Can only create spawn markers if builder team"}
+    summon marker ~ ~ ~ {
+        Tags: [MARKER_TAG],
+        CustomName: {text: "Spawn", color: theme.primary},
+        CustomNameVisible: true,
+        data: {name: "Spawn"},
+    }
+
+
+function tools:spawn_marker/delete_nearest:
+    store result score var temp["#killed"] kill @n[type=marker,tag=MARKER_TAG,distance=..5]
+    if temp["#killed"] == 1:
+        tellraw @s {text: "Killed nearest spawn marker", color: theme.success}
+    else:
+        tellraw @s {text: "Could not find spawn marker within 5 blocks", color: theme.failure}

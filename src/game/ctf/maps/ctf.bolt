@@ -1,0 +1,12 @@
+# from lib:item import item
+
+
+
+
+
+# class dwarves_flag(team_flag):
+#     flag = {team: 1, name: "Dwarves"}
+
+
+# class goblins_flag(team_flag):
+#     flag = {team: 2, name: "Goblins"}

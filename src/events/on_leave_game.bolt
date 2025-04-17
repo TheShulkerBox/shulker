@@ -1,0 +1,33 @@
+leave_game = Scoreboard("leave_game", criteria="trigger")
+
+#>
+#> Conditions for leave game
+#>
+append function event:on_join:
+    tag @s add player.just_joined
+    function event:on_leave_game
+    tag @s remove player.just_joined
+
+
+append function sys:tick/player:
+    # leave_game trigger cond
+    if leave_game["@s"] > 0:
+        function event:on_leave_game
+
+#>
+#> Event: on_leave_game
+#>
+append function event:on_leave_game:
+    """Called when a player leaves a game (via `/trigger leave_game` or otherwise)
+
+    as/at @s: player
+    """
+
+    leave_game["@s"].reset()
+    leave_game["@s"].enable()
+
+    tp @s 0 65 0 -90 0
+    # TODO: tp to `64 66 0` if you were just in a game
+
+    team join lobby
+    gamemode adventure

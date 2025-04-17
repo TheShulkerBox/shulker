@@ -1,0 +1,52 @@
+"""
+This handles sysadmin related things such as:
+- on server startup
+"""
+
+from lib:text import theme, boxed_text
+
+from functools import cache
+
+@cache
+def clock(speed: str):
+    if speed == "1t":
+        path = "sys:tick"
+    else:
+        path = f"sys:tick/{speed}"
+    
+    append function sys:load:
+        schedule function path speed replace
+
+    append function path:
+        schedule function path speed replace
+    
+    return path
+
+
+append function_tag minecraft:load {
+    "values": ["sys:load"]
+}
+
+append function sys:load:
+    function sys:load/objectives
+    tellraw @a[tag=staff] boxed_text(
+        {
+            text: "The Shulker Box",
+            hover_event: {
+                action: "show_text",
+                value: {text: "By rx97, Tallone55, and friends", color: "gray"},
+            },
+        }, 
+        text_color=theme.primary, 
+        box_color=theme.secondary
+    )
+
+
+@defer
+def tick_players_last():
+    """Some things rely on ordering for ticking players. The general `sys:tick/player` is done
+    last for those who don't care about ordering (most things).
+    """
+
+    append function clock("1t"):
+        as @a at @s function sys:tick/player

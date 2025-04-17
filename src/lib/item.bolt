@@ -1,0 +1,128 @@
+# stub bolt file -- reimport from python
+
+from lib:components import lore_transformer
+
+@defer
+def generate_give_commands():
+    for name, custom_item in ItemMeta.registered_items.items():
+        if custom_item.has_id:
+            function f"item:give/{name}":
+                give @s custom_item
+
+
+class item(metaclass=ItemMeta):
+    """item w/ helpers :D"""
+
+    def dyed_color_transformer(color: str | Any):
+        if type(color) is str:
+            return int(color.removeprefix("#"), 16)
+
+    def lore_transformer(lore: str | list[str]):
+        if type(lore) is str:
+            lore = [lore]
+        
+        transformed = []
+        for line in lore:
+            if type(line) is str:
+                transformed.append({text: line, color: theme.secondary, italic: false})
+            else:
+                transformed.append(line)
+        
+        return transformed    
+
+class armor_item(item):
+    """Makes armor unequipable while providing helper attribute components"""
+
+    tooltip_display = {hidden_components: ["minecraft:enchantments"]}
+    enchantments = {binding_curse: 1}
+    enchantment_glint_override = false
+
+    def armor_component(
+        slot: str,
+        value: float | None = None,
+        toughness: float | None = None,
+        kb_resist: float | None = None,
+        spd: float | None = None
+    ):
+        modifiers = []
+
+        if value is not None:
+            modifiers.append({
+                "type": "armor",
+                "slot": slot,
+                "id": "armor." + slot,
+                "amount": value,
+                "operation": "add_value",
+            })
+
+        if toughness is not None:
+            modifiers.append({
+                "type": "armor_toughness",
+                "slot": slot,
+                "id": "armor." + slot,
+                "amount": toughness,
+                "operation": "add_value",
+            })
+
+        if kb_resist is not None:
+            modifiers.append({
+                "type": "knockback_resistance",
+                "slot": slot,
+                "id": "armor." + slot,
+                "amount": kb_resist,
+                "operation": "add_value",
+            })
+
+        if spd is not None:
+            modifiers.append({
+                "type": "movement_speed",
+                "slot": slot,
+                "id": "armor." + slot,
+                "amount": spd,
+                "operation": "add_value",
+            })
+
+        if modifiers:
+            return {"attribute_modifiers": modifiers}
+
+
+class weapon_item(item):
+    """Provides weapon customization components"""
+
+    def weapon_component(
+        dmg: float | None,
+        spd: float | None,
+        kb: float | None,
+        # crit: float | None,
+    ):
+        modifiers = []
+
+        if dmg is not None:
+            modifiers.append({
+                "type": "attack_damage",
+                "slot": "mainhand",
+                "id": "weapon",
+                "amount": dmg,
+                "operation": "add_value",
+            })
+
+        if spd is not None:
+            modifiers.append({
+                "type": "attack_speed",
+                "slot": "weapon",
+                "id": "weapon",
+                "amount": kb,
+                "operation": "add_value",
+            })
+
+        if kb is not None:
+            modifiers.append({
+                "type": "attack_knockback",
+                "slot": "weapon",
+                "id": "weapon",
+                "amount": kb,
+                "operation": "add_value",
+            })
+
+        if modifiers:
+            return {"attribute_modifiers": modifiers}

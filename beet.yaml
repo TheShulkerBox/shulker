@@ -1,0 +1,33 @@
+id: shulkerbox
+
+require:
+  - bolt_expressions
+  - bolt_expressions.contrib.commands
+  - bolt
+  - plugins.custom_load
+  - bolt.contrib.defer
+
+pipeline:
+  - mecha
+
+data_pack:
+  load: [vendor/persist]
+
+  filter:
+    block:
+      - namespace: "minecraft"
+        path: "recipes/*"
+      - namespace: "minecraft"
+        path: "advancements/*"
+      - namespace: "minecraft"
+        path: "loot_tables/*"
+
+output: dist
+
+meta:
+  bolt:
+    entrypoint: ["*"]
+    prelude: ["lib:prelude"]
+
+  bolt_expressions:
+    init_path: sys:load/objectives

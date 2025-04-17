@@ -1,0 +1,3 @@
+from lib:text import theme
+
+FLAG_BEARER = {text: "You are carrying the flag! Return to base!", color: theme.secondary}
