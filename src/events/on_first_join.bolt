@@ -1,0 +1,14 @@
+"""
+This handles detecting joins via the `leave_game` criteria. We also have to handle
+server crashes which doesn't set that variable. We use the trick where `/reload` also occurs
+on server start to help handle that edge case.
+"""
+
+time_played = Scoreboard("stats.time_played", criteria="minecraft.custom:minecraft.play_time")
+
+append function sys:tick:
+    as @a[scores={time_played=..1}] at @s function event:on_first_join
+
+
+append function event:on_first_join:
+    playsound minecraft:ui.toast.challenge_complete master @s ~ ~ ~ 0.7 0.8 0.7

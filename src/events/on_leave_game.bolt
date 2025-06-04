@@ -1,3 +1,7 @@
+"""
+Event code for handling players leaving the game
+"""
+
 leave_game = Scoreboard("leave_game", criteria="trigger")
 
 #>

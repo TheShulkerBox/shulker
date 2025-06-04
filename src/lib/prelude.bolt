@@ -9,3 +9,4 @@ from sys:main import clock
 from typing import Any
 
 temp = Scoreboard("temp")
+globals = Scoreboard("globals")

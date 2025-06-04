@@ -1,6 +1,6 @@
 # stub bolt file -- reimport from python
 
-from lib:components import lore_transformer
+from src.lib.item import ItemMeta
 
 @defer
 def generate_give_commands():
@@ -29,6 +29,7 @@ class item(metaclass=ItemMeta):
                 transformed.append(line)
         
         return transformed    
+
 
 class armor_item(item):
     """Makes armor unequipable while providing helper attribute components"""
@@ -90,9 +91,9 @@ class weapon_item(item):
     """Provides weapon customization components"""
 
     def weapon_component(
-        dmg: float | None,
-        spd: float | None,
-        kb: float | None,
+        dmg: float | None = None,
+        spd: float | None = None,
+        kb: float | None = None,
         # crit: float | None,
     ):
         modifiers = []

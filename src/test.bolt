@@ -4,6 +4,7 @@ class op_sword(weapon_item):
     id = "minecraft:stone_sword"
     item_name = "taco sauce"
     lore = ["taco", "sauce"]
+    weapon = {dmg: 20}
 
 
 class op_helmet(armor_item):

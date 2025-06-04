@@ -1,0 +1,15 @@
+"""
+Keeps track of players in the previous and current tick. Pings staff when it changes.
+
+TODO: revisit and handle player joining and leaving on the same tick
+"""
+
+player_count = globals["player_count"]
+last_player_count = globals["last_player_count"]
+
+append function sys:tick:
+    store result score var player_count if entity @a
+    if player_count < last_player_count:
+        as @a[tag=staff] at @s playsound minecraft:block.note_block.bass master @s ~ ~ ~ 0.5 0.42
+
+    last_player_count = player_count

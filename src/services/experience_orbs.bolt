@@ -1,0 +1,2 @@
+append function sys:tick:
+    kill @e[type=experience_orb]
