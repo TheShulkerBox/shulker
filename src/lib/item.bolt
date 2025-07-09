@@ -87,8 +87,8 @@ class armor_item(item):
         slot: str,
         value: float | None = None,
         toughness: float | None = None,
-        kb_resist: float | None = None,
-        spd: float | None = None
+        knockback_resistance: float | None = None,
+        speed: float | None = None
     ):
         modifiers = []
 
@@ -110,21 +110,21 @@ class armor_item(item):
                 "operation": "add_value",
             })
 
-        if kb_resist is not None:
+        if knockback_resistance is not None:
             modifiers.append({
                 "type": "knockback_resistance",
                 "slot": slot,
                 "id": "armor." + slot,
-                "amount": kb_resist,
+                "amount": knockback_resistance,
                 "operation": "add_value",
             })
 
-        if spd is not None:
+        if speed is not None:
             modifiers.append({
                 "type": "movement_speed",
                 "slot": slot,
                 "id": "armor." + slot,
-                "amount": spd,
+                "amount": speed,
                 "operation": "add_value",
             })
 
@@ -136,37 +136,52 @@ class weapon_item(item):
     """Provides weapon customization components"""
 
     def weapon_component(
-        dmg: float | None = None,
-        spd: float | None = None,
-        kb: float | None = None,
+        damage: float | None = None,
+        speed: float | None = None,
+        knockback: float | None = None,
+        # **other_components,
         # crit: float | None,
     ):
         modifiers = []
 
-        if dmg is not None:
+        if damage is not None:
             modifiers.append({
                 "type": "attack_damage",
                 "slot": "mainhand",
                 "id": "weapon",
-                "amount": dmg,
+                "amount": damage,
                 "operation": "add_value",
             })
 
-        if spd is not None:
+        if speed is not None:
             modifiers.append({
                 "type": "attack_speed",
-                "slot": "weapon",
+                "slot": "mainhand",
                 "id": "weapon",
-                "amount": kb,
+                "amount": speed,
+                "operation": "add_value",
+            })
+            modifiers.append({
+                "type": "attack_speed",
+                "slot": "offhand",
+                "id": "weapon",
+                "amount": speed,
                 "operation": "add_value",
             })
 
-        if kb is not None:
+        if knockback is not None:
             modifiers.append({
                 "type": "attack_knockback",
-                "slot": "weapon",
+                "slot": "mainhand",
                 "id": "weapon",
-                "amount": kb,
+                "amount": knockback,
+                "operation": "add_value",
+            })
+            modifiers.append({
+                "type": "attack_knockback",
+                "slot": "offhand",
+                "id": "weapon",
+                "amount": knockback,
                 "operation": "add_value",
             })
 

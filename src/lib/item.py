@@ -46,7 +46,7 @@ class ComponentError(ItemError):
             f"Component `{name}` is invalid: `{type(component)}` (`{component}`).\n"
             "Expected `dict` with schema: \n"
             + "\n".join(
-                f"  {name}: {param.annotation.__name__}"
+                f"  {name}: {param.annotation}"
                 for name, param in signature.parameters.items()
                 if name != "self"
             )
@@ -96,6 +96,7 @@ class ItemMeta(type):
     def components(self):
         output_components = {}
         callable_members = {}
+        custom_components = []  # to remove later
 
         # Split namespace into callable and non-callable members
         for member in dir(self):
@@ -130,13 +131,10 @@ class ItemMeta(type):
                         # If our result exists, deeply merge our new components
                         # We also inject some metadata
                         if new_namespace is not None:
-                            metadata = {
-                                "custom_components": {name: component},
-                                "_custom_components": [name]
-                            }
+                            metadata = {"custom_components": {name: component}}
                             output_components["custom_data"] = deep_merge_dicts(output_components["custom_data"], metadata)
-                            
                             output_components = deep_merge_dicts(output_components, new_namespace)
+                            custom_components.append(name)
 
                     except Exception as e:
                         raise ComponentError(name, component, sig) from e
@@ -150,6 +148,10 @@ class ItemMeta(type):
                     if (value := func(output_components[name])) is not None:
                         output_components[name] = value
 
+        del output_components["id"]
+        for component in custom_components:
+            if component in output_components:
+                del output_components[component]
         return output_components
     
     @property

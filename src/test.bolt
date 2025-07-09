@@ -1,10 +1,10 @@
-from lib:item import item, weapon_item, armor_item
+from lib:item import weapon_item, armor_item
 
 class op_sword(weapon_item):
     id = "minecraft:stone_sword"
     item_name = "taco sauce"
     lore = ["taco", "sauce"]
-    weapon = {dmg: 20}
+    weapon = {damage: 20}
 
 
 class op_helmet(armor_item):
@@ -13,5 +13,23 @@ class op_helmet(armor_item):
     lore = ["taco", "sauce"]
 
 
-class lol(op_helmet):
-    ...
+# class lol(op_helmet):
+#     ...
+
+
+class mace(weapon_item):
+    id = "iron_shovel"
+    item_name = "Iron Mace"
+    lore = ["Stun active - crit to stun enemy"]
+    enchantment_glint_override = true
+    weapon = {damage: 7.5, speed: 0.7}
+    custom_data = {stun: true}
+
+# # footman.bolt
+# from ../items import mace
+
+# loadout = [
+#     mace,
+#     "cooked_mutton"
+# ]
+
