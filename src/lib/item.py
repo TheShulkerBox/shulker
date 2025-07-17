@@ -1,46 +1,17 @@
 import copy
 from inspect import signature, Signature
-import json
 from typing import Any, ClassVar
+from src.lib.helpers import title_case_to_snake_case, nbt_dump, deep_merge_dicts
+from src.lib.text import theme
 
 
-def title_case_to_snake_case(title_case_str):
-    snake_case_str = []
-    for index, char in enumerate(title_case_str):
-        # TitleCase usually starts with an uppercase so we ignore the first character
-        if char.isupper() and index != 0:
-            snake_case_str.append("_")
-
-        snake_case_str.append(char.lower())
-
-    return "".join(snake_case_str)
-
-
-def nbt_dump(obj: dict[str, Any]):
-    def serialize(obj: Any):
-        match obj:
-            case dict():
-                items = []
-                for key, value in obj.items():
-                    serialized_key = key
-                    serialized_value = serialize(value)
-                    items.append(f"{serialized_key}: {serialized_value}")
-                return "{" + ", ".join(items) + "}"
-            case list():
-                items = [serialize(element) for element in obj]
-                return "[" + ", ".join(items) + "]"
-            case str():
-                return f"'{obj}'"
-            case _:
-                return json.dumps(obj)
-
-    return serialize(obj)
-
-
-class ItemError(Exception): ...
+class ItemError(Exception):
+    """Exceptions related to custom items"""
 
 
 class ComponentError(ItemError):
+    """An Item Error specific towards custom components and transformers"""
+
     def __init__(self, name: str, component: Any, signature: Signature):
         super().__init__(
             f"Component `{name}` is invalid: `{type(component)}` (`{component}`).\n"
@@ -180,29 +151,184 @@ class ItemMeta(type):
         raise ItemError("`item` classes cannot be instantiated, see docstring.")
 
 
-def deep_merge_dicts(d1: dict[str, Any], d2: dict[str, Any]) -> dict[str, Any] | None:
-    """Deep merge two dictionaries, including lists, using match statement.
+class base_item(metaclass=ItemMeta):
+    """item is the base class for all items in the data pack. This is a special behaving structure that
+    barely resembles a class leveraging metaclasses.
 
-    Args:
-        d1 (dict): The first dictionary.
-        d2 (dict): The second dictionary to be merged into the first.
+    The basic structure is to define all components as "class variables" and then use custom methods
+    to define special behavior to simplify component construction. This allows you to abstract
+    complex behavior as isolated "custom components" or "component transformers" that can be reused
+    across multiple items.
+    
+    ```py
+    class basic_item(item):
+        id = "minecraft:stone"
+        item_name = {text: "Basic Item", color: theme.primary}
+        lore = ["This is a basic item.", "It does nothing special."]
+    ```
+    This item just uses vanilla components to define a stone item with a custom name and lore.
 
-    Returns:
-        dict: The deeply merged dictionary.
+    ```py
+    class custom_item(item):
+        id = "minecraft:custom_item"
+        item_name = {text: "Custom Item", color: theme.primary}
+        lore = ["This is a custom item.", "It has special behavior."]
+        test_component = false
+        
+        def test_component(val: bool):
+            return {"enchantment_glint_override": val}
+    ```
+    Here, we define a basic `test_component` that converts a `bool` into a new set of vanilla components.
+
+    ```py
+    class custom_item_2(item):
+        id = "minecraft:custom_item_2"
+        item_name = {text: "Custom Item 2", color: theme.primary}
+        lore = ["This is another custom item.", "It has special behavior."]
+        dyed_color = "#ff0000"
+    ```
+    This item uses a `dyed_color` transformer that is automatically transformed into a color integer. Note, the
+    implementation for this transformer is defined in the `item` class itself, so you can use it in any item.
+    
+    Custom components are functions that **must** end with "_component" and define a new component that gets converted
+    into one or more components. This is useful for defining a simple interface for coordinating multiple components.
+    Custom components can even define their own functions and other resource files in order to achieve it's purpose.
+
+    Component transformers on the other hand are functions that **must** end with "_transformer" and are used to transform
+    an existing component's value into a new value. If the transformer returns `None`, no action is taken. This is useful
+    when providing multiple input types for a component, such as a color that can be either a string or an integer.
     """
 
-    merged = copy.deepcopy(dict(d1))  # Make a copy of the first dictionary
+    def dyed_color_transformer(color: str | Any):
+        """Allows you to write dyed colors using traditional hex formatting"""
 
-    for key, value in d2.items():
-        if key in merged:
-            match (merged[key], value):
-                case (dict() as d1_value, dict() as d2_value):
-                    merged[key] = deep_merge_dicts(d1_value, d2_value)
-                case (list() as list1, list() as list2):
-                    merged[key] = list1 + list2
-                case _:
-                    merged[key] = value
-        else:
-            merged[key] = value
+        if type(color) is str:
+            return int(color.removeprefix("#"), 16)
 
-    return merged
+    def lore_transformer(lore: str | list[str] | list[dict[str, Any]]):
+        """Allows you to write lore using regular strings and auto applies formatting"""
+
+        if type(lore) is str:
+            lore = [lore]
+        
+        transformed = []
+        for line in lore:
+            if type(line) is str:
+                # we auto apply server theming if non-specified
+                transformed.append({"text": line, "color": theme.secondary, "italic": False})
+            else:
+                transformed.append(line)
+        
+        return transformed
+
+class armor_item(base_item):
+    """Makes armor unequipable while providing helper attribute components"""
+
+    tooltip_display = {"hidden_components": ["minecraft:enchantments"]}
+    enchantments = {"binding_curse": 1}
+    enchantment_glint_override = False
+
+    def armor_component(
+        slot: str,
+        value: float | None = None,
+        toughness: float | None = None,
+        knockback_resistance: float | None = None,
+        speed: float | None = None
+    ):
+        modifiers = []
+
+        if value is not None:
+            modifiers.append({
+                "type": "armor",
+                "slot": slot,
+                "id": "armor." + slot,
+                "amount": value,
+                "operation": "add_value",
+            })
+
+        if toughness is not None:
+            modifiers.append({
+                "type": "armor_toughness",
+                "slot": slot,
+                "id": "armor." + slot,
+                "amount": toughness,
+                "operation": "add_value",
+            })
+
+        if knockback_resistance is not None:
+            modifiers.append({
+                "type": "knockback_resistance",
+                "slot": slot,
+                "id": "armor." + slot,
+                "amount": knockback_resistance,
+                "operation": "add_value",
+            })
+
+        if speed is not None:
+            modifiers.append({
+                "type": "movement_speed",
+                "slot": slot,
+                "id": "armor." + slot,
+                "amount": speed,
+                "operation": "add_value",
+            })
+
+        if modifiers:
+            return {"attribute_modifiers": modifiers}
+
+
+class weapon_item(base_item):
+    """Provides weapon customization components"""
+
+    def weapon_component(
+        damage: float | None = None,
+        speed: float | None = None,
+        knockback: float | None = None,
+        # **other_components,
+        # crit: float | None,
+    ):
+        modifiers = []
+
+        if damage is not None:
+            modifiers.append({
+                "type": "attack_damage",
+                "slot": "mainhand",
+                "id": "weapon",
+                "amount": damage,
+                "operation": "add_value",
+            })
+
+        if speed is not None:
+            modifiers.append({
+                "type": "attack_speed",
+                "slot": "mainhand",
+                "id": "weapon",
+                "amount": speed,
+                "operation": "add_value",
+            })
+            modifiers.append({
+                "type": "attack_speed",
+                "slot": "offhand",
+                "id": "weapon",
+                "amount": speed,
+                "operation": "add_value",
+            })
+
+        if knockback is not None:
+            modifiers.append({
+                "type": "attack_knockback",
+                "slot": "mainhand",
+                "id": "weapon",
+                "amount": knockback,
+                "operation": "add_value",
+            })
+            modifiers.append({
+                "type": "attack_knockback",
+                "slot": "offhand",
+                "id": "weapon",
+                "amount": knockback,
+                "operation": "add_value",
+            })
+
+        if modifiers:
+            return {"attribute_modifiers": modifiers}

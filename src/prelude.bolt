@@ -1,0 +1,17 @@
+"""
+Everything in this file gets "auto-imported" into every single bolt file.
+Put things that should be available at all times.
+
+Note: It's really common to have conflicts so be careful what is all defined here!
+"""
+
+from bolt_expressions import Scoreboard, Data
+from src.lib.text import theme
+from src.lib.item import base_item, armor_item, weapon_item
+
+from sys:main import clock
+
+from typing import Any
+
+temp = Scoreboard("temp")
+globals = Scoreboard("globals")

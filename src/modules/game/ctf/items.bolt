@@ -1,7 +1,3 @@
-from lib:item import item, armor_item
-from lib:text import theme
-
-
 class team_flag(armor_item):
     """General CTF flag item"""
 

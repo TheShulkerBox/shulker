@@ -5,19 +5,15 @@ General utilities relating to text components. Includes the following:
 - etc.
 """
 
-from minecraft_text_components import
-    TextComponent,
-    style,
-    minify,
-    prevent_inheritance,
+from minecraft_text_components import TextComponent, style, minify
 
-theme = {
-    regular: "#ebebeb",
-    primary: "#e7c8dd",
-    secondary: "light_purple",
-    success: "#7fb192",
-    failure: "red",
-}
+class theme:
+    regular = "#ebebeb"
+    primary = "#e7c8dd"
+    secondary = "light_purple"
+    success = "#7fb192"
+    failure = "red"
+
 
 def boxed_text(text: TextComponent, text_color: str, box_color: str):
     return minify(
