@@ -4,7 +4,7 @@ require:
   - bolt_expressions
   - bolt_expressions.contrib.commands
   - bolt
-  - plugins.custom_load
+  - src.plugins.custom_load
   - bolt.contrib.defer
 
 pipeline:
