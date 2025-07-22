@@ -10,9 +10,9 @@ General utilities relating to text components. Includes the following:
 from minecraft_text_components import TextComponent, style, minify
 
 class theme:
-    regular = "#ebebeb"
     primary = "#e7c8dd"
     secondary = "light_purple"
+    body = "#ebebeb"
     success = "#7fb192"
     failure = "red"
 

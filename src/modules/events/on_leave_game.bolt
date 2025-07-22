@@ -1,5 +1,5 @@
 """
-Event code for handling players leaving the game
+Event code for handling players leaving the game (via `/trigger leave_game`)
 """
 
 leave_game = Scoreboard("leave_game", criteria="trigger")
@@ -14,7 +14,6 @@ append function event:on_join:
 
 
 append function sys:tick/player:
-    # leave_game trigger cond
     if leave_game["@s"] > 0:
         function event:on_leave_game
 

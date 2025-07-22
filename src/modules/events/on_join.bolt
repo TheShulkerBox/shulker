@@ -1,7 +1,7 @@
 """
-This handles detecting joins via the `leave_game` criteria. We also have to handle
-server crashes which doesn't set that variable. We use the trick where `/reload` also occurs
-on server start to help handle that edge case.
+Handles joins via the `leave_game` criteria. We also have to handle
+server crashes which doesn't set that variable. We use the trick where
+`/reload` also occurs on server start to help handle that edge case.
 """
 
 # Iff score is :

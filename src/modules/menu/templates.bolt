@@ -1,0 +1,38 @@
+"""Template menu
+"""
+
+from minecraft_text_components import TextComponent, style
+from src.lib.helpers import deep_merge_dicts
+
+def multi_action_template(
+    title: TextComponent,
+    body: TextComponent, 
+    actions: list[dict[str, Any]],  # these are normal actions
+    columns: int = 2,
+    can_close_with_escape: bool = true,
+    after_action: str = "close",
+    **other_fields,  # this will be deep merged.
+):
+    output = {
+        "type": "minecraft:multi_action",
+        "title": style(title, color=theme.primary),
+        "body": {
+            type: "minecraft:plain_message",
+            contents: style(body, color=theme.body)
+        },
+        "actions": actions,
+        "columns": columns,
+        "can_close_with_escape": can_close_with_escape,
+        "after_action": after_action,
+        "exit_action": {
+            label: {text: "Back", color: theme.body}
+        },
+    }
+
+    for key, value in other_fields.items():
+        if key not in output:
+            output[key] = value
+        else:
+            deep_merge_dicts(output[key], value)
+
+    return output

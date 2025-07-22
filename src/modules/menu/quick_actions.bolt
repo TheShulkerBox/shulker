@@ -1,0 +1,35 @@
+from ./templates import multi_action_template
+
+dialog_tag minecraft:quick_actions {
+    "values": ["menu:quick_action"]
+}
+
+dialog menu:quick_action multi_action_template(
+    title="Quick Action Menu",
+    body="Body Message [temp]",
+    actions=[
+         {
+            label: {text: "Return to Lobby", color: theme.body},
+            tooltip: {text: "Leaves the current game and teleports to lobby spawn", color: theme.secondary},
+            action: {
+                type: "run_command",
+                command: "trigger leave_game"
+            }
+        },
+        {
+            label: {text: "Staff", color: theme.body, italic: true},
+            tooltip: "Only for staff",
+            action: {
+                type: "run_command",
+                command: "function menu:quick_actions/staff"
+            }
+        }
+    ],
+)
+
+function menu:quick_actions/staff:
+    execute unless entity @s[tag=staff]:
+        title @s actionbar {text: "You are not permitted to access the staff page", color: theme.failure}
+        raw dialog clear @s
+
+    execute if entity @s[tag=staff] run raw dialog show @s menu:staff/maplist

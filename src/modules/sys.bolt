@@ -1,15 +1,30 @@
 """
 This handles sysadmin related things such as:
 - on server startup
+
+Functions:
+- `sys:tick` runs every tick
+- `sys:load` runs on load
+- `sys:tick/players` run for every player (ordered last in the tick cycle)
 """
 
 from lib:text import theme, boxed_text
 
 from functools import cache
 
+
 @cache
 def clock(speed: str):
-    if speed == "1t":
+    """
+    This is the main clock function (available globally via `prelude`).
+
+    ```
+    function clock("4t"):
+        say every 4 ticks
+    ```
+    """
+
+    if (speed == "1t") or (speed == "1"):
         path = "sys:tick"
     else:
         path = f"sys:tick/{speed}"
@@ -48,5 +63,5 @@ def tick_players_last():
     last for those who don't care about ordering (most things).
     """
 
-    append function clock("1t"):
+    append function sys:tick:
         as @a at @s function sys:tick/player

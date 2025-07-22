@@ -1,0 +1,81 @@
+"""
+Staff maplist
+"""
+
+from ../templates import multi_action_template
+
+maps = {
+    "Elven Cave": "3000 60 4000",
+    "The Arena": "3000 70 3000",
+    "The Hall": "1000 65 4000",
+    "Snow Village": "2000 150 5000",
+    "The Slums": "2004 170 5892",
+    "Factory": "2000 150 7000",
+    "Etherlok": "1000 255 5000",
+    "Shangri-La": "-1000 150 0",
+    "Temple": "5378 105 6376",
+    "Bloodthorne": "-6000 75 0",
+    "Arcane Containment": "9020 138 -7",
+    "Market Classic": "3125 70 577",
+    "Market Evolved": "4000 70 2000",
+    "The Mill": "3500 100 -350",
+    "Snowden": "1030 90 2100",
+    "Dwarven": "-3000 80 0",
+    "Fungal Caves": "4995 84 7009",
+    "Mystic Marsh": "-4998 67 119",
+    "Valley of Kings": "4000 84 -1",
+    "Emerald Queen": "6000 104 8000",
+    "Salt Mine": "5000 80 -40",
+    "Sanctuary": "8000 100 0",
+    "Cliffs of Fates": "6000 100 7000",
+    "Caldera": "7000 100 6000",
+    "Spooky Market": "4125 70 577",
+    "Scary Mill": "4500 100 -350",
+    "Darker Dwarven": "-4000 80 0",
+    "Blood Queen": "7000 100 8000",
+    "Dungeon Building Area": "10000 100 10000",
+    "Dungeon": "0 150 -1000",
+    "Underworld": "2000 0 3000",
+    "Spawn": "0 70 0",
+    "Cliffs": "7000 256 7000",
+    "Hilldom": "4000 100 5000",
+    "Spooky Manor": "5000 150 2000",
+    "Untitled End Map": "-1000 200 -1000",
+    "Temple (old)": "5378 105 5376",
+    "Atoll": "2633 100 400",
+    "Holy City": "-2970 115 -2935",
+    "Salt Island": "2200 115 125",
+    "Exalted": "5000 100 5000",
+    "Build Area": "0 100 1000",
+    "Nordic": "1300 100 100",
+    "Black Forest": "3430 90 50",
+    "Night CTF Shangri-La": "6969 125 -15",
+}
+
+
+buttons = []
+for name, coords in maps.items():
+    buttons.append({
+        label: {text: name, color: theme.body},
+        tooltip: {text: coords, color: theme.secondary},
+        action: {
+            type: "run_command",
+            command: f"tp @s {coords}"
+        }
+    })
+
+dialog menu:staff/maplist multi_action_template(
+    title="Staff Map Teleporter",
+    body="Body Message[temp]",
+    actions=buttons,
+    exit_action={
+        label: {
+            text: "Back",
+            color: "#ebebeb"
+        },
+        action: {
+            type: "show_dialog",
+            dialog: "menu:quick_action",
+        }
+    }
+)
