@@ -1,11 +1,8 @@
 from beet import Context
 from bolt import Module
-from dotenv import dotenv
 
 
 def beet_default(ctx: Context):
-    dotenv.load_dotenv()
-    
     src = ctx.directory / "src"
 
     # Load our modules. we mount them directly to have a simpler path

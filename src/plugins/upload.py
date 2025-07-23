@@ -2,8 +2,11 @@ import time
 import requests
 import json
 import os
+import dotenv
 
 from beet import Context
+
+dotenv.load_dotenv()
 
 SERVER_ID = os.environ["BLOOM_SERVER_ID"]
 PACK = "shulkerbox_data_pack.zip"
