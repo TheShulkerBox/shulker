@@ -208,6 +208,17 @@ wheels = [
 ]
 
 [[package]]
+name = "dotenv"
+version = "0.9.9"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "python-dotenv" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b2/b7/545d2c10c1fc15e48653c91efde329a790f2eecfbbf2bd16003b5db2bab0/dotenv-0.9.9-py2.py3-none-any.whl", hash = "sha256:29cf74a087b31dafdb5a446b6d7e11cbce8ed2741540e2339c69fbef92c94ce9", size = 1892 },
+]
+
+[[package]]
 name = "exceptiongroup"
 version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
@@ -775,6 +786,15 @@ wheels = [
 ]
 
 [[package]]
+name = "python-dotenv"
+version = "1.1.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/f6/b0/4bc07ccd3572a2f9df7e6782f52b0c6c90dcbb803ac4a167702d7d0dfe1e/python_dotenv-1.1.1.tar.gz", hash = "sha256:a8a6399716257f45be6a007360200409fce5cda2661e3dec71d23dc15f6189ab", size = 41978 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5f/ed/539768cf28c661b5b068d66d96a2f155c4971a5d55684a514c1a0e0dec2f/python_dotenv-1.1.1-py3-none-any.whl", hash = "sha256:31f23644fe2602f88ff55e1f5c79ba497e01224ee7737937930c448e4d0e24dc", size = 20556 },
+]
+
+[[package]]
 name = "pyyaml"
 version = "6.0.2"
 source = { registry = "https://pypi.org/simple" }
@@ -856,6 +876,7 @@ dependencies = [
     { name = "beet-plugins" },
     { name = "bolt" },
     { name = "bolt-expressions" },
+    { name = "dotenv" },
     { name = "ipython" },
     { name = "minecraft-text-components" },
     { name = "pillow" },
@@ -869,6 +890,7 @@ requires-dist = [
     { name = "beet-plugins", git = "https://github.com/thewii/beet-plugins" },
     { name = "bolt", specifier = ">=0.49.1" },
     { name = "bolt-expressions", specifier = ">=0.17.0" },
+    { name = "dotenv", specifier = ">=0.9.9" },
     { name = "ipython", specifier = ">=8.28.0" },
     { name = "minecraft-text-components", specifier = ">=3.3.0" },
     { name = "pillow", specifier = ">=11.0.0" },

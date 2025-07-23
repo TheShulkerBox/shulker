@@ -12,6 +12,7 @@ dependencies = [
   "beet-plugins @ git+https://github.com/thewii/beet-plugins",
   "pillow>=11.0.0",
   "requests>=2.32.3",
+  "dotenv>=0.9.9",
 ]
 description = "Add your description here"
 name = "shulker"
