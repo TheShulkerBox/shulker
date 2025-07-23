@@ -17,7 +17,7 @@ def beet_default(ctx: Context):
     ctx.data.mount("data/lib/module", lib)
 
     # For python files that start with `# bolt`, re-export as bolt file
-    # ⚠️ python file should *also* be a valid bolt file (no list comprehensions, match statements etc) 
+    # ⚠️ Python file should *also* be a valid bolt file (no list comprehensions, match statements etc) 
     for python_file in lib.glob("*.py"):
         with python_file.open() as f:
             if f.readline().startswith("# bolt"):

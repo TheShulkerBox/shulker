@@ -142,7 +142,7 @@ class ItemMeta(type):
 
     def conditional_string(self):
         id = self.__dict__.get("id", "*")
-        return f"{id}[custom_data~{{item_ids:['{self.name}']}}]"
+        return f"{id}[custom_data~{{item_id:'{self.name}'}}]"
 
     __neg__ = __invert__ = conditional_string
     __pos__ = __str__ = item_string
@@ -160,7 +160,7 @@ class base_item(metaclass=ItemMeta):
     complex behavior as isolated "custom components" or "component transformers" that can be reused
     across multiple items.
     
-    ```py
+    ```
     class basic_item(item):
         id = "minecraft:stone"
         item_name = {text: "Basic Item", color: theme.primary}
@@ -168,7 +168,7 @@ class base_item(metaclass=ItemMeta):
     ```
     This item just uses vanilla components to define a stone item with a custom name and lore.
 
-    ```py
+    ```
     class custom_item(item):
         id = "minecraft:custom_item"
         item_name = {text: "Custom Item", color: theme.primary}
@@ -180,7 +180,7 @@ class base_item(metaclass=ItemMeta):
     ```
     Here, we define a basic `test_component` that converts a `bool` into a new set of vanilla components.
 
-    ```py
+    ```
     class custom_item_2(item):
         id = "minecraft:custom_item_2"
         item_name = {text: "Custom Item 2", color: theme.primary}

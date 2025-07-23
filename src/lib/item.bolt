@@ -1,5 +1,3 @@
-# stub bolt file -- reimport from python
-
 from src.lib.item import ItemMeta
 
 @defer
