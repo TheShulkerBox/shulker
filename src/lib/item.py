@@ -198,6 +198,8 @@ class base_item(metaclass=ItemMeta):
     an existing component's value into a new value. If the transformer returns `None`, no action is taken. This is useful
     when providing multiple input types for a component, such as a color that can be either a string or an integer.
     """
+    
+    tool = {"can_destroy_blocks_in_creative": False, "rules": []}
 
     def dyed_color_transformer(color: str | Any):
         """Allows you to write dyed colors using traditional hex formatting"""
@@ -284,8 +286,8 @@ class weapon_item(base_item):
         damage: float | None = None,
         speed: float | None = None,
         knockback: float | None = None,
-        # **other_components,
         # crit: float | None,
+        **kwargs,  # there are actual weapon stuff we need to pass through
     ):
         modifiers = []
 
@@ -330,5 +332,12 @@ class weapon_item(base_item):
                 "operation": "add_value",
             })
 
+        output = {}
         if modifiers:
-            return {"attribute_modifiers": modifiers}
+            output |= {"attribute_modifiers": modifiers}
+        
+        if kwargs:
+            output |= kwargs
+        
+        if output:
+            return output

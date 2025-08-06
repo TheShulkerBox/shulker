@@ -4,8 +4,8 @@ Keeps track of players in the previous and current tick. Pings staff when it cha
 TODO: revisit and handle player joining and leaving on the same tick
 """
 
-player_count = globals["player_count"]
-last_player_count = globals["last_player_count"]
+player_count = GLOBALS["player_count"]
+last_player_count = GLOBALS["last_player_count"]
 
 append function sys:tick:
     store result score var player_count if entity @a

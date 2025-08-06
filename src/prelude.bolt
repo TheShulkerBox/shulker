@@ -5,13 +5,21 @@ Put things that should be available at all times.
 Note: It's really common to have conflicts so be careful what is all defined here!
 """
 
-from bolt_expressions import Scoreboard, Data
+from bolt_expressions import Scoreboard, Data, ScoreSource, DataSource
 from src.lib.text import theme
 from src.lib.item import base_item, armor_item, weapon_item
+from src.lib.helpers import Static
 
 from sys:main import clock
 
 from typing import Any
 
-temp = Scoreboard("temp")
-globals = Scoreboard("globals")
+TEMP = Scoreboard("temp")
+CONST = Scoreboard("const")
+GLOBALS = Scoreboard("globals")
+MACRO = Data.storage("macro")
+
+BOLT_TEMP = Data.storage("bolt:temp")
+
+ID = Scoreboard("ID")
+PLAYER_ID = ID["@s"]

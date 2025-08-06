@@ -1,0 +1,72 @@
+"""
+A port of the original shulker xp lib, simplified:
+
+
+"""
+
+import math
+
+xp_levels = TEMP["$levels"]
+xp_points = TEMP["$points"]
+
+#: we derive this value by finding the level that needs more than "1000" xp points
+#: 1000 points is easy to use as a percentage (multiply by 10)
+#: we want to make sure we have "atleast" 1 point higher so we don't actually attain a level
+TARGET_LEVEL = math.floor((1001 + 169) / 9)
+
+
+class XP(Static):
+    """Provides various utilities with working with the xp bar"""
+
+    def set_points(percent: "int | ScoreSource"):
+        """Sets a percentage of the xp bar to be filled instantly."""
+
+        # ensure we are within bounds
+        percent = clamp(percent)
+
+        # get the percentage
+        XP.get_levels(xp_levels)
+        xp set @s TARGET_LEVEL levels
+        XP.get_points(xp_points)
+        
+        MACRO["points"] = 10 * percent
+        with var MACRO:
+            $xp set @s $(points) points
+        
+        MACRO["levels"] = xp_levels
+        with var MACRO:
+            $xp set @s $(levels) levels
+
+    def get_points(input: ScoreSource):
+        """Gets the xp points currently on the bar"""
+
+        execute store result score input.scoreholder input.objective run xp query @s points
+    
+    def get_levels(input: ScoreSource):
+        """Gets the xp levels currently on the bar"""
+
+        execute store result score input.scoreholder input.objective run xp query @s levels
+
+
+def clamp(value: "int | ScoreSource"):
+    """Clamps the input between 0 and 100. Interestingly, this can result in
+    converting a `ScoreSource` into a number resulting in a compile-time
+    optimization path in the actual source code.
+    """
+
+    return max(0, min(100, value))
+
+
+# def raw(levels):
+#     """Not Needed for now"""
+
+#     if 0 <= levels <= 16:
+#         total_points = (levels ** 2) + (8 * level)
+#     elif 17 <= levels <= 31:
+#         total_points = 2.5 * (levels ** 2) - (40.5 * level) + 360
+#     else:
+#         total_points = 4.5 * (levels ** 2) - 162.5 * level + 2220
+
+function xp:set:
+    $scoreboard players set @s temp $(percent)
+    XP.set_points(TEMP["@s"])

@@ -12,6 +12,8 @@ from lib:text import theme, boxed_text
 
 from functools import cache
 
+from bolt_expressions import Expression
+
 
 @cache
 def clock(speed: str):
@@ -43,7 +45,6 @@ append function_tag minecraft:load {
 }
 
 append function sys:load:
-    function sys:load/objectives
     tellraw @a[tag=staff] boxed_text(
         {
             text: "The Shulker Box",

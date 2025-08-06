@@ -4,8 +4,11 @@ require:
   - bolt_expressions
   - bolt_expressions.contrib.commands
   - bolt
+  # - src.plugins.fancy_macros
+  - mecha.contrib.nesting
   - src.plugins.custom_load
   - bolt.contrib.defer
+  # - mecha.contrib.bake_macros
 
 pipeline:
   - mecha
@@ -25,9 +28,14 @@ data_pack:
 output: dist
 
 meta:
+  generate_namespace: "sys"
+
   bolt:
     entrypoint: ["*"]
     prelude: ["lib:prelude"]
 
   bolt_expressions:
-    init_path: sys:load/objectives
+    temp_objective: "temp"
+    const_objective: "const"
+    temp_storage: "bolt:temp"
+    init_path: "load/init_objectives"

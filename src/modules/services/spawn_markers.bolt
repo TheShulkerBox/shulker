@@ -29,8 +29,8 @@ function tools:spawn_marker/create:
 
 
 function tools:spawn_marker/delete_nearest:
-    store result score var temp["#killed"] kill @n[type=marker,tag=MARKER_TAG,distance=..5]
-    if temp["#killed"] == 1:
+    store result score var TEMP["#killed"] kill @n[type=marker,tag=MARKER_TAG,distance=..5]
+    if TEMP["#killed"] == 1:
         tellraw @s {text: "Killed nearest spawn marker", color: theme.success}
     else:
         tellraw @s {text: "Could not find spawn marker within 5 blocks", color: theme.failure}

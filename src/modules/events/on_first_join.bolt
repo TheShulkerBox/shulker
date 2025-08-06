@@ -1,10 +1,10 @@
 """
-This handles detecting joins via the `leave_game` criteria. We also have to handle
-server crashes which doesn't set that variable. We use the trick where `/reload` also occurs
-on server start to help handle that edge case.
+This detects first join based on the `time_played` stat scoreboard. We use a scoreboard
+instead of an advancement because it's easier to reset when testing `on_first_join` logic.
 """
 
 time_played = Scoreboard("stats.time_played", criteria="minecraft.custom:minecraft.play_time")
+
 
 append function sys:tick:
     as @a[scores={time_played=..1}] at @s function event:on_first_join

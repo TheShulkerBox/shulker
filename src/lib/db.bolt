@@ -1,0 +1,41 @@
+"""
+"""
+
+UUID1 = Scoreboard("uuid1")
+UUID2 = Scoreboard("uuid2")
+UUID3 = Scoreboard("uuid3")
+UUID4 = Scoreboard("uuid4")
+
+
+class Database:
+    name: str
+    db: Data
+
+    def __init__(self, name: str):
+        self.name = name
+        
+        # each database gets their own storage file
+        self.db = Data.storage(f"db.{name}:")
+
+    
+    def get(self, key: str, value: str, destination: DataSource):
+        """Get a value from the database by key and value, storing it in destination"""
+        
+        MACRO["value"] = value
+        with var MACRO:
+            raw f"$data modify storage {destination._target} {destination._path} set from storage {self.name} data[{$(key): $(value)}]"
+
+
+class _PlayerDB(Database):
+    def __init__(self):
+        super().__init__("player")
+    
+    def get_player(self, destination: DataSource):
+        """Get player specific data"""
+        
+        MACRO["id"] = PLAYER_ID
+        with var MACRO:
+            raw f"$data modify storage {destination._target} {destination._path} set from storage {self.name} data[{id: $(id)}]"
+
+
+PlayerDB = _PlayerDB()

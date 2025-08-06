@@ -1,0 +1,2 @@
+append function event:on_join:
+    attribute @s minecraft:waypoint_transmit_range base set 0

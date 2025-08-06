@@ -1,3 +1,4 @@
+from collections.abc import Callable
 import copy
 import json
 from typing import Any
@@ -34,6 +35,10 @@ def nbt_dump(obj: dict[str, Any]):
                 return "[" + ", ".join(items) + "]"
             case str():
                 return f"'{obj}'"
+            case bool() as b:
+                if b:
+                    return "true"
+                return "false"
             case _:
                 return json.dumps(obj)
 
@@ -66,3 +71,15 @@ def deep_merge_dicts(d1: dict[str, Any], d2: dict[str, Any]) -> dict[str, Any] |
             merged[key] = value
 
     return merged
+
+
+class StaticMetaClass(type):
+    def __new__(cls, name: str, bases: tuple[type, ...], namespace: dict[str, Any]):
+        namespace = {k: (staticmethod(v) if (not k.startswith("_")) and (isinstance(v, Callable)) else v) for k, v in namespace.items()}
+        return super().__new__(
+            cls, name, bases, namespace
+        )
+
+
+class Static(metaclass=StaticMetaClass):
+    ...
