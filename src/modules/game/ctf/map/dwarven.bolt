@@ -1,0 +1,16 @@
+from game:manager import Map, Team
+
+dwarven = Map(
+    id="dwarven",
+    teams=[
+        Team(id="smalls", color="red", spawn=(0, 0, 0, 0, 0)),
+        Team(id="bigs", color="blue", spawn=(0, 0, 0, 0, 0)),
+    ],
+    location=(0, 65, 0),
+    dimension="overworld"
+)
+
+
+function dwarven.init:
+    # Teleport players to the center of the map
+    tp @a 0 65 0 -90 0

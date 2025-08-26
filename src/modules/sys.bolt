@@ -45,6 +45,7 @@ append function_tag minecraft:load {
 }
 
 append function sys:load:
+    forceload add 0 0
     tellraw @a[tag=staff] boxed_text(
         {
             text: "The Shulker Box",

@@ -5,6 +5,12 @@ Use this file to fuck around :D
 from lib:xp import XP
 
 
+class tacos(base_item):
+    id = "minecraft:stone_sword"
+    item_name = "taco sauce"
+    lore = ["taco", "sauce"]
+    weapon = {damage: 20}
+
 class op_sword(weapon_item):
     id = "minecraft:stone_sword"
     item_name = "taco sauce"
@@ -34,3 +40,10 @@ function taco:sauce:
         return run say i am holding an op_helmet
     say i am not holding a op_helmet
 
+from lib:db import PlayerDB
+
+function a:b:
+    for t in PlayerDB:
+        TEMP["tacos"] = t.data
+        if TEMP["tacos"] > 1:
+            say hi

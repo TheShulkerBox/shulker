@@ -15,7 +15,7 @@ class team_flag(armor_item):
 
 
 class team_wool(armor_item):
-    """General team wool"""
+    """General team head wool"""
 
     def team_component(color: str, name: str):
         return {

@@ -1,6 +1,8 @@
 """
 """
 
+from lib:utils import get_name
+
 UUID1 = Scoreboard("uuid1")
 UUID2 = Scoreboard("uuid2")
 UUID3 = Scoreboard("uuid3")
@@ -15,7 +17,7 @@ class Database:
         self.name = name
         
         # each database gets their own storage file
-        self.db = Data.storage(f"db.{name}:")
+        self.db = Data.storage(f"db.{name}:main")
 
     
     def get(self, key: str, value: str, destination: DataSource):
@@ -26,16 +28,60 @@ class Database:
             raw f"$data modify storage {destination._target} {destination._path} set from storage {self.name} data[{$(key): $(value)}]"
 
 
-class _PlayerDB(Database):
-    def __init__(self):
-        super().__init__("player")
-    
-    def get_player(self, destination: DataSource):
+class PlayerDB(metaclass=Singleton):
+    def _copy_uuid(self, loc: DataSource):
+        loc["uuid1"] = UUID1["@s"]
+        loc["uuid2"] = UUID2["@s"]
+        loc["uuid3"] = UUID3["@s"]
+        loc["uuid4"] = UUID4["@s"]
+
+    def add_player(self, player: DataSource):
+        """Adds a player to the database (DOES NOT CHECK FOR DUPLICATES)"""
+        
+        data modify storage playerdb:main players append from var player
+
+    def get_self(self) -> DataSource:
         """Get player specific data"""
         
-        MACRO["id"] = PLAYER_ID
+        self._copy_uuid(MACRO)
         with var MACRO:
-            raw f"$data modify storage {destination._target} {destination._path} set from storage {self.name} data[{id: $(id)}]"
+            $data modify storage shulker:temp player set from storage playerdb:main players[{uuid1: $(uuid1), uuid2: $(uuid2), uuid3: $(uuid3), uuid4: $(uuid4)}]
 
+        return TEMP_STORAGE.player
+    
+    def save_self(self, data: DataSource):
+        """Save player specific data"""
+        
+        self._copy_uuid(MACRO)
+        with var MACRO:
+            $data modify storage playerdb:main players[{uuid1: $(uuid1), uuid2: $(uuid2), uuid3: $(uuid3), uuid4: $(uuid4)}].data set from storage shulker:temp data
+    
+    def exists_self(self) -> str:
+        """Check if the player exists in the database"""
+        
+        function playerdb:exists_self:
+            self._copy_uuid(MACRO)
+            return run with var MACRO:
+                $return run execute if data storage playerdb:main players[{uuid1: $(uuid1), uuid2: $(uuid2), uuid3: $(uuid3), uuid4: $(uuid4)}]
+        
+        return playerdb:exists_self
+    
+    def __iter__(self):
+        """Iterate through all players in the database and yield the player in temp storage
+        
+        ```bolt
+        for player in PlayerDB:
+            if player.data.net_worth > 1000:
+                say big number alert!
+        ```
+        """
 
-PlayerDB = _PlayerDB()
+        store result score loop temp if data storage playerdb:main players[]
+        execute function ~/loop_playerdb:
+            TEMP["loop"] -= 1
+            MACRO["index"] = TEMP["loop"] * -1
+            with var MACRO:
+                $data modify storage shulker:temp player set from storage playerdb:main players[{$(index)}]
+            yield TEMP_STORAGE.player
+            if TEMP["loop"] > 0:
+                function ~/

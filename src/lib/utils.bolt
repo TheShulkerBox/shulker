@@ -1,0 +1,38 @@
+loot_table lib:player_head {
+    "type": "minecraft:entity",
+    "pools": [
+        {
+            "rolls": 1,
+            "entries": [
+                {
+                    "type": "minecraft:item",
+                    "name": "minecraft:player_head",
+                    "functions": [
+                        {
+                            "function": "minecraft:fill_player_head",
+                            "entity": "this"
+                        },
+                        {
+                            "function": "minecraft:set_custom_data",
+                            "entity": "this",
+                            "tag": {
+                                "head": 1
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
+
+
+def get_name():
+    """Gets the player name by loot spawning a player head and returning the name"""
+
+    loot spawn 0 0 0 loot lib:player_head
+    positioned 0 0 0 as @n[type=item] if items entity @s contents player_head[custom_data~{head:1b}]:
+        TEMP_STORAGE.player_name = SELF.components."minecraft:profile".name
+        kill @s
+    
+    return TEMP_STORAGE.player_name

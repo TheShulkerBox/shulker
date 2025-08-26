@@ -8,7 +8,7 @@ Note: It's really common to have conflicts so be careful what is all defined her
 from bolt_expressions import Scoreboard, Data, ScoreSource, DataSource
 from src.lib.text import theme
 from src.lib.item import base_item, armor_item, weapon_item
-from src.lib.helpers import Static
+from src.lib.helpers import Singleton
 
 from sys:main import clock
 
@@ -18,8 +18,6 @@ TEMP = Scoreboard("temp")
 CONST = Scoreboard("const")
 GLOBALS = Scoreboard("globals")
 MACRO = Data.storage("macro")
+SELF = Data.entity("@s")
 
-BOLT_TEMP = Data.storage("bolt:temp")
-
-ID = Scoreboard("ID")
-PLAYER_ID = ID["@s"]
+TEMP_STORAGE = Data.storage("shulker:temp")

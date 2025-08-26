@@ -15,10 +15,10 @@ xp_points = TEMP["$points"]
 TARGET_LEVEL = math.floor((1001 + 169) / 9)
 
 
-class XP(Static):
+class XP(metaclass=Singleton):
     """Provides various utilities with working with the xp bar"""
 
-    def set_points(percent: "int | ScoreSource"):
+    def set_points(self, percent: "int | ScoreSource"):
         """Sets a percentage of the xp bar to be filled instantly."""
 
         # ensure we are within bounds
@@ -37,15 +37,15 @@ class XP(Static):
         with var MACRO:
             $xp set @s $(levels) levels
 
-    def get_points(input: ScoreSource):
+    def get_points(self, input: ScoreSource):
         """Gets the xp points currently on the bar"""
 
-        execute store result score input.scoreholder input.objective run xp query @s points
+        store result score input.scoreholder input.objective run xp query @s points
     
-    def get_levels(input: ScoreSource):
+    def get_levels(self, input: ScoreSource):
         """Gets the xp levels currently on the bar"""
 
-        execute store result score input.scoreholder input.objective run xp query @s levels
+        store result score input.scoreholder input.objective run xp query @s levels
 
 
 def clamp(value: "int | ScoreSource"):

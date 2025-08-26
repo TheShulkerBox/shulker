@@ -1,4 +1,3 @@
-from collections.abc import Callable
 import copy
 import json
 from typing import Any
@@ -73,13 +72,8 @@ def deep_merge_dicts(d1: dict[str, Any], d2: dict[str, Any]) -> dict[str, Any] |
     return merged
 
 
-class StaticMetaClass(type):
+class Singleton(type):
     def __new__(cls, name: str, bases: tuple[type, ...], namespace: dict[str, Any]):
-        namespace = {k: (staticmethod(v) if (not k.startswith("_")) and (isinstance(v, Callable)) else v) for k, v in namespace.items()}
         return super().__new__(
             cls, name, bases, namespace
-        )
-
-
-class Static(metaclass=StaticMetaClass):
-    ...
+        )()

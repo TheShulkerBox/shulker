@@ -119,7 +119,10 @@ class ItemMeta(type):
                     if (value := func(output_components[name])) is not None:
                         output_components[name] = value
 
+        if "id" in output_components:
+            self.id = output_components["id"]
         del output_components["id"]
+
         for component in custom_components:
             if component in output_components:
                 del output_components[component]
@@ -131,21 +134,24 @@ class ItemMeta(type):
 
     @property
     def has_id(self):
-        return "id" in self.__dict__
+        return self.id is not None
 
     def item_string(self):
+        components = ",".join(f"{k}={nbt_dump(v)}" for k, v in self.components.items())
         if not self.has_id:
             raise ItemError(f"`{self.name}` item must define an `id`!")
-
-        components = ",".join(f"{k}={nbt_dump(v)}" for k, v in self.components.items())
         return f"{self.id}[{components}]"
 
     def conditional_string(self):
-        id = self.__dict__.get("id", "*")
+        id = self.id or "*"
         return f"{id}[custom_data~{{item_id:'{self.name}'}}]"
 
     __neg__ = __invert__ = conditional_string
     __pos__ = __str__ = item_string
+
+    def __repr__(self):
+        fields = ", ".join(f"{k}={v}" for k, v in self.__dict__.items() if not k.startswith("_"))
+        return f"{self.name}[{fields}]"
 
     def __call__(*_, **__):
         raise ItemError("`item` classes cannot be instantiated, see docstring.")
@@ -199,6 +205,7 @@ class base_item(metaclass=ItemMeta):
     when providing multiple input types for a component, such as a color that can be either a string or an integer.
     """
     
+    id = None
     tool = {"can_destroy_blocks_in_creative": False, "rules": []}
 
     def dyed_color_transformer(color: str | Any):

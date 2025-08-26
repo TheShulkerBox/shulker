@@ -6,9 +6,9 @@ require:
   - bolt
   # - src.plugins.fancy_macros
   - mecha.contrib.nesting
-  - src.plugins.custom_load
   - bolt.contrib.defer
   # - mecha.contrib.bake_macros
+  - src.plugins.custom_load
 
 pipeline:
   - mecha
