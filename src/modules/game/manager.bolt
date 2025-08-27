@@ -19,6 +19,7 @@ class Team:
     id: str
     color: str
     spawn: tuple[int, int, int, int, int]  # coords, yaw, pitch
+    
 
     def __post_init__(self):
         if self.color not in TEAM_COLORS:
@@ -62,7 +63,7 @@ class Map:
         return f"game:map/{self.id}/tick"
 
     @contextmanager
-    def __branch__(self) -> Iterator[Literal[True]]:
+    def bool(self) -> Iterator[Literal[True]]:
         """Implements `if` statement behavior
 
         ```bolt
