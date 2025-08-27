@@ -20,7 +20,6 @@ class Team:
     color: str
     spawn: tuple[int, int, int, int, int]  # coords, yaw, pitch
     
-
     def __post_init__(self):
         if self.color not in TEAM_COLORS:
             raise ValueError(f"`color` needs to be one of: {TEAM_COLORS}")

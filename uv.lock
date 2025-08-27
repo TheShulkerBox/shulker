@@ -867,17 +867,19 @@ wheels = [
 [[package]]
 name = "shulker"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "beet" },
     { name = "beet-plugins" },
     { name = "bolt" },
     { name = "bolt-expressions" },
+    { name = "click" },
     { name = "ipython" },
     { name = "minecraft-text-components" },
     { name = "pillow" },
     { name = "python-dotenv" },
     { name = "pytz" },
+    { name = "pyyaml" },
     { name = "requests" },
     { name = "rich" },
 ]
@@ -888,11 +890,13 @@ requires-dist = [
     { name = "beet-plugins", git = "https://github.com/thewii/beet-plugins" },
     { name = "bolt", specifier = ">=0.49.1" },
     { name = "bolt-expressions", specifier = ">=0.17.0" },
+    { name = "click", specifier = ">=8.2.1" },
     { name = "ipython", specifier = ">=8.28.0" },
     { name = "minecraft-text-components", specifier = ">=3.3.0" },
     { name = "pillow", specifier = ">=11.0.0" },
     { name = "python-dotenv", specifier = ">=1.1.1" },
     { name = "pytz", specifier = ">=2025.2" },
+    { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "requests", specifier = ">=2.32.3" },
     { name = "rich", specifier = ">=13.9.2" },
 ]
