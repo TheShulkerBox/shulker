@@ -12,8 +12,8 @@ function lime:clean_up_the_trash:
 
 function lime:eat_vegetables:
     attribute @s minecraft:scale base set 5
-    attribute @s minecraft:movement_speed base set 1.2
-    attribute @s minecraft:jump_strength base set 1.2
+    attribute @s minecraft:movement_speed base set 0.5
+    attribute @s minecraft:jump_strength base set 0.5
     attribute @s minecraft:entity_interaction_range base set 15
     attribute @s minecraft:step_height base set 4
 
