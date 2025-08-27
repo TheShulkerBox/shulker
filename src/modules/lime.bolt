@@ -15,4 +15,4 @@ function eat_vegetables:
     attribute @s minecraft:scale base set 2
     attribute @s minecraft:movement_speed base set 2
     attribute @s minecraft:jump_strength base set 2
-    attribute @s minecraft:attack_range base set 2
+    attribute @s minecraft:entity_interaction_range base set 2
