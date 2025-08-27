@@ -1,0 +1,8 @@
+class mace(weapon_item):
+    id = "iron_shovel"
+    item_model = "mace"
+    item_name = "Iron Mace"
+    lore = ["Stun active - crit to stun enemy"]
+    enchantment_glint_override = true
+    weapon = {damage: 7.5, speed: 0.7}
+    custom_data = {stun: true}
