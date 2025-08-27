@@ -2,6 +2,7 @@
     "recommendations": [
         "thenuclearnexus.mecha-language-server",
         "minecraftcommands.syntax-mcfunction",
-        "superant.mc-dp-icons"
+        "superant.mc-dp-icons",
+        "usernamehw.errorlens"
     ]
 }
