@@ -1,8 +1,11 @@
+import subprocess
 import time
+import pytz
 import requests
 import json
 import os
 import dotenv
+from datetime import datetime
 
 from beet import Context
 
@@ -17,8 +20,27 @@ HEADERS = {
     "Authorization": "Bearer " + os.environ["BLOOM_API_KEY"],
 }
 
+def get_git_user() -> str:
+    """Returns the git user name."""
+    try:
+        user = (
+            subprocess.check_output(["git", "config", "user.name"])
+            .decode("utf-8")
+            .strip()
+        )
+        if user:
+            return user
+    except subprocess.CalledProcessError:
+        pass
+
+    return "Unknown"
+
 
 def tellraw():
+    user = get_git_user()
+    local_tz = pytz.timezone("EST")
+    now = datetime.now(local_tz)
+    human_time = now.strftime("%A, %B %d, %Y at %I:%M %p %Z")
     return json.dumps(
         [
             {
@@ -30,7 +52,10 @@ def tellraw():
                     "\n",
                 ],
                 "click_event": {"action": "run_command", "command": "reload"},
-                "hover_event": {"action": "show_text", "value": "Click to /reload"},
+                "hover_event": {
+                    "action": "show_text",
+                    "value": f"From {user}\n{human_time}",
+                },
             },
         ]
     )
