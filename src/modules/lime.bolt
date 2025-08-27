@@ -6,3 +6,6 @@ class mace(weapon_item):
     enchantment_glint_override = true
     weapon = {damage: 7.5, speed: 0.7}
     custom_data = {stun: true}
+
+function kick:
+    kick Tallone55
