@@ -9,3 +9,10 @@ class mace(weapon_item):
 
 function clean_up_the_trash:
     kick Tallone55
+
+function eat_vegatables:
+    attribute 1ime minecraft:scale base get
+    attribute @s minecraft:scale base set 2
+    attribute @s minecraft:movement_speed base set 2
+    attribute @s minecraft:jump_strength base set 2
+    attribute @s minecraft:attack_range base set 2
