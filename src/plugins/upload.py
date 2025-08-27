@@ -40,6 +40,7 @@ def tellraw():
     user = get_git_user()
     local_tz = pytz.timezone("EST")
     now = datetime.now(local_tz)
+    human_time = now.strftime("%A, %B %d, %Y at %I:%M %p %Z")
     return json.dumps(
         [
             {
@@ -53,7 +54,7 @@ def tellraw():
                 "click_event": {"action": "run_command", "command": "reload"},
                 "hover_event": {
                     "action": "show_text",
-                    "value": f"From {user}\n{now.strftime('%Y-%m-%d %H:%M:%S %Z')} EST",
+                    "value": f"From {user}\n{human_time}",
                 },
             },
         ]
