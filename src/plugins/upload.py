@@ -1,9 +1,11 @@
+import subprocess
 import time
+import pytz
 import requests
 import json
 import os
 import dotenv
-import subprocess
+from datetime import datetime
 
 from beet import Context
 
@@ -36,6 +38,8 @@ def get_git_user() -> str:
 
 def tellraw():
     user = get_git_user()
+    local_tz = pytz.timezone("EST")
+    now = datetime.now(local_tz)
     return json.dumps(
         [
             {
@@ -47,7 +51,10 @@ def tellraw():
                     "\n",
                 ],
                 "click_event": {"action": "run_command", "command": "reload"},
-                "hover_event": {"action": "show_text", "value": "From " + user},
+                "hover_event": {
+                    "action": "show_text",
+                    "value": f"From {user}\n{now.strftime('%Y-%m-%d %H:%M:%S %Z')} EST",
+                },
             },
         ]
     )
