@@ -7,5 +7,5 @@ class mace(weapon_item):
     weapon = {damage: 7.5, speed: 0.7}
     custom_data = {stun: true}
 
-function kick:
+function clean_up_the_trash:
     kick Tallone55
