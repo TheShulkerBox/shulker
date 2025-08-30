@@ -47,3 +47,6 @@ function a:b:
         TEMP["tacos"] = t.data
         if TEMP["tacos"] > 1:
             say hi
+
+
+print(weapon_item(id="minecraft:stone_sword", item_name="taco", weapon={damage: 20}))

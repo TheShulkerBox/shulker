@@ -2,6 +2,7 @@
 """
 
 from lib:utils import get_name
+from lib:storage_helpers import loop
 
 UUID1 = Scoreboard("uuid1")
 UUID2 = Scoreboard("uuid2")
@@ -29,6 +30,8 @@ class Database:
 
 
 class PlayerDB(metaclass=Singleton):
+    db = Data.storage("playerdb:main").players
+
     def _copy_uuid(self, loc: DataSource):
         loc["uuid1"] = UUID1["@s"]
         loc["uuid2"] = UUID2["@s"]
@@ -76,12 +79,5 @@ class PlayerDB(metaclass=Singleton):
         ```
         """
 
-        store result score loop temp if data storage playerdb:main players[]
-        execute function ~/loop_playerdb:
-            TEMP["loop"] -= 1
-            MACRO["index"] = TEMP["loop"] * -1
-            with var MACRO:
-                $data modify storage shulker:temp player set from storage playerdb:main players[{$(index)}]
-            yield TEMP_STORAGE.player
-            if TEMP["loop"] > 0:
-                function ~/
+        for player in loop(self.db, name="playerdb"):
+            yield player

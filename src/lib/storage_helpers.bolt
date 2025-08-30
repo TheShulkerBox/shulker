@@ -1,0 +1,71 @@
+from collections.abc import Iterator
+
+def convert_data_source_into_name(data: DataSource) -> str:
+    """Convert a DataSource into a valid name for function/variable names"""
+    
+    return str(data).replace(" ", "_").replace(".", "_").replace(":", "_")
+
+def loop(data: DataSource, name: str = "") -> Iterator[DataSource]:
+    """Iterate through all elements in a list and yield the element in temp storage
+
+    ```bolt
+    for item in loop(some_list):
+        if item.value > 1000:
+            say big number alert!
+    ```
+    """
+
+    for item in loop_with_index(data, name):
+        yield item[1]
+
+
+def loop_with_index(data: DataSource, name: str = "") -> Iterator[tuple[int, DataSource]]:
+    """Iterate through all elements in a list and yield the index and element in temp storage
+
+    ```bolt
+    for i, item in loop_with_index(some_list):
+        if i % 2 == 0:
+            say even index alert!
+        if item.value > 1000:
+            say big number alert!
+    ```
+    """
+
+    if not name:
+        name = convert_data_source_into_name(data)
+    
+    loop_func = ~/loop_{name}
+
+    store result score _loop temp if data var data[:]
+    execute function loop_func:
+        TEMP["_loop"] -= 1
+        MACRO["index"] = TEMP["_loop"] * -1
+        with var MACRO:
+            $data modify storage shulker:temp item set from storage shulker:temp data[{$(index)}]
+        yield (TEMP["_loop"], TEMP_STORAGE.item)
+        if TEMP["_loop"] > 0:
+            function loop_func
+
+
+def loop_while(data: DataSource) -> Iterator[ScoreSource]:
+    """Iterate through all elements in a list while a condition is true, yielding
+    the element in temp storage.
+
+    ```bolt
+    while loop_while(some_list):
+        ...
+    ```
+
+    ⚠️ WARNING: This can create infinite loops if the condition never becomes false.
+    """
+
+    if not name:
+        name = convert_data_source_into_name(data)
+    
+    loop_func = ~/loop_while_{name}
+
+    execute function loop_func:
+        store result score _loop temp if data var data[:]
+            yield TEMP["_loop"]
+            if TEMP["_loop"] > 0:
+                function loop_func

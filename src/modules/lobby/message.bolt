@@ -1,0 +1,3 @@
+from lib:text import boxed_text
+
+SIDEBAR_TITLE = boxed_text("The Shulker Box")

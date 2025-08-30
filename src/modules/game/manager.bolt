@@ -3,6 +3,10 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Iterator, Literal, ClassVar
 
+from src.lib.helpers import branch
+
+from lib:storage_helpers import loop_with_index, loop_while
+
 TEAM_COLORS = [
     "dark_aqua",  "dark_blue",    "red",    "black",
     "dark_red",   "dark_purple",  "gold",   "gray",
@@ -22,7 +26,7 @@ class Team:
     
     def __post_init__(self):
         if self.color not in TEAM_COLORS:
-            raise ValueError(f"`color` needs to be one of: {TEAM_COLORS}")
+            raise ValueError(f"`color` needs to be one of: {TEAM_COLORS}")  # for now :(
 
     @property
     def name(self) -> str:
@@ -61,15 +65,37 @@ class Map:
 
         return f"game:map/{self.id}/tick"
 
-    @contextmanager
-    def bool(self) -> Iterator[Literal[True]]:
-        """Implements `if` statement behavior
+    @branch
+    def is_selected(self) -> Iterator[Literal[True]]:
+        """Implements `if` statement behavior for checking if this map is the current map.
 
         ```bolt
-        if MyMap:
+        if MyMap.is_selected():
             say "this only occurs if my map is selected"
         ```
         """
 
         if GAME_META.current.map.id == self.id:
             yield True
+
+# - shuffle function to randomize map queue
+# - next button to go to next map in queue
+#   - if queue empty, shuffle
+# - map voting system
+
+append function sys:load:
+    if not GAME_META.map_queue:
+        GAME_META.map_queue = []
+
+
+function game:map_queue/next:
+    if not GAME_META.map_queue:
+        return run function game:map_queue/shuffle
+    
+    GAME_META.current.map = GAME_META.map_queue[-1]
+    GAME_META.map_queue[-1].remove()
+
+
+function game:map_queue/shuffle:
+    TEMP_STORAGE.maps = GAME_META.all_maps
+    while loop_while(TEMP_STORAGE.maps):
