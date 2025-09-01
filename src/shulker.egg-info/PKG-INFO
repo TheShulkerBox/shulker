@@ -1,0 +1,49 @@
+Metadata-Version: 2.4
+Name: shulker
+Version: 0.1.0
+Summary: Add your description here
+Author: rx97
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: beet>=0.108.5
+Requires-Dist: bolt>=0.49.1
+Requires-Dist: bolt-expressions>=0.17.0
+Requires-Dist: rich>=13.9.2
+Requires-Dist: ipython>=8.28.0
+Requires-Dist: minecraft-text-components>=3.3.0
+Requires-Dist: beet-plugins@ git+https://github.com/thewii/beet-plugins
+Requires-Dist: pillow>=11.0.0
+Requires-Dist: requests>=2.32.3
+Requires-Dist: python-dotenv>=1.1.1
+Requires-Dist: pytz>=2025.2
+Requires-Dist: click>=8.2.1
+Requires-Dist: pyyaml>=6.0.2
+
+# shulker
+
+## Setup
+
+The only requirement for getting started is [`uv`](https://docs.astral.sh/uv/), which will handle installing and running the correct python alongside handling all of the project dependencies.
+
+```bash
+uv install
+```
+
+## Building
+
+We use [beet](https://mcbeet.dev/) to manage building our packs for release.
+
+```bash
+uv run beet
+```
+
+## Push to Bloom
+
+First, you'll need to grab a bloom api key and your server id and set it to the following environment variables:
+- `BLOOM_API_KEY`
+- `BLOOM_SERVER_ID`
+
+Then,
+```bash
+uv run beet -p beet-upload.yaml
+```
