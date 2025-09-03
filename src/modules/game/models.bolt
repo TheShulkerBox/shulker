@@ -41,7 +41,6 @@ class Team:
 @dataclass
 class Map:
     _all_maps: ClassVar[list["Map"]] = []
-    _counter: ClassVar[count] = count()
 
     id: str
     teams: list[Team]
