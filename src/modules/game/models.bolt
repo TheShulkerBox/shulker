@@ -55,7 +55,7 @@ class Map:
         """Register the map in the global list of maps to be processed later."""
         
         self._all_maps.append(self)
-        self.hashed_id = hash(self.id) & 0x7FFFFFFF   # takes a 64-bit hash -> 2**31-1
+        self.hashed_id = hash(self.id) & int("0x7FFFFFFF", 16)   # takes a 64-bit hash -> 2**31-1
 
     @property
     def name(self) -> str:
