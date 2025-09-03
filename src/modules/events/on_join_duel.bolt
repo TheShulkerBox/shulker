@@ -1,0 +1,26 @@
+from game:models import Map
+
+# Runs when an attempt to join any duels map has been detected, context is on the joining player, at their position
+
+requested_arena = Scoreboard("join_duel", criteria="trigger")
+duels_storage = Data.storage("duels:main")
+
+# Check player count in selected duels map (selected by trigger command when requesting to join)
+# Reference duels occupancy data structure (dictionary?) for appropriate map
+
+append function sys:tick:
+    as @a[scores={requested_arena=1..}] function duels:attempt_join:
+
+function duels:attempt_join:
+    requested_map = Map.get(requested_arena["@s"])
+
+    # Compare whether duels lobby is full or not
+    if requested_map.state.player_count < requested_map.max_player_count:
+        # Succeed joining arena
+        execute function duels:succeed_join:
+            tellraw @s ['',{text:"Successfully joined the arena!",color:theme.success}]
+            requested_map.state.player_count += 1
+            # TODO Add players to teams, teleport to appropriate spawn rooms
+    # Fail to join arena (as a player, at least)
+    else:
+        tellraw @s ['',{text:"That arena is full!",color:theme.failure}]
