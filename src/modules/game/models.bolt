@@ -15,7 +15,7 @@ TEAM_COLORS = [
 GAME_META = Data.storage("game:meta")
 
 
-class MapTag(StrEnum):
+class MapTag(Enum):
     Competitive = "competitive"
     All = "all"
     CTF = "ctf"
@@ -80,7 +80,7 @@ class Map:
         return f"game:map/{self.id}/effects"
 
     @classmethod
-    def state(self, map_id: str | DataSource | ScoreSource) -> DataSource:
+    def get(self, map_id: str | DataSource | ScoreSource) -> DataSource:
         """Returns a storage location for storing map-specific state for a map with the given ID.
 
         `map_id` can be:
