@@ -1,0 +1,15 @@
+README.md
+pyproject.toml
+src/lib/helpers.py
+src/lib/item.py
+src/lib/text.py
+src/plugins/commands.py
+src/plugins/custom_load.py
+src/plugins/fancy_macros.py
+src/plugins/upload.py
+src/shulker.egg-info/PKG-INFO
+src/shulker.egg-info/SOURCES.txt
+src/shulker.egg-info/dependency_links.txt
+src/shulker.egg-info/entry_points.txt
+src/shulker.egg-info/requires.txt
+src/shulker.egg-info/top_level.txt
