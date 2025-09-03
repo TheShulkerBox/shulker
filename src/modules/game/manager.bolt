@@ -1,4 +1,4 @@
-from ./manager import GAME_META
+from ./models import GAME_META
 
 from lib:storage_helpers import loop
 

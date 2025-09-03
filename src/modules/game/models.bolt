@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from enum import StrEnum
+from itertools import count
 from typing import Iterator, Literal, ClassVar
 
 from src.lib.helpers import branch
@@ -41,6 +42,7 @@ class Team:
 @dataclass
 class Map:
     _all_maps: ClassVar[list["Map"]] = []
+    _counter: ClassVar[count] = count()
 
     id: str
     teams: list[Team]
@@ -55,6 +57,7 @@ class Map:
         """Register the map in the global list of maps to be processed later."""
         
         self._all_maps.append(self)
+        self.numeric_id = next(self._counter)
 
     @property
     def name(self) -> str:
@@ -78,6 +81,41 @@ class Map:
 
         return f"game:map/{self.id}/effects"
 
+    @classmethod
+    def state(self, map_id: str | DataSource | ScoreSource) -> DataSource:
+        """Returns a storage location for storing map-specific state for a map with the given ID.
+
+        `map_id` can be:
+        - a string (compile-time)
+        - a DataSource (like a storage location) (runtime)
+        - a ScoreSource (an objective + selector/name) (runtime)
+        
+        ```py
+        map_state = Map.state("market")
+        # or
+        map_state = Map.state(TEMP_STORAGE.special_map_id)
+        # or
+        map_state = Map.state(TEMP["map_id"])
+
+        if map_state.is_active:
+            say "do a barrel roll!"
+        ```
+        """
+        
+        if type(map_id) is ScoreSource:
+            # If our input is a score, we check against the "numeric_id" field
+            TEMP_STORAGE.macro = {id: map_id}
+            with var TEMP_STORAGE.macro:
+                $data modify storage shulker:temp map set from game:meta map[{numeric_id: $(id)}]
+
+        elif:
+            # Otherwise, we check against the "id" field
+            TEMP_STORAGE.macro = {id: map_id}
+            with var TEMP_STORAGE.macro:
+                $data modify storage shulker:temp map set from game:meta map[{id: $(id)}]
+            
+            return TEMP_STORAGE.map
+
     @branch
     def is_selected(self) -> Iterator[bool]:
         """Implements `if` statement behavior for checking if this map is the current map.
@@ -93,6 +131,8 @@ class Map:
     
 
     def as_data(self):
+        """Convert the map into a data representation that can be stored in storage (or used as dict)."""
+
         return dict(self.__dict__)
 
 
@@ -105,3 +145,6 @@ class Map:
             for map in self._all_maps:
                 for map_tag in map.tags:
                     GAME_META.map_pools[map_tag] = map.as_data()
+
+
+
