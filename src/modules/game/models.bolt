@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from enum import StrEnum
-from itertools import count
 from typing import Iterator, Literal, ClassVar
 
 from src.lib.helpers import branch
@@ -57,7 +56,7 @@ class Map:
         """Register the map in the global list of maps to be processed later."""
         
         self._all_maps.append(self)
-        self.numeric_id = next(self._counter)
+        self.hashed_id = hash(self.id) & 0x7FFFFFFF   # takes a 64-bit hash -> 2**31-1
 
     @property
     def name(self) -> str:
@@ -103,16 +102,16 @@ class Map:
         """
         
         if type(map_id) is ScoreSource:
-            # If our input is a score, we check against the "numeric_id" field
+            # If our input is a score, we check against the "hashed_id" field
             TEMP_STORAGE.macro = {id: map_id}
             with var TEMP_STORAGE.macro:
-                $data modify storage shulker:temp map set from game:meta map[{numeric_id: $(id)}]
+                $data modify storage shulker:temp map_state set from game:meta map_state[{hashed_id: $(id)}]
 
         elif:
             # Otherwise, we check against the "id" field
             TEMP_STORAGE.macro = {id: map_id}
             with var TEMP_STORAGE.macro:
-                $data modify storage shulker:temp map set from game:meta map[{id: $(id)}]
+                $data modify storage shulker:temp map_state set from game:meta map_state[{id: $(id)}]
             
             return TEMP_STORAGE.map
 
