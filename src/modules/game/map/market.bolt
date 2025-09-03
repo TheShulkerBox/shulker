@@ -1,0 +1,20 @@
+from ../models import Map, Team, MapTag
+
+market = Map(
+    id="market",
+    tags=[
+        MapTag.Competitive,
+        MapTag.CTF,
+        MapTag.All,
+    ],
+    teams=[
+        Team(id="smalls", color="red", spawn=(0, 0, 0, 0, 0)),
+        Team(id="bigs", color="blue", spawn=(0, 0, 0, 0, 0)),
+    ],
+    location=(0, 65, 0),
+    dimension="overworld"
+)
+
+
+function market.effects:
+    particle minecraft:heart 0 65 0 0 0 0 0 1 force @a

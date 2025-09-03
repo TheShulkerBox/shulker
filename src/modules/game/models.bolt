@@ -1,0 +1,107 @@
+from dataclasses import dataclass
+from enum import StrEnum
+from typing import Iterator, Literal, ClassVar
+
+from src.lib.helpers import branch
+
+TEAM_COLORS = [
+    "dark_aqua",  "dark_blue",    "red",    "black",
+    "dark_red",   "dark_purple",  "gold",   "gray",
+    "dark_green", "light_purple", "yellow", "white",
+    "dark_gray",  "blue",         "green",  "aqua",
+]
+
+#: stores meta data about games and maps
+GAME_META = Data.storage("game:meta")
+
+
+class MapTag(StrEnum):
+    Competitive = "competitive"
+    All = "all"
+    CTF = "ctf"
+    FTM = "ftm"
+    Deathmatch = "deathmatch"
+
+
+@dataclass
+class Team:
+    id: str
+    color: str
+    spawn: tuple[int, int, int, int, int]  # coords, yaw, pitch
+    
+    def __post_init__(self):
+        if self.color not in TEAM_COLORS:
+            raise ValueError(f"`color` needs to be one of: {TEAM_COLORS}")  # for now :(
+
+    @property
+    def name(self) -> str:
+        return self.id.replace("_", " ").title()
+
+
+@dataclass
+class Map:
+    _all_maps: ClassVar[list["Map"]] = []
+
+    id: str
+    teams: list[Team]
+    max_player_count: int
+    tags: list[MapTag]
+
+    # eventually, all maps will be 0 0 0 in their own dimension
+    location: tuple[int, int, int]
+    dimension: str = "overworld"
+
+    def __post_init__(self):
+        """Register the map in the global list of maps to be processed later."""
+        
+        self._all_maps.append(self)
+
+    @property
+    def name(self) -> str:
+        return self.id.replace("_", " ").title()
+
+    @property
+    def init(self) -> str:
+        """Called when the map is initialized."""
+
+        return f"game:map/{self.id}/init"
+    
+    @property
+    def tick(self) -> str:
+        """Called every tick for the map while active."""
+
+        return f"game:map/{self.id}/tick"
+    
+    @property
+    def effects(self) -> str:
+        """Called every second for the map (even when not active)."""
+
+        return f"game:map/{self.id}/effects"
+
+    @branch
+    def is_selected(self) -> Iterator[bool]:
+        """Implements `if` statement behavior for checking if this map is the current map.
+
+        ```
+        if MyMap.is_selected():
+            say "this only occurs if my map is selected"
+        ```
+        """
+
+        if GAME_META.current.map.id == self.id:
+            yield True
+    
+
+    def as_data(self):
+        return dict(self.__dict__)
+
+
+    @defer
+    def _load_maps(self):
+        """Load all maps into the game meta storage."""
+
+        append function sys:load:
+            GAME_META.map_pools = {}
+            for map in self._all_maps:
+                for map_tag in map.tags:
+                    GAME_META.map_pools[map_tag] = map.as_data()

@@ -40,6 +40,9 @@ def clock(speed: str):
     return path
 
 
+clock("1t")  # cache it immediately so it's available everywhere
+
+
 append function_tag minecraft:load {
     "values": ["sys:load"]
 }
