@@ -86,9 +86,8 @@ class BranchProtocol(Protocol):
         ...
 
 def branch(func: Callable[..., Iterator[Literal[True]]]) -> BranchProtocol:
-    """Decorator to convert a method into a class with a `__branch__` method.
-
-    This is used to allow methods to be used in `if` statements in Bolt scripts.
+    """Decorator to convert a method into a class with a `__branch__` method. This is used to
+     allow methods to be used in `if` statements in Bolt scripts.
 
     ```python
     from src.lib.helpers import branch
