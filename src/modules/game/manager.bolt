@@ -6,21 +6,22 @@ from lib:storage_helpers import loop
 append function sys:load:
     if not GAME_META.map_queue:
         GAME_META.map_queue = []
+        function game:map_queue/shuffle
 
 
 function game:map/queue/next:
     # if the queue is empty, shuffle it
     if not GAME_META.map_queue:
-        return run function game:map_queue/shuffle
+        function game:map_queue/shuffle
 
     # otherwise, set the current map to the next in the queue and remove it from the queue
-    GAME_META.current.map = GAME_META.map_queue[-1]
+    GAME_META.current.map = Map.get(GAME_META.map_queue[-1])
     GAME_META.map_queue[-1].remove()
 
 
 function game:map/queue/shuffle:
     # copy all maps into temp storage
-    TEMP_STORAGE.maps = GAME_META.all_maps
+    TEMP_STORAGE.maps = GAME_META.all_maps[:].id
     while loop(TEMP_STORAGE.maps):
         # for each iteration, pick a random index from the remaining maps (0..len-1)
         MACRO.len = len(TEMP_STORAGE.maps[:]) - 1  # 0..$(len) is inclusive..inclusive in minecraft
@@ -37,7 +38,8 @@ function game:map/queue/shuffle:
 def generate_custom_queuing():
     for map in Map._all_maps:
         function f"game:map/queue/enqueue_{map.id}":
-            GAME_META.map_queue.append(map.as_data())
+            GAME_META.map_queue.append(map.id)
+
 
 function game:start:
     ...

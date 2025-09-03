@@ -21,3 +21,5 @@ SELF = Data.entity("@s")
 
 TEMP_STORAGE = Data.storage("shulker:temp")
 MACRO = TEMP_STORAGE.macro
+
+MAX_INT = 2 ** 31 - 1

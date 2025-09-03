@@ -9,7 +9,7 @@ duels_storage = Data.storage("duels:main")
 # Reference duels occupancy data structure (dictionary?) for appropriate map
 
 append function sys:tick:
-    as @a[scores={requested_arena=1..}] function duels:attempt_join:
+    as @a[scores={requested_arena=1..}] function duels:attempt_join
 
 function duels:attempt_join:
     requested_map = Map.get(requested_arena["@s"])
@@ -18,9 +18,9 @@ function duels:attempt_join:
     if requested_map.state.player_count < requested_map.max_player_count:
         # Succeed joining arena
         execute function duels:succeed_join:
-            tellraw @s ['',{text:"Successfully joined the arena!",color:theme.success}]
+            tellraw @s {text: "Successfully joined the arena!", color: theme.success}
             requested_map.state.player_count += 1
             # TODO Add players to teams, teleport to appropriate spawn rooms
     # Fail to join arena (as a player, at least)
     else:
-        tellraw @s ['',{text:"That arena is full!",color:theme.failure}]
+        tellraw @s {text: "That arena is full!", color: theme.failure}

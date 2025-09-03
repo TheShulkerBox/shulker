@@ -1,5 +1,6 @@
-from dataclasses import dataclass
-from enum import StrEnum
+from dataclasses import dataclass, asdict
+from enum import Enum, auto
+import json
 from typing import Iterator, Literal, ClassVar
 
 from src.lib.helpers import branch
@@ -15,7 +16,12 @@ TEAM_COLORS = [
 GAME_META = Data.storage("game:meta")
 
 
-class MapTag(Enum):
+class MapTag:
+    """Organizational tags for maps. Used for map queuing and map pools.
+    
+    *Can't use enum bc of bolt limitations*
+    """
+
     Competitive = "competitive"
     All = "all"
     CTF = "ctf"
@@ -44,12 +50,13 @@ class Map:
 
     id: str
     teams: list[Team]
-    max_player_count: int
-    tags: list[MapTag]
+    tags: list[str]
 
     # eventually, all maps will be 0 0 0 in their own dimension
     location: tuple[int, int, int]
     dimension: str = "overworld"
+
+    max_player_count: int = MAX_INT
 
     def __post_init__(self):
         """Register the map in the global list of maps to be processed later."""
@@ -98,8 +105,23 @@ class Map:
         if map.state.number_of_barrels > 100:
             say "do a barrel roll!"
         ```
+
+        Data-layout for output:
+        ```json
+        {
+            id: "market",
+            hashed_id: 123456789,
+            teams: [...],
+            max_player_count: 16,
+            tags: [...],
+            location: [0, 65, 0],
+            dimension: "overworld",
+
+            state: { ... }  # custom per-map state,
+        }
+        ```
         """
-        
+
         if type(map_id) is ScoreSource:
             # If our input is a score, we check against the "hashed_id" field
             TEMP_STORAGE.macro = {id: map_id}
@@ -111,6 +133,7 @@ class Map:
             TEMP_STORAGE.macro = {id: map_id}
             with var TEMP_STORAGE.macro:
                 $data modify storage shulker:temp map_state set from game:meta maps[{id: $(id)}]
+
         else:
             raise TypeError(f"map_id ({map_id}) must be a str, DataSource, or ScoreSource")
 
@@ -133,25 +156,27 @@ class Map:
     def as_data(self):
         """Convert the map into a data representation that can be stored in storage (or used as dict)."""
 
-        return dict(self.__dict__)
+        return json.dumps(asdict(self))
 
 
-    @defer
-    def _load_maps(self):
-        """Load all maps into the game meta storage."""
+@defer
+def _load_maps():
+    """Load all maps into the game meta storage."""
 
-        append function sys:load:
+    append function sys:load:
+        execute function game:map/init:
             GAME_META.maps = []
-            GAME_META.map_pools = {
-                "all": [],
-                "competitive": [],
-                "ctf": [],
-                "ftm": [],
-                "deathmatch": [],
-            }
 
-            for map in self._all_maps:
+            # pre load all map pool keys
+            GAME_META.map_pools = {}
+            for tag in MapTag.__dict__:
+                if not tag.startswith("_"):
+                    GAME_META.map_pools[tag] = []
+
+            # append our map to meta data
+            for map in Map._all_maps:
                 GAME_META.maps.append(map.as_data())
                 
+                # add map ids to their respective pools
                 for map_tag in map.tags:
                     GAME_META.map_pools[map_tag].append(map.id)

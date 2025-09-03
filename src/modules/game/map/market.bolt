@@ -1,6 +1,6 @@
 from ../models import Map, Team, MapTag
 
-market = Map(
+map = Map(
     id="market",
     tags=[
         MapTag.Competitive,
@@ -16,5 +16,5 @@ market = Map(
 )
 
 
-function market.effects:
+function map.effects:
     particle minecraft:heart 0 65 0 0 0 0 0 1 force @a

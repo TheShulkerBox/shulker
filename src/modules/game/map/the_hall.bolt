@@ -1,6 +1,6 @@
 from ../models import Map, Team, MapTag
 
-market = Map(
+map = Map(
     id="the_hall",
     tags=[
         MapTag.Deathmatch,
@@ -12,5 +12,5 @@ market = Map(
     ],
     location=(1000, 63, 4000),
     dimension="overworld",
-    max_player_count=2
+    max_player_count=2,
 )
