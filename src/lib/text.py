@@ -17,7 +17,7 @@ class theme:
     failure = "red"
 
 
-def boxed_text(text: TextComponent, text_color: str, box_color: str):
+def boxed_text(text: TextComponent, text_color: str = theme.primary, box_color: str = theme.secondary):
     return minify(
         [
             {"text": "[ ", "color": box_color},

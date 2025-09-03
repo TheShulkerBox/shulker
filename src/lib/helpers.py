@@ -1,6 +1,8 @@
+from collections.abc import Callable, Iterator
 import copy
+from contextlib import contextmanager
 import json
-from typing import Any
+from typing import Any, Literal, Protocol
 
 
 def title_case_to_snake_case(title_case_str: str):
@@ -77,3 +79,27 @@ class Singleton(type):
         return super().__new__(
             cls, name, bases, namespace
         )()
+
+
+class BranchProtocol(Protocol):
+    def __branch__(self) -> Iterator[Literal[True]]:
+        ...
+
+def branch(func: Callable[..., Iterator[Literal[True]]]) -> BranchProtocol:
+    """Decorator to convert a method into a class with a `__branch__` method. This is used to
+     allow methods to be used in `if` statements in Bolt scripts.
+
+    ```python
+    from src.lib.helpers import branch
+
+    class MyClass:
+        @branch
+        def my_method(self) -> Iterator[Literal[True]]:
+            yield True
+    ```
+    """
+
+    class BranchWrapper:
+        __branch__ = contextmanager(func)
+
+    return BranchWrapper()

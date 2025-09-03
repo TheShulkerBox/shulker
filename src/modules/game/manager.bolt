@@ -3,6 +3,10 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Iterator, Literal, ClassVar
 
+from src.lib.helpers import branch
+
+from lib:storage_helpers import loop
+
 TEAM_COLORS = [
     "dark_aqua",  "dark_blue",    "red",    "black",
     "dark_red",   "dark_purple",  "gold",   "gray",
@@ -22,7 +26,7 @@ class Team:
     
     def __post_init__(self):
         if self.color not in TEAM_COLORS:
-            raise ValueError(f"`color` needs to be one of: {TEAM_COLORS}")
+            raise ValueError(f"`color` needs to be one of: {TEAM_COLORS}")  # for now :(
 
     @property
     def name(self) -> str:
@@ -57,19 +61,55 @@ class Map:
     
     @property
     def tick(self) -> str:
-        """Called every tick for the map."""
+        """Called every tick for the map while active."""
 
         return f"game:map/{self.id}/tick"
+    
+    @property
+    def effects(self) -> str:
+        """Called every second for the map (even when not active)."""
 
-    @contextmanager
-    def bool(self) -> Iterator[Literal[True]]:
-        """Implements `if` statement behavior
+        return f"game:map/{self.id}/effects"
 
-        ```bolt
-        if MyMap:
+    @branch
+    def is_selected(self) -> Iterator[bool]:
+        """Implements `if` statement behavior for checking if this map is the current map.
+
+        ```
+        if MyMap.is_selected():
             say "this only occurs if my map is selected"
         ```
         """
 
         if GAME_META.current.map.id == self.id:
             yield True
+
+
+append function sys:load:
+    if not GAME_META.map_queue:
+        GAME_META.map_queue = []
+
+
+function game:map/queue/next:
+    # if the queue is empty, shuffle it
+    if not GAME_META.map_queue:
+        return run function game:map_queue/shuffle
+
+    # otherwise, set the current map to the next in the queue and remove it from the queue
+    GAME_META.current.map = GAME_META.map_queue[-1]
+    GAME_META.map_queue[-1].remove()
+
+
+function game:map/queue/shuffle:
+    # copy all maps into temp storage
+    TEMP_STORAGE.maps = GAME_META.all_maps
+    while loop(TEMP_STORAGE.maps):
+        # for each iteration, pick a random index from the remaining maps (0..len-1)
+        MACRO.len = len(TEMP_STORAGE.maps[:]) - 1  # 0..$(len) is inclusive..inclusive in minecraft
+        with var MACRO:
+            $execute store result storage shulker:macro index int 1 run random value 0..$(len)
+        
+        # append that map to the queue and remove it from temp storage
+        with var MACRO:
+            $data modify storage game:meta map_queue append from storage shulker:temp maps[{$(index)}]
+            $data remove storage shulker:temp maps[$(index)]

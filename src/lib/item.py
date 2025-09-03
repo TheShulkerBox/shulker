@@ -1,6 +1,8 @@
 import copy
 from inspect import signature, Signature
 from typing import Any, ClassVar
+from itertools import count
+
 from src.lib.helpers import title_case_to_snake_case, nbt_dump, deep_merge_dicts
 from src.lib.text import theme
 
@@ -46,6 +48,8 @@ class ItemMeta(type):
     """
 
     registered_items: ClassVar[dict[str, "ItemMeta"]] = {}
+    counter: ClassVar[count] = count()
+
     _namespace: dict[str, Any]
 
     def __new__(cls, name: str, bases: list[type], namespace: dict[str, Any]):
@@ -139,7 +143,7 @@ class ItemMeta(type):
     def item_string(self):
         components = ",".join(f"{k}={nbt_dump(v)}" for k, v in self.components.items())
         if not self.has_id:
-            raise ItemError(f"`{self.name}` item must define an `id`!")
+            raise ItemError(f"`{self.name}` item must define an `id` if generating a give or other command!")
         return f"{self.id}[{components}]"
 
     def conditional_string(self):
@@ -153,8 +157,13 @@ class ItemMeta(type):
         fields = ", ".join(f"{k}={v}" for k, v in self.__dict__.items() if not k.startswith("_"))
         return f"{self.name}[{fields}]"
 
-    def __call__(*_, **__):
-        raise ItemError("`item` classes cannot be instantiated, see docstring.")
+    def __call__(self, /, **kwargs):
+        """Returns an anonymous item that inherits from this item with changes from kwargs"""
+
+        if not kwargs:
+            raise ItemError(f"Cannot instantiate `{self.name}` without changes!")
+
+        return type(f"{self.name}_generated_{next(self.counter)}", (self,), kwargs)
 
 
 class base_item(metaclass=ItemMeta):

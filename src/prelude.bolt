@@ -17,7 +17,7 @@ from typing import Any
 TEMP = Scoreboard("temp")
 CONST = Scoreboard("const")
 GLOBALS = Scoreboard("globals")
-MACRO = Data.storage("macro")
+MACRO = Data.storage("shulker:macro")
 SELF = Data.entity("@s")
 
 TEMP_STORAGE = Data.storage("shulker:temp")

@@ -1,0 +1,7 @@
+append function sys:load:
+    team add lobby "Lobby"
+    team modify lobby color gray
+
+
+append function sys:tick:
+    team join lobby @a[team=]

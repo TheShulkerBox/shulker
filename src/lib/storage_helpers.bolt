@@ -1,0 +1,69 @@
+from collections.abc import Iterator
+from contextlib import contextmanager
+from dataclasses import dataclass
+
+from bolt_expressions import Source
+
+
+def convert_data_source_into_name(data: DataSource) -> str:
+    """Convert a DataSource into a valid name for function/variable names"""
+    
+    return str(data).replace(" ", "_").replace(".", "_").replace(":", "_")
+
+@dataclass
+class loop:
+    data: DataSource
+    name: str = ""
+    reversed: bool = False
+    with_index: bool = False
+
+    @dataclass
+    class WhileCondition:
+        condition: Source
+
+        def __bool__(self):
+            if self.condition:
+                return False
+
+    def __post_init__(self):
+        self.name = self.name or convert_data_source_into_name(self.data)
+
+    def __iter__(self) -> Iterator[DataSource | tuple[int, DataSource]]:
+        """Iterate through all elements in a list and yield the element in temp storage
+
+        ```bolt
+        for item in loop(some_list):
+            if item.value > 1000:
+                say big number alert!
+        ```
+        """
+
+        store result score _loop temp if data var self.data[:]
+        execute function ~/loop/{self.name}:
+            TEMP["_loop"] -= 1
+            MACRO["index"] = TEMP["_loop"] * -1
+            with var MACRO:
+                $data modify storage shulker:temp item set from storage shulker:temp data[{$(index)}]
+
+            if self.with_index:
+                yield (TEMP["_loop"], TEMP_STORAGE.item)
+            else:
+                yield TEMP_STORAGE.item
+            
+            if TEMP["_loop"] > 0:
+                function ~/
+    
+    @contextmanager
+    def __loop__(self):
+        """Iterate through all elements in a list while a condition is true.
+
+        ```bolt
+        while loop(some_list):
+            ...
+        ```
+        
+        ⚠️ WARNING: This can create infinite loops if the condition never becomes false.
+        """
+
+        execute function ~/loop/while_{self.name}:
+            yield self.WhileCondition(self.data)
