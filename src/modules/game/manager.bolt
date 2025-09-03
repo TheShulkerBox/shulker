@@ -1,4 +1,4 @@
-from ./models import GAME_META
+from ./models import GAME_META, Map
 
 from lib:storage_helpers import loop
 
@@ -32,6 +32,12 @@ function game:map/queue/shuffle:
             $data modify storage game:meta map_queue append from storage shulker:temp maps[{$(index)}]
             $data remove storage shulker:temp maps[$(index)]
 
+
+@defer
+def generate_custom_queuing():
+    for map in Map._all_maps:
+        function f"game:map/queue/enqueue_{map.id}":
+            GAME_META.map_queue.append(map.as_data())
 
 function game:start:
     ...
