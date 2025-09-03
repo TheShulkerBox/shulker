@@ -23,3 +23,6 @@ function lime:vomit:
     attribute @s minecraft:jump_strength base reset
     attribute @s minecraft:entity_interaction_range base reset
     attribute @s minecraft:step_height base reset
+
+function lime:compensate:
+    attribute @s minecraft:scale base set 1.01
