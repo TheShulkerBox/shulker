@@ -3,7 +3,7 @@ from enum import Enum, auto
 import json
 from typing import Iterator, Literal, ClassVar
 
-from src.lib.helpers import branch
+from lib.helpers import branch
 
 TEAM_COLORS = [
     "dark_aqua",  "dark_blue",    "red",    "black",

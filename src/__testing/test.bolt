@@ -2,6 +2,7 @@
 Use this file to fuck around :D
 """
 
+from item:base import base_item, armor_item, weapon_item
 from lib:xp import XP
 
 

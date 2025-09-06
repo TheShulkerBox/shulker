@@ -12,7 +12,13 @@ from lib:text import theme, boxed_text
 
 from functools import cache
 
-from bolt_expressions import Expression
+from bolt_expressions import Scoreboard, Expression
+
+
+SERVER_GLOBALS = Scoreboard("server.globals")
+
+server_load = ~/load
+server_tick = ~/tick
 
 
 @cache
@@ -27,11 +33,11 @@ def clock(speed: str):
     """
 
     if (speed == "1t") or (speed == "1"):
-        path = "sys:tick"
+        path = server_tick
     else:
-        path = f"sys:tick/{speed}"
+        path = f"{server_tick}/{speed}"
     
-    append function sys:load:
+    append function server_load:
         schedule function path speed replace
 
     append function path:
@@ -40,14 +46,14 @@ def clock(speed: str):
     return path
 
 
-clock("1t")  # cache it immediately so it's available everywhere
+clock("1t")  # default clock at 1t, cached
 
 
-append function_tag minecraft:load {
-    "values": ["sys:load"]
+prepend function_tag minecraft:load {
+    "values": [server_load]
 }
 
-append function sys:load:
+prepend function server_load:
     forceload add 0 0
     tellraw @a[tag=staff] boxed_text(
         {
@@ -68,5 +74,5 @@ def tick_players_last():
     last for those who don't care about ordering (most things).
     """
 
-    append function sys:tick:
-        as @a at @s function sys:tick/player
+    append function server_load:
+        as @a at @s function f"{server_load}/player"

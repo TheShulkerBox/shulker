@@ -1,9 +1,0 @@
-"""
-Event called during the initialization of a player entering the database
-"""
-
-from lib:utils import get_name
-
-
-function event:on_playerdb_init:
-    TEMP_STORAGE.player.name = get_name()

@@ -1,5 +1,3 @@
-# bolt
-
 """
 General utilities relating to text components. Includes the following:
 - Color constants

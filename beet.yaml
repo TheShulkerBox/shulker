@@ -4,11 +4,11 @@ require:
   - bolt_expressions
   - bolt_expressions.contrib.commands
   - bolt
-  # - src.plugins.fancy_macros
+  # - plugins.fancy_macros
   - mecha.contrib.nesting
   - bolt.contrib.defer
   # - mecha.contrib.bake_macros
-  - src.plugins.custom_load
+  - plugins.custom_load
 
 pipeline:
   - mecha
@@ -28,11 +28,11 @@ data_pack:
 output: dist
 
 meta:
-  generate_namespace: "sys"
+  generate_namespace: "server"
 
   bolt:
     entrypoint: ["*"]
-    prelude: ["lib:prelude"]
+    prelude: ["server:prelude"]
 
   bolt_expressions:
     temp_objective: "temp"

@@ -2,7 +2,8 @@
 """
 
 from minecraft_text_components import TextComponent, style
-from src.lib.helpers import deep_merge_dicts
+
+from lib.helpers import deep_merge_dicts
 
 def multi_action_template(
     title: TextComponent,

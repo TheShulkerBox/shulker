@@ -1,7 +1,7 @@
 """
 """
 
-from lib:utils import get_name
+from lib:utils import get_player_name
 from lib:storage_helpers import loop
 
 UUID1 = Scoreboard("uuid1")

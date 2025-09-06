@@ -4,10 +4,15 @@ Keeps track of players in the previous and current tick. Pings staff when it cha
 TODO: revisit and handle player joining and leaving on the same tick
 """
 
-player_count = GLOBALS["player_count"]
-last_player_count = GLOBALS["last_player_count"]
+# Ensure that join event code is loaded first
+import ./on_join as _
+import ./on_first_join as _
+from ../core import SERVER_GLOBALS
 
-append function sys:tick:
+player_count = SERVER_GLOBALS["player_count"]
+last_player_count = SERVER_GLOBALS["last_player_count"]
+
+append function server_tick:
     store result score var player_count if entity @a
     if player_count < last_player_count:
         as @a[tag=staff] at @s playsound minecraft:block.note_block.bass master @s ~ ~ ~ 0.5 0.42

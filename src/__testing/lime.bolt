@@ -1,3 +1,5 @@
+from item:base import base_item, armor_item, weapon_item
+
 class mace(weapon_item):
     id = "iron_shovel"
     item_model = "mace"

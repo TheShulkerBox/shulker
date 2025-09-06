@@ -1,8 +1,0 @@
-Scoreboard("food", criteria="food")
-
-append function clock("10s"):
-    effect give @a[team=lobby,scores={food=..19}] saturation infinite 1 true
-    effect give @a[team=lobby] regeneration infinite 6 true
-    effect give @a[team=lobby] resistance infinite 3 true
-    effect give @a[team=lobby] speed infinite 1 true
-    effect give @a[team=lobby] weakness infinite 0 true

@@ -1,4 +1,4 @@
-from src.lib.item import ItemMeta
+from ./base import ItemMeta
 
 @defer
 def generate_give_commands():

@@ -1,0 +1,24 @@
+# class team_flag(armor_item):
+#     """General CTF flag item"""
+
+#     def flag_component(team: int, name: str):
+#         return {
+#             custom_data: {ctf: {"team": team, "name": name}},
+#             item_name: {text: f"{name}' Flag"},
+#             lore: [
+#                 {
+#                     text: "Bring this flag back to {name}'s base to win!",
+#                     color: theme.success,
+#                 }
+#             ]
+#         }
+
+
+# class team_wool(armor_item):
+#     """General team head wool"""
+
+#     def team_component(color: str, name: str):
+#         return {
+#             id: f"{color}_wool",
+#             item_name: {text: f"{name} wool"},
+#         }

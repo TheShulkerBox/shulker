@@ -3,8 +3,8 @@ from inspect import signature, Signature
 from typing import Any, ClassVar
 from itertools import count
 
-from src.lib.helpers import title_case_to_snake_case, nbt_dump, deep_merge_dicts
-from src.lib.text import theme
+from lib.helpers import title_case_to_snake_case, nbt_dump, deep_merge_dicts
+from lib.text import theme
 
 
 class ItemError(Exception):

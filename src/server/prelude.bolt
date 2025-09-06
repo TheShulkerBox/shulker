@@ -5,18 +5,18 @@ Put things that should be available at all times.
 Note: It's really common to have conflicts so be careful what is all defined here!
 """
 
-from bolt_expressions import Scoreboard, Data, ScoreSource, DataSource
-from src.lib.text import theme
-from src.lib.item import base_item, armor_item, weapon_item
-from src.lib.helpers import Singleton
-
-from sys:main import clock
-
 from typing import Any
+
+from bolt_expressions import Scoreboard, Data, ScoreSource, DataSource
+
+from lib.text import theme
+from lib.helpers import Singleton
+
+from ./core import clock, server_load, server_tick
+
 
 TEMP = Scoreboard("temp")
 CONST = Scoreboard("const")
-GLOBALS = Scoreboard("globals")
 SELF = Data.entity("@s")
 
 TEMP_STORAGE = Data.storage("shulker:temp")

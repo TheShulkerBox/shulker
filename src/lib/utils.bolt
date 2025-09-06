@@ -27,7 +27,7 @@ loot_table lib:player_head {
 }
 
 
-def get_name():
+def get_player_name():
     """Gets the player name by loot spawning a player head and returning the name"""
 
     loot spawn 0 0 0 loot lib:player_head
