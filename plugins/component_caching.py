@@ -1,3 +1,4 @@
+import json
 from pydantic import BaseModel, Field, RootModel, model_validator
 from beet import Context, JsonFile
 from typing import Any, Iterable, Literal, Self, Union
@@ -296,10 +297,10 @@ def resolve_schema_reference(path: str, mcdoc: dict[str, Any]) -> Schema:
     try:
         return Schema.model_validate(mcdoc[path])
     except Exception as err:
-        import json
-
         print(json.dumps(mcdoc[path]))
-        raise err
+        print(err)
+    
+    return Schema.model_construct(None)  # dummy schema, no validation
 
 
 def validate_data(
@@ -325,6 +326,7 @@ def validate_data(
         ExceptionGroup: If multiple validation errors occur (e.g., in UnionSchema or ListSchema).
         ValueError: For issues within the schema definition itself (e.g., multiple SpreadFields).
     """
+
     path = path if path is not None else []
 
     match schema.root:
