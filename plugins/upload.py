@@ -20,6 +20,7 @@ HEADERS = {
     "Authorization": "Bearer " + os.environ["BLOOM_API_KEY"],
 }
 
+
 def get_git_user() -> str:
     """Returns the git user name."""
     try:

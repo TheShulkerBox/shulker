@@ -3,6 +3,7 @@ import beet.toolchain.commands as commands
 from beet import Project
 import click
 
+
 @beet.command()
 @click.pass_context
 def deploy(ctx: click.Context):

@@ -7,6 +7,7 @@ General utilities relating to text components. Includes the following:
 
 from minecraft_text_components import TextComponent, style, minify
 
+
 class theme:
     primary = "#e7c8dd"
     secondary = "light_purple"
@@ -15,7 +16,11 @@ class theme:
     failure = "red"
 
 
-def boxed_text(text: TextComponent, text_color: str = theme.primary, box_color: str = theme.secondary):
+def boxed_text(
+    text: TextComponent,
+    text_color: str = theme.primary,
+    box_color: str = theme.secondary,
+):
     return minify(
         [
             {"text": "[ ", "color": box_color},

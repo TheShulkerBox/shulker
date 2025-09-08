@@ -76,18 +76,16 @@ def deep_merge_dicts(d1: dict[str, Any], d2: dict[str, Any]) -> dict[str, Any] |
 
 class Singleton(type):
     def __new__(cls, name: str, bases: tuple[type, ...], namespace: dict[str, Any]):
-        return super().__new__(
-            cls, name, bases, namespace
-        )()
+        return super().__new__(cls, name, bases, namespace)()
 
 
 class BranchProtocol(Protocol):
-    def __branch__(self) -> Iterator[Literal[True]]:
-        ...
+    def __branch__(self) -> Iterator[Literal[True]]: ...
+
 
 def branch(func: Callable[..., Iterator[Literal[True]]]) -> BranchProtocol:
     """Decorator to convert a method into a class with a `__branch__` method. This is used to
-     allow methods to be used in `if` statements in Bolt scripts.
+    allow methods to be used in `if` statements in Bolt scripts.
 
     ```python
     from src.lib.helpers import branch
@@ -103,3 +101,13 @@ def branch(func: Callable[..., Iterator[Literal[True]]]) -> BranchProtocol:
         __branch__ = contextmanager(func)
 
     return BranchWrapper()
+
+
+def id_to_number(id: str) -> int:
+    """Converts a string id to a numerical one using a hash function.
+
+    Since hash functions return 64-bit integers, we mask it to 31 bits to ensure it's positive
+    and fits within the range of a standard scoreboard.
+    """
+
+    return hash(id) & int("0x7FFFFFFF", 16)

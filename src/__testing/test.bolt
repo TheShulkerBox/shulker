@@ -10,13 +10,13 @@ class tacos(base_item):
     id = "minecraft:stone_sword"
     item_name = "taco sauce"
     lore = ["taco", "sauce"]
-    weapon = {damage: 20}
+    attack = {damage: 20}
 
 class op_sword(weapon_item):
     id = "minecraft:stone_sword"
     item_name = "taco sauce"
     lore = ["taco", "sauce"]
-    weapon = {damage: 20}
+    attack = {damage: 20}
 
 
 class op_helmet(armor_item):
@@ -50,7 +50,7 @@ function a:b:
             say hi
 
 
-print(weapon_item(id="minecraft:stone_sword", item_name="taco", weapon={damage: 20}))
+weapon_item(id="minecraft:stone_sword", item_name="taco", attack={damage: 20})
 
 from lib:storage_helpers import loop
 

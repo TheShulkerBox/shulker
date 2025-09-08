@@ -1,0 +1,41 @@
+from dataclasses import dataclass, field
+from typing import ClassVar
+
+from item:base import base_item
+from lib:helpers import id_to_number
+
+ARMOR_SLOTS = ["head", "chest", "legs", "feet"]
+
+@dataclass
+class Kit:
+    name: str
+    tagline: str
+    icon: base_item
+
+    armor: dict[str, base_item] = field(default_factory=dict)
+    hotbar: list[base_item] = field(default_factory=list)
+    offhand: base_item | None = None
+
+    _all_kits: ClassVar[list["Kit"]] = []
+
+    def __post_init__(self):
+        self._all_kits.append(self)
+
+    @property
+    def id(self) -> str:
+        return self.name.lower().replace(" ", "_")
+
+    @property
+    def numerical_id(self) -> int:
+        return id_to_number(self.id)
+
+    def apply_loadout(self):
+        for slot, armor in self.armor.items():
+            item replace entity @s f"armor.{slot}" with armor
+
+        for index, item in enumerate(self.hotbar):
+            if item is not None:
+                item replace entity @s f"hotbar.{index}" with item
+        
+        if self.offhand is not None:
+            item replace entity @s weapon.offhand with self.offhand

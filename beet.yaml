@@ -9,6 +9,7 @@ require:
   - bolt.contrib.defer
   # - mecha.contrib.bake_macros
   - plugins.custom_load
+  - plugins.component_caching
 
 pipeline:
   - mecha

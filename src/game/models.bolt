@@ -3,7 +3,7 @@ from enum import Enum, auto
 import json
 from typing import Iterator, Literal, ClassVar
 
-from lib.helpers import branch
+from lib.helpers import branch, id_to_number
 
 TEAM_COLORS = [
     "dark_aqua",  "dark_blue",    "red",    "black",
@@ -62,7 +62,7 @@ class Map:
         """Register the map in the global list of maps to be processed later."""
         
         self._all_maps.append(self)
-        self.hashed_id = hash(self.id) & int("0x7FFFFFFF", 16)   # takes a 64-bit hash -> 2**31-1
+        self.hashed_id = id_to_number(self.id)
 
     @property
     def name(self) -> str:

@@ -30,7 +30,6 @@ from nbtlib import Base, Serializer as NbtSerializer
 from tokenstream import InvalidSyntax, TokenStream, set_location
 
 
-
 @dataclass
 class MacroTag(Base):
     name: str = required_field()
@@ -106,7 +105,7 @@ def path_contains_macro(path: AstNbtPath):
                 component.index.evaluate()
             ):
                 return True
-            
+
             if isinstance(component.index, AstMacroArgument):
                 return True
 
