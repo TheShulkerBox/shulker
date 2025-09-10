@@ -1,0 +1,19 @@
+from item:base import base_item
+
+from kit:base import Kit
+
+Kit(
+    name="Cupid",
+    tagline="A untrusty soldier at the back of the battle",
+    icon="bow",
+
+    armor={
+        "chest": base_item(id="leather_chestplate", dyed_color="FFC0CB"),
+        "legs": base_item(id="leather_leggings", dyed_color="FFC0CB"),
+        "feet": base_item(id="leather_boots", dyed_color="FFC0CB"),
+    },
+    hotbar=[
+        base_item(id="wooden_sword", name="Dirk"),
+        base_item(id="bread", count=3),
+    ],
+)
