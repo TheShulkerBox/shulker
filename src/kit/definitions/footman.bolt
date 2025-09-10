@@ -17,7 +17,7 @@ Kit(
     hotbar=[
         base_item(id="iron_sword", name="Iron Broadsword"),
         net,
-        base_item(id="pumpkin_pie", Count=3),
+        base_item(id="pumpkin_pie", count=3),
         rations,
     ],
 )
