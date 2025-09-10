@@ -1,10 +1,16 @@
 from dataclasses import dataclass, field
-from typing import ClassVar
+from typing import ClassVar, NamedTuple
 
 from item:base import base_item
 from lib:helpers import id_to_number
 
 ARMOR_SLOTS = ["head", "chest", "legs", "feet"]
+
+class ItemWithCount(NamedTuple):
+    item: base_item
+    count: int = 1
+
+item_type = base_item | tuple[base_item, int]
 
 @dataclass
 class Kit:
@@ -12,14 +18,23 @@ class Kit:
     tagline: str
     icon: base_item
 
-    armor: dict[str, base_item] = field(default_factory=dict)
-    hotbar: list[base_item] = field(default_factory=list)
-    offhand: base_item | None = None
+    armor: dict[str, item_type] = field(default_factory=dict)
+    hotbar: list[item_type] = field(default_factory=list)
+    offhand: item_type | None = None
 
     _all_kits: ClassVar[list["Kit"]] = []
 
     def __post_init__(self):
         self._all_kits.append(self)
+
+        for key in self.armor:
+            self.armor[key] = ItemWithCount(self.armor[key])
+        
+        for index in range(len(self.hotbar)):
+            self.hotbar[index] = ItemWithCount(self.hotbar[index])
+        
+        if self.offhand is not None:
+            self.offhand = ItemWithCount(self.offhand)
 
     @property
     def id(self) -> str:
@@ -28,14 +43,26 @@ class Kit:
     @property
     def numerical_id(self) -> int:
         return id_to_number(self.id)
+    
+    @property
+    def loadout(self) -> str:
+        return f"kit:loadout/{self.id}"
 
     def apply_loadout(self):
         for slot, armor in self.armor.items():
-            item replace entity @s f"armor.{slot}" with armor
+            item replace entity @s f"armor.{slot}" with armor.item armor.count
 
-        for index, item in enumerate(self.hotbar):
-            if item is not None:
-                item replace entity @s f"hotbar.{index}" with item
+        for index, hotbar in enumerate(self.hotbar):
+            if hotbar.item is not None:
+                item replace entity @s f"hotbar.{index}" with hotbar.item hotbar.count
         
         if self.offhand is not None:
-            item replace entity @s weapon.offhand with self.offhand
+            offhand, count = self.offhand
+            item replace entity @s weapon.offhand with offhand count
+
+
+@defer
+def generate_kits():
+    for kit in Kit._all_kits:
+        function kit.loadout:
+            kit.apply_loadout()

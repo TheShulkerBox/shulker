@@ -1,6 +1,8 @@
 """
 """
 
+from functools import cache
+
 from lib:utils import get_player_name
 from lib:storage_helpers import loop
 
@@ -59,6 +61,7 @@ class PlayerDB(metaclass=Singleton):
         with var MACRO:
             $data modify storage playerdb:main players[{uuid1: $(uuid1), uuid2: $(uuid2), uuid3: $(uuid3), uuid4: $(uuid4)}].data set from storage shulker:temp data
     
+    @cache
     def exists_self(self) -> str:
         """Check if the player exists in the database"""
         
