@@ -5,10 +5,12 @@ from itertools import count
 
 from beet import Context
 import rich
-import rich.pretty
+from rich.pretty import Pretty
+from rich.panel import Panel
+from rich.console import Group
 from lib.helpers import title_case_to_snake_case, nbt_dump, deep_merge_dicts
 
-from plugins.component_caching import SchemaFile, validate_data
+from plugins.component_caching import SchemaFile, ValidationError, validate_data
 
 
 class ItemError(Exception):
@@ -76,10 +78,16 @@ class ItemMeta(type):
 
     @classmethod
     def validate_component(cls, component_name: str, component: dict[str, Any]):
+        if "custom_data" in component_name or "count" in component_name:
+            return
+
         schemas: SchemaFile = cls.ctx.meta["item_component_schemas"]
         if (schema := schemas.get(component_name)) is not None:
             if "custom_data" not in component_name:
                 validate_data(component, schema, cls.ctx.meta["mcdoc"]["mcdoc"])
+                return
+        
+        raise ValidationError(f"Component [bold green]'{component_name}'[/bold green] is not a vanilla component!")
 
     @property
     def components(self):
@@ -153,20 +161,30 @@ class ItemMeta(type):
             if component in output_components:
                 del output_components[component]
         
-        errors: list[tuple[ExceptionGroup, str, dict[str, Any]]] = []
+        errors: list[tuple[ExceptionGroup | ValidationError, str, dict[str, Any]]] = []
         for name, component in output_components.items():
             try:
                 self.validate_component(name, component)
             except ExceptionGroup as e:
                 errors.append((e, name, component))
+            except ValidationError as e:
+                errors.append((e, name, component))
         
         if errors:
-            rich.print(f"[red]Item [bold green]{self.name!r}[/bold green] [italic grey50](from {self.__module__})[/italic grey50] failed component validation.")
-            rich.pretty.pprint(output_components)
+            messages = []
             for error, name, component in errors:
-                rich.print(f"[red]Component [bold green]'{name}'[/bold green] failed validation.")
-                for suberror in error.exceptions:
-                    rich.print("[bold red]|_", suberror.args[0])
+                messages.append("[bold grey50]Errors:")
+                match error:
+                    case ExceptionGroup(exceptions=exceptions):
+                        messages.append(f"[bold red]|_[/bold red] Component [bold green]'{name}'[/bold green] failed validation.")
+                        for suberror in exceptions:
+                            messages.append(f"  [bold red]|_[/bold red] {suberror.args[0]}")
+                    case ValidationError() as err:
+                        messages.append(f"[bold red]|_[/bold red] {err.args[0]}")
+                messages.append("")
+                messages.append("[bold grey50]Resolved components:")
+                messages.append(Pretty(output_components))
+            rich.print(Panel(Group(*messages), title=f"[red]Item [bold green]{self.name!r}[/bold green] [italic grey50](from {self.__module__})[/italic grey50] failed component validation."))
 
         return output_components
 
@@ -205,8 +223,15 @@ class ItemMeta(type):
         if not kwargs:
             raise ItemError(f"Cannot instantiate `{self.name}` without changes!")
         
-        if count := kwargs.get("count"):
-            kwargs.pop("count")
-            return type(f"{self.name}_generated_{next(self.counter)}", (self,), kwargs), count
+        # generate unique name
+        name = self.ctx.generate.path(self.name + "_generated_{incr}").replace(":", "_").replace("/", "_")
+        
+        # get count before creating item
+        count = None if "count" not in kwargs else kwargs.pop("count")
 
-        return type(f"{self.name}_generated_{next(self.counter)}", (self,), kwargs)
+        new_cls = type(name, (self,), kwargs)
+
+        if count:
+            return new_cls, count
+
+        return new_cls

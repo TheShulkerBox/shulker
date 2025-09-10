@@ -1,13 +1,13 @@
 from item:base import base_item
 from item:throwable/net import net
-# from item:food/rations import rations
+from item:food/rations import rations
 
 from kit:base import Kit
 
 Kit(
     name="Footman",
     tagline="A trusty soldier at the front of the battle",
-    icon=base_item(id="iron_sword"),
+    icon="iron_sword",
 
     armor={
         "chest": base_item(id="iron_chestplate"),
@@ -18,6 +18,6 @@ Kit(
         base_item(id="iron_sword", name="Iron Broadsword"),
         net,
         base_item(id="pumpkin_pie", Count=3),
-        # rations,
+        rations,
     ],
 )

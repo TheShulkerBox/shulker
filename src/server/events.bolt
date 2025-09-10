@@ -1,4 +1,5 @@
-from lib:db import UUID1, UUID2, UUID3, UUID4, PlayerDB
+from server:core import server_tick, server_load, SERVER_GLOBALS
+from lib:db import UUIDS, UUID1, UUID2, UUID3, UUID4, PlayerDB
 from lib:utils import get_player_name
 
 
@@ -13,7 +14,6 @@ on_join = ~/on_join
 #  0 -> player has joined / is online
 #  1 -> player has not joined (player has left game)
 on_join_score = Scoreboard("player.on_join", criteria="minecraft.custom:minecraft.leave_game")
-
 time_played = Scoreboard("stats.time_played", criteria="minecraft.custom:minecraft.play_time")
 
 
@@ -28,17 +28,17 @@ append function server_tick:
     as @a unless score var on_join_score["@s"] = var on_join_score["@s"]:
         on_join_score["@s"] += 1
     
+    # On new joins..
     as @a[scores={on_join_score=1..}] at @s function ./on_join
 
 
 append function server_load:
-    """We reset all scores and set online players to 0 on load"""
-
+    # We reset all scores and set online players to 0 on load
     on_join_score["*"].reset()
     on_join_score["@a"] = 0
 
 
-append function on_first_join:
+function on_first_join:
     """
     This detects first join based on the `time_played` stat scoreboard. We use a scoreboard
     instead of an advancement because it's easier to reset when testing `on_first_join` logic.
@@ -47,7 +47,7 @@ append function on_first_join:
     playsound minecraft:ui.toast.challenge_complete master @s ~ ~ ~ 0.7 0.8 0.7
 
 
-append function on_join:
+function on_join:
     """Called when a player joins (even if the server had crashed).
 
     as/at @s: player
@@ -63,11 +63,9 @@ append function on_join:
         playsound block.end_portal_frame.fill master @s 0 65 0 2 0.5 1
 
     execute function ~/check_uuids:
-        # 1. check whether our UUID matches our scoreboard UUIDs
-        store result score uuid1 temp run data get entity @s UUID[0]
-        store result score uuid2 temp run data get entity @s UUID[1]
-        store result score uuid3 temp run data get entity @s UUID[2]
-        store result score uuid4 temp run data get entity @s UUID[3]
+        # 1. check wh ether our UUID matches our scoreboard UUIDs
+        for i in range(4):
+            TEMP[f"uuid{i + 1}"] = SELF[i]
 
         # if so, we are *that* guy
         if (
@@ -83,10 +81,8 @@ append function on_join:
         #    b. player is old, but they changed their name to a new one with no scores
         #    c. player is old, but they changed their name to one that used to exist
         # First we set their UUIDs to the scoreboard
-        UUID1["@s"] = TEMP["uuid1"]
-        UUID2["@s"] = TEMP["uuid2"]
-        UUID3["@s"] = TEMP["uuid3"]
-        UUID4["@s"] = TEMP["uuid4"]
+        for i, uuid_score in enumerate(UUIDS):
+            uuid_score["@s"] = TEMP[f"uuid{i + 1}"]
 
         # If we exist in the database, then we are ok!
         if function PlayerDB.exists_self():
@@ -97,3 +93,15 @@ append function on_join:
         function ~/../on_playerdb_init
         PlayerDB.add_player(TEMP_STORAGE.player)
         return 1
+
+
+player_count = SERVER_GLOBALS["player_count"]
+last_player_count = SERVER_GLOBALS["last_player_count"]
+
+append function server_tick:
+    # detect player cnt
+    store result score var player_count if entity @a
+    if player_count < last_player_count:
+        as @a[tag=staff] at @s playsound minecraft:block.note_block.bass master @s ~ ~ ~ 0.5 0.42
+
+    last_player_count = player_count

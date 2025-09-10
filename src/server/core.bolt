@@ -15,10 +15,13 @@ from functools import cache
 from bolt_expressions import Scoreboard, Expression
 
 
-SERVER_GLOBALS = Scoreboard("server.globals")
-
+#> Function Paths
 server_load = ~/load
 server_tick = ~/tick
+server_tick_player = ~/tick/player
+
+
+SERVER_GLOBALS = Scoreboard("server.globals")
 
 
 @cache
@@ -40,20 +43,17 @@ def clock(speed: str):
     append function server_load:
         schedule function path speed replace
 
-    append function path:
+    function path:
         schedule function path speed replace
     
     return path
-
-
-clock("1t")  # default clock at 1t, cached
 
 
 prepend function_tag minecraft:load {
     "values": [server_load]
 }
 
-prepend function server_load:
+function server_load:
     forceload add 0 0
     tellraw @a[tag=staff] boxed_text(
         {
@@ -75,4 +75,6 @@ def tick_players_last():
     """
 
     append function server_load:
-        as @a at @s function f"{server_load}/player"
+        as @a at @s function server_tick_player
+
+clock("1t")  # default clock at 1t, cached

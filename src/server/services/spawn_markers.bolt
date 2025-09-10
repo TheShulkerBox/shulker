@@ -2,9 +2,11 @@
 Handles the spawn markers used by builders to easily tp people back to... spawn
 """
 
+from server:core import clock, server_tick_player
+
 MARKER_TAG = "sys.spawn_marker"
 
-append function sys:tick/player:
+append function server_tick_player:
     execute function ./check_nearby:
         execute
             unless entity @s[team=builder]  # ignore builders

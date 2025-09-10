@@ -1,0 +1,33 @@
+from server:core import server_tick, server_load, clock
+from lib:text import boxed_text
+
+food = Scoreboard("food", criteria="food")
+lobby_display = Scoreboard("lobby_display", criteria="dummy")
+
+SIDEBAR_TITLE = boxed_text("The Shulker Box")
+
+append function server_load:
+    # Lobby team creation
+    team add lobby "Lobby"
+    team modify lobby color gray
+
+    # Setup lobby sidebar
+    scoreboard objectives modify lobby_display displayname SIDEBAR_TITLE
+    scoreboard objectives modify lobby_display displayautoupdate true
+    scoreboard objectives modify lobby_display numberformat fixed ""
+    scoreboard objectives setdisplay sidebar.team.gray lobby_display
+
+
+append function server_tick:
+    # Join lobby team if you have none
+    team join lobby @a[team=]
+
+
+append function clock("10s"):
+    # Lobby Effects
+    execute function lobby:effects/apply:
+        effect give @a[team=lobby,scores={food=..19}] saturation infinite 1 true
+        effect give @a[team=lobby] regeneration infinite 6 true
+        effect give @a[team=lobby] resistance infinite 3 true
+        effect give @a[team=lobby] speed infinite 1 true
+        effect give @a[team=lobby] weakness infinite 0 true

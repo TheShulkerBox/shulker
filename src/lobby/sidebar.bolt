@@ -1,9 +1,0 @@
-from ./message import SIDEBAR_TITLE
-
-lobby_display = Scoreboard("lobby_display", criteria="dummy")
-
-append function sys:load:
-    scoreboard objectives modify lobby_display displayname SIDEBAR_TITLE
-    scoreboard objectives modify lobby_display displayautoupdate true
-    scoreboard objectives modify lobby_display numberformat fixed ""
-    scoreboard objectives setdisplay sidebar.team.gray lobby_display

@@ -73,8 +73,14 @@ class ValidationError(Exception):
     def __str__(self):
         path_str = ".".join(map(str, self.path))
         if path_str:
-            return f"Validation Error at '{path_str}' (Schema: {self.schema_kind}): {super().__str__()}"
-        return f"Validation Error (Schema: {self.schema_kind}): {super().__str__()}"
+            s = f"Validation Error at '{path_str}'"
+        else:
+            s = "Validation Error"
+        
+        if self.schema_kind:
+            s = f"{s} (Schema: {self.schema_kind})"
+        
+        return f"{s}: {super().__str__()}"
 
 
 class BaseSchema(BaseModel):

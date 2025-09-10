@@ -10,6 +10,7 @@ UUID1 = Scoreboard("uuid1")
 UUID2 = Scoreboard("uuid2")
 UUID3 = Scoreboard("uuid3")
 UUID4 = Scoreboard("uuid4")
+UUIDS = [UUID1, UUID2, UUID3, UUID4]
 
 
 class Database:
@@ -34,11 +35,11 @@ class Database:
 class PlayerDB(metaclass=Singleton):
     db = Data.storage("playerdb:main").players
 
-    def _copy_uuid(self, loc: DataSource):
-        loc["uuid1"] = UUID1["@s"]
-        loc["uuid2"] = UUID2["@s"]
-        loc["uuid3"] = UUID3["@s"]
-        loc["uuid4"] = UUID4["@s"]
+    def _copy_uuid(self, storage_location: DataSource):
+        for i, uuid_score in enumerate(UUIDS):
+            storage_location[f"uuid{i}"] = uuid_score["@s"]
+
+        return storage_location
 
     def add_player(self, player: DataSource):
         """Adds a player to the database (DOES NOT CHECK FOR DUPLICATES)"""
@@ -48,8 +49,7 @@ class PlayerDB(metaclass=Singleton):
     def get_self(self) -> DataSource:
         """Get player specific data"""
         
-        self._copy_uuid(MACRO)
-        with var MACRO:
+        with var self._copy_uuid(MACRO):
             $data modify storage shulker:temp player set from storage playerdb:main players[{uuid1: $(uuid1), uuid2: $(uuid2), uuid3: $(uuid3), uuid4: $(uuid4)}]
 
         return TEMP_STORAGE.player
@@ -57,8 +57,7 @@ class PlayerDB(metaclass=Singleton):
     def save_self(self, data: DataSource):
         """Save player specific data"""
         
-        self._copy_uuid(MACRO)
-        with var MACRO:
+        with var self._copy_uuid(MACRO):
             $data modify storage playerdb:main players[{uuid1: $(uuid1), uuid2: $(uuid2), uuid3: $(uuid3), uuid4: $(uuid4)}].data set from storage shulker:temp data
     
     @cache
@@ -66,8 +65,7 @@ class PlayerDB(metaclass=Singleton):
         """Check if the player exists in the database"""
         
         function playerdb:exists_self:
-            self._copy_uuid(MACRO)
-            return run with var MACRO:
+            return run with var self._copy_uuid(MACRO):
                 $return run execute if data storage playerdb:main players[{uuid1: $(uuid1), uuid2: $(uuid2), uuid3: $(uuid3), uuid4: $(uuid4)}]
         
         return playerdb:exists_self

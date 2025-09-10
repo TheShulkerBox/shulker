@@ -12,9 +12,6 @@ from bolt_expressions import Scoreboard, Data, ScoreSource, DataSource
 from lib.text import theme
 from lib.helpers import Singleton
 
-from ./core import clock, server_load, server_tick
-
-
 TEMP = Scoreboard("temp")
 CONST = Scoreboard("const")
 SELF = Data.entity("@s")
