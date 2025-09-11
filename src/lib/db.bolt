@@ -1,18 +1,6 @@
 """
 """
 
-from functools import cache
-
-from lib:utils import get_player_name
-from lib:storage_helpers import loop
-
-UUID1 = Scoreboard("uuid1")
-UUID2 = Scoreboard("uuid2")
-UUID3 = Scoreboard("uuid3")
-UUID4 = Scoreboard("uuid4")
-UUIDS = [UUID1, UUID2, UUID3, UUID4]
-
-
 class Database:
     name: str
     db: Data
@@ -30,55 +18,3 @@ class Database:
         MACRO["value"] = value
         with var MACRO:
             raw f"$data modify storage {destination._target} {destination._path} set from storage {self.name} data[{$(key): $(value)}]"
-
-
-class PlayerDB(metaclass=Singleton):
-    db = Data.storage("playerdb:main").players
-
-    def _copy_uuid(self, storage_location: DataSource):
-        for i, uuid_score in enumerate(UUIDS):
-            storage_location[f"uuid{i}"] = uuid_score["@s"]
-
-        return storage_location
-
-    def add_player(self, player: DataSource):
-        """Adds a player to the database (DOES NOT CHECK FOR DUPLICATES)"""
-        
-        data modify storage playerdb:main players append from var player
-
-    def get_self(self) -> DataSource:
-        """Get player specific data"""
-        
-        with var self._copy_uuid(MACRO):
-            $data modify storage shulker:temp player set from storage playerdb:main players[{uuid1: $(uuid1), uuid2: $(uuid2), uuid3: $(uuid3), uuid4: $(uuid4)}]
-
-        return TEMP_STORAGE.player
-    
-    def save_self(self, data: DataSource):
-        """Save player specific data"""
-        
-        with var self._copy_uuid(MACRO):
-            $data modify storage playerdb:main players[{uuid1: $(uuid1), uuid2: $(uuid2), uuid3: $(uuid3), uuid4: $(uuid4)}].data set from storage shulker:temp data
-    
-    @cache
-    def exists_self(self) -> str:
-        """Check if the player exists in the database"""
-        
-        function playerdb:exists_self:
-            return run with var self._copy_uuid(MACRO):
-                $return run execute if data storage playerdb:main players[{uuid1: $(uuid1), uuid2: $(uuid2), uuid3: $(uuid3), uuid4: $(uuid4)}]
-        
-        return playerdb:exists_self
-    
-    def __iter__(self):
-        """Iterate through all players in the database and yield the player in temp storage
-        
-        ```bolt
-        for player in PlayerDB:
-            if player.data.net_worth > 1000:
-                say big number alert!
-        ```
-        """
-
-        for player in loop(self.db, name="playerdb"):
-            yield player

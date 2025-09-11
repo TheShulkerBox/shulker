@@ -13,7 +13,7 @@ duels_storage = Data.storage("duels:main")
 # Reference duels occupancy data structure (dictionary?) for appropriate map
 
 append function server_tick:
-    as @a[scores={requested_arena=1..}] function duels:attempt_join
+    as @a[scores={requested_arena=1..}] function on_attempt_join
 
 
 function on_attempt_join:

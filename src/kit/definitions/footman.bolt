@@ -1,8 +1,8 @@
+from kit:base import Kit
 from item:base import base_item
 # from item:throwable/net import net
 # from item:food/rations import rations
 
-from kit:base import Kit
 
 Kit(
     name="Footman",
@@ -15,7 +15,7 @@ Kit(
         "feet": base_item(id="iron_boots"),
     },
     hotbar=[
-        base_item(id="iron_sword", name="Iron Broadsword"),
+        base_item(id="iron_sword", item_name="Iron Broadsword"),
         # net,
         base_item(id="pumpkin_pie", count=3),
         # rations,

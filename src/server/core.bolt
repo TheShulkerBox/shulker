@@ -21,7 +21,7 @@ server_tick = ~/tick
 server_tick_player = ~/tick/player
 
 
-SERVER_GLOBALS = Scoreboard("server.globals")
+SERVER_GLOBALS = Scoreboard("server.globals", criteria="dummy")
 
 
 @cache
@@ -66,6 +66,7 @@ function server_load:
         text_color=theme.primary, 
         box_color=theme.secondary,
     )
+    Expression.init()
 
 
 @defer
@@ -76,5 +77,6 @@ def tick_players_last():
 
     append function server_load:
         as @a at @s function server_tick_player
+
 
 clock("1t")  # default clock at 1t, cached

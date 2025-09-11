@@ -1,15 +1,18 @@
 id: shulkerbox
 
 require:
+  # it needs to go first so that exit phase happens last
+  - plugins.upload
+
   - bolt_expressions
   - bolt_expressions.contrib.commands
   - bolt
-  # - plugins.fancy_macros
   - mecha.contrib.nesting
   - bolt.contrib.defer
-  # - mecha.contrib.bake_macros
-  - plugins.custom_load
   - plugins.component_caching
+
+  # needs to go last
+  - plugins.custom_load
 
 pipeline:
   - mecha
@@ -29,14 +32,15 @@ data_pack:
 output: dist
 
 meta:
+  deploy: false
   generate_namespace: "server"
 
   bolt:
-    entrypoint: ["*"]
+    entrypoint: "*"
     prelude: ["server:prelude"]
 
   bolt_expressions:
     temp_objective: "temp"
     const_objective: "const"
     temp_storage: "bolt:temp"
-    init_path: "load/init_objectives"
+    init_path: "core/load/init_objectives"

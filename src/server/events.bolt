@@ -1,11 +1,11 @@
 from server:core import server_tick, server_load, SERVER_GLOBALS
-from lib:db import UUIDS, UUID1, UUID2, UUID3, UUID4, PlayerDB
 from lib:utils import get_player_name
 
 
 #> Events
 on_first_join = ~/on_first_join
 on_join = ~/on_join
+on_playerdb_init = ~/on_playerdb_init 
 # on_player_count = 
 
 
@@ -19,7 +19,7 @@ time_played = Scoreboard("stats.time_played", criteria="minecraft.custom:minecra
 
 append function server_tick:
     # First join based on time played scoreboard
-    as @a[scores={time_played=..1}] at @s function ./on_first_join
+    as @a[scores={time_played=..1}] at @s function on_first_join
 
     # Detect player joining on two conditions:
     # 
@@ -29,7 +29,7 @@ append function server_tick:
         on_join_score["@s"] += 1
     
     # On new joins..
-    as @a[scores={on_join_score=1..}] at @s function ./on_join
+    as @a[scores={on_join_score=1..}] at @s function on_join
 
 
 append function server_load:
@@ -62,37 +62,6 @@ function on_join:
         as @a[tag=staff] at @s playsound minecraft:entity.experience_orb.pickup master @s ~ ~ ~ 2 1.5
         playsound block.end_portal_frame.fill master @s 0 65 0 2 0.5 1
 
-    execute function ~/check_uuids:
-        # 1. check wh ether our UUID matches our scoreboard UUIDs
-        for i in range(4):
-            TEMP[f"uuid{i + 1}"] = SELF[i]
-
-        # if so, we are *that* guy
-        if (
-            (TEMP["uuid1"] == UUID1["@s"])
-            and (TEMP["uuid2"] == UUID2["@s"])
-            and (TEMP["uuid3"] == UUID3["@s"])
-            and (TEMP["uuid4"] == UUID4["@s"])
-        ):
-            return 1
-
-        # 2. otherwise, we have 3 situations:
-        #    a. player is new, so we add them to the database
-        #    b. player is old, but they changed their name to a new one with no scores
-        #    c. player is old, but they changed their name to one that used to exist
-        # First we set their UUIDs to the scoreboard
-        for i, uuid_score in enumerate(UUIDS):
-            uuid_score["@s"] = TEMP[f"uuid{i + 1}"]
-
-        # If we exist in the database, then we are ok!
-        if function PlayerDB.exists_self():
-            execute return 1
-
-        # Else, we are a new player
-        TEMP_STORAGE.player = {}
-        function ~/../on_playerdb_init
-        PlayerDB.add_player(TEMP_STORAGE.player)
-        return 1
 
 
 player_count = SERVER_GLOBALS["player_count"]

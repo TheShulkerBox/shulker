@@ -78,13 +78,14 @@ def make_request(route: str, data: dict[str, str] | str | bytes):
 def beet_default(ctx: Context):
     yield
 
-    path = ctx.directory / "dist" / PACK
-    ctx.data.save(path=path, overwrite=True, zipped=True)
+    if ctx.meta["deploy"]:
+        path = ctx.directory / "dist" / PACK
+        ctx.data.save(path=path, overwrite=True, zipped=True)
 
-    make_request(
-        route=rf"files/write?file={TARGET.replace('/', '%2F')}",
-        data=(path).read_bytes(),
-    )
-    time.sleep(0.05)
-    make_request(route="command", data={"command": "tellraw @a[tag=op] " + tellraw()})
-    make_request(route="command", data={"command": "reload"})
+        make_request(
+            route=rf"files/write?file={TARGET.replace('/', '%2F')}",
+            data=(path).read_bytes(),
+        )
+        time.sleep(0.05)
+        make_request(route="command", data={"command": "tellraw @a[tag=op] " + tellraw()})
+        make_request(route="command", data={"command": "reload"})

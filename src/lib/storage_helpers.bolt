@@ -13,6 +13,7 @@ def convert_data_source_into_name(data: DataSource) -> str:
 @dataclass
 class loop:
     data: DataSource
+    temp_storage: DataSource = TEMP_STORAGE
     name: str = ""
     reversed: bool = False
     with_index: bool = False
@@ -43,12 +44,12 @@ class loop:
             TEMP["_loop"] -= 1
             MACRO["index"] = TEMP["_loop"] * -1
             with var MACRO:
-                $data modify storage shulker:temp item set from storage shulker:temp data[{$(index)}]
+                raw f"$data modify {self.temp_storage.item} set from storage {self.temp_storage._target} data[{{$(index)}}]"
 
             if self.with_index:
-                yield (TEMP["_loop"], TEMP_STORAGE.item)
+                yield (TEMP["_loop"], self.temp_storage.item)
             else:
-                yield TEMP_STORAGE.item
+                yield self.temp_storage.item
             
             if TEMP["_loop"] > 0:
                 function ~/
@@ -67,3 +68,21 @@ class loop:
 
         execute function ~/loop/while_{self.name}:
             yield self.WhileCondition(self.data)
+
+
+def storage_path(source: DataSource) -> str:
+    return f"{source._target} {source._path}"
+
+
+def debug_storage(*args):
+    output = []
+    for arg in args:
+        if isinstance(arg, DataSource):
+            output.append({storage: arg._target, nbt: str(arg._path)})
+        else:
+            output.append(arg)
+        output.append(" ")
+    
+    del output[-1]
+    
+    return output

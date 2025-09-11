@@ -1,0 +1,129 @@
+from functools import cache
+
+from server:events import on_join, on_playerdb_init 
+from lib:utils import get_player_name
+from lib:storage_helpers import loop
+from lib:helpers import Singleton
+
+
+UUID = [
+    Scoreboard("uuid0", criteria="dummy"),
+    Scoreboard("uuid1", criteria="dummy"),
+    Scoreboard("uuid2", criteria="dummy"),
+    Scoreboard("uuid3", criteria="dummy"),
+]
+
+
+class PlayerDB(metaclass=Singleton):
+    db = Data.storage("playerdb:main").players
+    temp = Data.storage("playerdb:temp")
+
+    def _copy_uuid(self, storage_location: DataSource):
+        for i, uuid_score in enumerate(UUID):
+            storage_location[f"uuid{i}"] = uuid_score["@s"]
+
+        return storage_location
+    
+    def init_player(self):
+        self.temp.player = {
+            "uuid0": UUID[0]["@s"],
+            "uuid1": UUID[1]["@s"],
+            "uuid2": UUID[2]["@s"],
+            "uuid3": UUID[3]["@s"],
+            "data": {},
+        }
+        return self.temp.player
+
+    def add_player(self, player: DataSource):
+        """Adds a player to the database (DOES NOT CHECK FOR DUPLICATES)"""
+        
+        data modify storage playerdb:main players append from var player
+
+    @cache
+    def get_self(self) -> DataSource:
+        """Get player specific data"""
+        
+        execute function playerdb:get_self:
+            with var self._copy_uuid(MACRO):
+                $data modify storage playerdb:temp player set from storage playerdb:main players[{uuid0: $(uuid0), uuid1: $(uuid1), uuid2: $(uuid2), uuid3: $(uuid3)}]
+
+        return self.temp.player
+    
+    @cache
+    def save(self, player: DataSource):
+        """Save player specific data"""
+        
+        execute function playerdb:save:
+            # TODO: improve macro
+            self.temp.player = player
+            for i in range(4):
+                MACRO[f"uuid{i}"] = player[f"uuid{i}"]
+            with var MACRO:
+                $data modify storage playerdb:main players[{uuid0: $(uuid0), uuid1: $(uuid1), uuid2: $(uuid2), uuid3: $(uuid3)}].data set from storage playerdb:temp player.data
+    
+    @cache
+    def exists_self(self) -> str:
+        """Check if the player exists in the database"""
+        
+        function playerdb:exists_self:
+            return run with var self._copy_uuid(MACRO):
+                $return run execute if data storage playerdb:main players[{uuid0: $(uuid0), uuid1: $(uuid1), uuid2: $(uuid2), uuid3: $(uuid3)}]
+        
+        return playerdb:exists_self
+    
+    def __iter__(self):
+        """Iterate through all players in the database and yield the player in temp storage
+        
+        ```bolt
+        for player in PlayerDB:
+            if player.data.net_worth > 1000:
+                say big number alert!
+        ```
+        """
+
+        for player in loop(self.db, name="playerdb", temp_storage=self.temp):
+            yield player
+
+
+function playerdb:reset:
+    data remove storage playerdb:main players
+    for i in range(4):
+        scoreboard players reset * f"uuid{i}"
+    
+    scoreboard players reset @a player.on_join
+
+
+prepend function on_join:
+    execute function ~/check_uuids:
+        TEMP_STORAGE.player = SELF
+
+        # 1. check whether our UUID matches our scoreboard UUIDs
+        for i in range(4):
+            TEMP[f"uuid{i}"] = TEMP_STORAGE.player.UUID[i]
+
+        
+        vals = []
+        for i in range(4):
+            vals.append(TEMP[f"uuid{i}"] == UUID[i]["@s"])
+
+        # if so, we are *that* guy
+        if all(vals):
+            return 1
+
+        # 2. otherwise, we have 3 situations:
+        #    a. player is new, so we add them to the database
+        #    b. player is old, but they changed their name to a new one with no scores
+        #    c. player is old, but they changed their name to one that used to exist
+        # First we set their UUIDs to the scoreboard
+        for i, uuid_score in enumerate(UUID):
+            uuid_score["@s"] = TEMP[f"uuid{i}"]
+
+        # If we exist in the database, then we are ok!
+        if function PlayerDB.exists_self():
+            execute return 1
+
+        # Else, we are a new player
+        player = PlayerDB.init_player()
+        function on_playerdb_init
+        PlayerDB.add_player(player)
+        return 1

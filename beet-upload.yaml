@@ -1,3 +1,4 @@
 extend: beet.yaml
 
-require: [plugins.upload]
+meta:
+  deploy: true

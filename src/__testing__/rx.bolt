@@ -1,0 +1,16 @@
+import component:on_use as _
+from item:base import base_item
+
+
+class dart(base_item):
+    id = "arrow"
+    item_name = "taco sauce 2 deluxe"
+    on_use = {callback: ~/on_use, replace: true}
+
+
+function ~/on_use:
+    say hi
+
+
+dart.build()
+

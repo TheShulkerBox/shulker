@@ -5,10 +5,10 @@ class net(base_item):
     item_name = "Net"
     lore = ["Toss at your enemy to ensnare them", "Capture your foes, you dishonorable retiarius"]
     throwable = {
-        persistance: 100,
         on_throw: ~/on_throw,
         on_tick: ~/on_tick,
     }
+    weapon = { sauce : 10 }
 
 
 function ~/on_throw:

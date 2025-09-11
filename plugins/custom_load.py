@@ -18,9 +18,6 @@ def generate_python_module(path: Path) -> tuple[str, Module]:
     )
     contents = f"from {import_path} import {names}"
 
-    if str(path).endswith("src/item/base.py"):
-        contents += "\n\nItemMeta.ctx = ctx"
-
     return bolt_path, Module(contents)
 
 
@@ -43,7 +40,7 @@ def beet_default(ctx: Context):
             )
 
         # For python files, we generate a bolt module that imports them
-        for path in dir.glob("*.py"):
+        for path in dir.glob("**/*.py"):
             bolt_path, module = generate_python_module(path)
 
             ctx.generate(f"{dir.stem}:{bolt_path}", module)

@@ -10,10 +10,9 @@ from typing import Any
 from bolt_expressions import Scoreboard, Data, ScoreSource, DataSource
 
 from lib.text import theme
-from lib.helpers import Singleton
 
-TEMP = Scoreboard("temp")
-CONST = Scoreboard("const")
+TEMP = Scoreboard("temp", criteria="dummy")
+CONST = Scoreboard("const", criteria="dummy")
 SELF = Data.entity("@s")
 
 TEMP_STORAGE = Data.storage("shulker:temp")

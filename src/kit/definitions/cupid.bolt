@@ -1,6 +1,5 @@
-from item:base import base_item
-
 from kit:base import Kit
+from item:base import base_item
 
 Kit(
     name="Cupid",
@@ -8,12 +7,12 @@ Kit(
     icon="bow",
 
     armor={
-        "chest": base_item(id="leather_chestplate", dyed_color="FFC0CB"),
-        "legs": base_item(id="leather_leggings", dyed_color="FFC0CB"),
-        "feet": base_item(id="leather_boots", dyed_color="FFC0CB"),
+        "chest": base_item(id="leather_chestplate", dyed_color="#ffc0cb"),
+        "legs": base_item(id="leather_leggings", dyed_color="#ffc0cb"),
+        "feet": base_item(id="leather_boots", dyed_color="#ffc0cb"),
     },
     hotbar=[
-        base_item(id="wooden_sword", name="Dirk"),
+        base_item(id="wooden_sword", item_name="Dirk"),
         base_item(id="bread", count=3),
     ],
 )

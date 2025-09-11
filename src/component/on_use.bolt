@@ -1,0 +1,120 @@
+from typing import Literal, Any
+from dataclasses import field
+
+from component:meta import component
+from item:meta import ItemType
+from lib:errors import CustomComponentError
+from lib:storage_helpers import storage_path, debug_storage
+from server:services/playerdb import PlayerDB
+
+
+AnimationLiteral = (
+    Literal["none"]
+    | Literal["eat"]
+    | Literal["drink"]
+    | Literal["block"]
+    | Literal["bow"]
+    | Literal["spear"]
+    | Literal["spyglass"]
+    | Literal["toot_horn"]
+    | Literal["brush"]
+)
+
+
+@component
+class on_use:
+    callback: str
+    replace: bool = False
+    delay: float = 0.1
+    cooldown: float = 0.0
+    cooldown_group: str = ""
+    animation: AnimationLiteral = "none"
+    sound: str = ""
+    on_use_effects: list[dict[str, Any]] = field(default_factory=list)
+
+    def __call__(self) -> dict[str, Any]:
+        on_use_path = f"{self.item.path}/on_use"
+        advancement on_use_path {
+            "criteria": {
+                "requirement": {
+                    "trigger": "minecraft:consume_item",
+                    "conditions": {
+                        "item": {
+                            "predicates": {
+                                "minecraft:custom_data": {"item_id": self.item.name}
+                            }
+                        }
+                    }
+                }
+            },
+            "rewards": {
+                "function": on_use_path
+            }
+        }
+
+        function on_use_path:
+            advancement revoke @s only on_use_path
+            
+            player = PlayerDB.get_self()
+            TEMP_STORAGE.self = SELF
+
+            db_item_storage = player.data.item[self.item.name]
+
+            store success score $offhand temp if items entity @s weapon.offhand self.item.conditional_string()
+
+            if TEMP["$offhand"]:
+                db_item_storage.on_use.slot = "offhand"
+                db_item_storage.on_use.item = TEMP_STORAGE.self.equipment.offhand
+            else:
+                db_item_storage.on_use.slot = TEMP_STORAGE.self.SelectedItemSlot
+                with var db_item_storage.on_use:
+                    raw f"$data modify {db_item_storage.on_use.item} set from {TEMP_STORAGE.self.Inventory}[{{Slot: $(slot)b}}]"
+            
+            
+            tag @s add item.on_use_component.return_item
+            
+            function self.callback
+
+            PlayerDB.save(player)
+
+            if self.replace:
+                schedule function ~/return_item 1t replace
+                
+                function ~/return_item:
+                    as @a[tag=item.on_use_component.return_item]:
+                        player = PlayerDB.get_self()
+                        
+                        db_item_storage = player.data.item[self.item.name]
+                        
+                        if db_item_storage.on_use.slot == "offhand":
+                            with var db_item_storage.on_use.item:
+                                $item modify entity @s weapon.offhand {function: 'set_components', components: $(components)}
+                        else:
+                            MACRO.components = db_item_storage.on_use.item.components
+                            MACRO.slot = db_item_storage.on_use.slot
+                            with var MACRO:
+                                $item modify entity @s hotbar.$(slot) {function: 'set_components', components: $(components)}
+
+        output = {
+            "consumable": {
+                "consume_seconds": self.delay,
+                "animation": self.animation,
+                "has_consume_particles": false,
+                "sound": {"sound_id": self.sound},
+            }
+        }
+
+        if self.on_use_effects:
+            output["consumable"]["on_consume_effects"] = self.on_use_effects
+        
+        if self.cooldown:
+            output["use_cooldown"]["seconds"] = self.cooldown
+
+            if self.cooldown_group:
+                output["use_cooldown"]["cooldown_group"] = self.cooldown_group
+
+        if self.replace:
+            output["use_remainder"] = {id: self.item.id}
+            output["max_stack_size"] = 1
+
+        return output

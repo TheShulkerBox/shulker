@@ -6,6 +6,8 @@ A port of the original shulker xp lib, simplified:
 
 import math
 
+from lib:helpers import Singleton
+
 xp_levels = TEMP["$levels"]
 xp_points = TEMP["$points"]
 

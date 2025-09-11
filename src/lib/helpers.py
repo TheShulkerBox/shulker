@@ -2,8 +2,9 @@ from collections.abc import Callable, Iterator
 import copy
 from contextlib import contextmanager
 import json
-from typing import Any, Literal, Protocol
+from typing import Any, Literal, Protocol, Union, get_args, get_origin
 
+from typeguard import check_type as _check_type, TypeCheckError
 
 def title_case_to_snake_case(title_case_str: str):
     """Converts a title case string into snake case"""
@@ -46,7 +47,7 @@ def nbt_dump(obj: dict[str, Any]):
     return serialize(obj)
 
 
-def deep_merge_dicts(d1: dict[str, Any], d2: dict[str, Any]) -> dict[str, Any] | None:
+def deep_merge_dicts(d1: dict[str, Any], d2: dict[str, Any], inplace: bool = False) -> dict[str, Any] | None:
     """Deep merge two dictionaries, including lists, using match statement.
 
     Args:
@@ -57,7 +58,10 @@ def deep_merge_dicts(d1: dict[str, Any], d2: dict[str, Any]) -> dict[str, Any] |
         dict: The deeply merged dictionary.
     """
 
-    merged = copy.deepcopy(dict(d1))  # Make a copy of the first dictionary
+    if inplace:
+        merged = d1
+    else:
+        merged = copy.deepcopy(dict(d1))  # Make a copy of the first dictionary
 
     for key, value in d2.items():
         if key in merged:
@@ -111,3 +115,24 @@ def id_to_number(id: str) -> int:
     """
 
     return hash(id) & int("0x7FFFFFFF", 16)
+
+def check_type(value: Any, expected_type: type) -> bool:
+    try:
+        _check_type(value, expected_type)
+    except TypeCheckError:
+        return False
+    
+    return True
+
+def pretty_type(type_obj) -> str:
+    if origin := get_origin(type_obj):
+        if origin is Union:
+            # Handle Union types
+            types = get_args(type_obj)
+            return f"Union[{', '.join(pretty_type(t) for t in types)}]"
+    
+    # Handle other generic types if needed, e.g., List, Dict
+    elif hasattr(type_obj, '__name__'):
+        return type_obj.__name__
+    
+    return str(type_obj)

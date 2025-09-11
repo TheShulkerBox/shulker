@@ -1,8 +1,0 @@
-from ./base import ItemMeta
-
-@defer
-def generate_give_commands():
-    for name, custom_item in ItemMeta.registered_items.items():
-        if custom_item.has_id:
-            function f"item:give/{name}":
-                give @s custom_item
