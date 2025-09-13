@@ -241,7 +241,7 @@ def validate_data(
         case BooleanSchema():
             if not isinstance(data, bool):
                 raise ValidationError(path[-1], data, "bool")
-        
+
         case ByteSchema():
             if not isinstance(data, (int, bool)):
                 raise ValidationError(path[-1], data, "byte")

@@ -1,16 +1,19 @@
 import copy
 import dataclasses
+import json
 from typing import Any, ClassVar, Self
-from itertools import count
+from itertools import chain, count
 
 from beet import Context
-import rich
-from rich.pretty import Pretty
-from rich.panel import Panel
-from rich.console import Group
 
-from component.meta import Component, Transformer
-from lib.helpers import title_case_to_snake_case, nbt_dump, deep_merge_dicts, check_type, pretty_type
+from component.base import Component, Transformer
+from lib.helpers import (
+    title_case_to_snake_case,
+    nbt_dump,
+    deep_merge_dicts,
+    check_type,
+    pretty_type,
+)
 from lib.errors import (
     ComponentError,
     CustomTransformerError,
@@ -22,6 +25,7 @@ from lib.errors import (
     MissingValidationError,
 )
 from lib.component_validation import validate_data, SchemaFile
+from lib.rich import console, Tree, Syntax, Group, Panel, RenderableType, Text
 
 
 class ItemType(type):
@@ -64,6 +68,9 @@ class ItemType(type):
             )
 
         namespace["_component_cache"] = {}
+        namespace["_has_errored"] = False
+        namespace["_components"] = {}
+
         cls.registered_items[name] = new_cls = super().__new__(
             cls, name, bases, namespace
         )
@@ -89,17 +96,20 @@ class ItemType(type):
                 except ValidationError as err:
                     return ComponentError(component_name, component, [err])
                 except ExceptionGroup as err:
-                    return ComponentError(component_name, component, err.exceptions, msg=err.args[0])
-                
+                    return ComponentError(
+                        component_name, component, err.exceptions, msg=err.args[0]
+                    )
+
                 return
 
         return NonExistentComponentError(component_name)
 
     def handle_custom_components(
-        self, components: list[Component], resolved_components: dict[str, Any]
-    ) -> list[CustomComponentError]:
+        self, custom_components: list[Component], resolved_components: dict[str, Any]
+    ) -> tuple[list[Component], list[CustomComponentError]]:
         errors = []
-        for component in components:
+        constructed_components = []
+        for component in custom_components:
             name: str = component.__name__
 
             try:
@@ -110,22 +120,31 @@ class ItemType(type):
                     if name not in self._component_cache:
                         field_errors: list[ValidationError] = []
                         reconstructed_data = {}
+                        component_fields = {
+                            field.name: field for field in dataclasses.fields(component)
+                        }
 
                         # validate the fields
-                        for field in dataclasses.fields(component):
+                        for field in component_fields.values():
                             if check_type(data, field.type):
                                 reconstructed_data[field.name] = data
                                 continue
-                                                    
+
                             if check_type(data, dict):
                                 if (value := data.get(field.name)) is None:
                                     if field.default is not dataclasses.MISSING:
                                         reconstructed_data[field.name] = field.default
-                                    elif field.default_factory is not dataclasses.MISSING:
-                                        reconstructed_data[field.name] = field.default_factory()
+                                    elif (
+                                        field.default_factory is not dataclasses.MISSING
+                                    ):
+                                        reconstructed_data[field.name] = (
+                                            field.default_factory()
+                                        )
                                     else:
                                         field_errors.append(
-                                            MissingValidationError(field.name, None, field.type)
+                                            MissingValidationError(
+                                                field.name, None, field.type
+                                            )
                                         )
                                 elif not check_type(value, field.type):
                                     field_errors.append(
@@ -133,6 +152,15 @@ class ItemType(type):
                                     )
                                 else:
                                     reconstructed_data[field.name] = value
+
+                        if unexpected_keys := set(data.keys()) ^ set(
+                            reconstructed_data.keys()
+                        ):
+                            for key in unexpected_keys:
+                                if key not in component_fields:
+                                    field_errors.append(
+                                        UnexpectedValidationError(key, data[key])
+                                    )
 
                         # product error if found
                         if field_errors:
@@ -142,11 +170,17 @@ class ItemType(type):
                         try:
                             constructed_component = component(**reconstructed_data)
                             constructed_component.item = self
-                            output = constructed_component()
+                            # TODO block writes to this (maybe?)
+                            constructed_component.resolved_components = dict(
+                                resolved_components
+                            )
+                            output = constructed_component.render()
+                            constructed_components.append(constructed_component)
                         except Exception as err:
                             raise ComponentError(name, data, [err])
 
-                        self._component_cache[name] = output
+                        if component._cache:
+                            self._component_cache[name] = output
                     else:
                         output = self._component_cache[name]
 
@@ -156,20 +190,19 @@ class ItemType(type):
                         resolved_components["custom_data"] = deep_merge_dicts(
                             resolved_components["custom_data"], metadata
                         )
-                        deep_merge_dicts(
-                            resolved_components, output, inplace=True
-                        )
+                        deep_merge_dicts(resolved_components, output, inplace=True)
 
             except ComponentError as err:
                 errors.append(err)
 
-        return errors
+        return constructed_components, errors
 
     def handle_custom_transformers(
-        self, transformers: list[Transformer], resolved_components: dict[str, Any]
-    ) -> list[CustomTransformerError]:
+        self, custom_transformers: list[Transformer], resolved_components: dict[str, Any]
+    ) -> tuple[list[Transformer], list[CustomComponentError]]:
         errors = []
-        for transformer in transformers:
+        constructed_transformers = []
+        for transformer in custom_transformers:
             name = transformer.__name__
 
             try:
@@ -185,12 +218,17 @@ class ItemType(type):
                         if check_type(data, field.type):
                             reconstructed_data[field.name] = data
                             continue
-                        
+
                         if check_type(data, dict):
                             if (value := data.get(field.name)) is None:
-                                if field.default is dataclasses.MISSING and field.default_factory is dataclasses.MISSING:
+                                if (
+                                    field.default is dataclasses.MISSING
+                                    and field.default_factory is dataclasses.MISSING
+                                ):
                                     field_errors.append(
-                                        MissingValidationError(field.name, None, field.type)
+                                        MissingValidationError(
+                                            field.name, None, field.type
+                                        )
                                     )
                             elif not check_type(value, field.type):
                                 field_errors.append(
@@ -206,19 +244,23 @@ class ItemType(type):
                     try:
                         constructed_transformer = transformer(**reconstructed_data)
                         constructed_transformer.item = self
-                        if (value := constructed_transformer()) is not None:
+                        if (value := constructed_transformer.render()) is not None:
                             resolved_components[name] = value
+                        constructed_transformers.append(constructed_transformer)
                     except Exception as err:
                         raise ComponentError(name, data, [err])
 
             except ComponentError as err:
                 errors.append(err)
 
-        return errors
+        return constructed_transformers, errors
 
     @property
-    def components(self):
-        output_components = {}
+    def components(self) -> dict[str, Any]:
+        if self._components:
+            return self._components
+
+        original_components = {}
 
         # Split namespace into callable and non-callable members
         for member in dir(self):
@@ -227,19 +269,23 @@ class ItemType(type):
 
             if (val := getattr(self, member)) is not None:
                 if not callable(val):
-                    output_components[member] = copy.deepcopy(val)
+                    original_components[member] = copy.deepcopy(val)
 
         # inject custom data
         output_components = deep_merge_dicts(
-            output_components, {"custom_data": {"item_id": self.name}}
+            original_components, {"custom_data": {"item_id": self.name}}, inplace=False
         )
 
-        component_errors = self.handle_custom_components(
-            self._components, output_components
+        custom_components, component_errors = self.handle_custom_components(
+            self._custom_components, output_components
         )
-        transformer_errors = self.handle_custom_transformers(
-            self._transformers, output_components
+        custom_transformers, transformer_errors = self.handle_custom_transformers(
+            self._custom_transformers, output_components
         )
+
+        for component_or_transformer in chain(custom_components, custom_transformers):
+            if component_or_transformer.__class__.__name__ in original_components:
+                component_or_transformer.post_render()
 
         if "id" in output_components:
             self.id = output_components.pop("id")
@@ -247,9 +293,15 @@ class ItemType(type):
         if "count" in output_components:
             self.count = output_components.pop("count")
 
-        self.calculate_errors(
-            component_errors, transformer_errors, output_components
-        )
+        if not self._has_errored:
+            self._has_errored = self.calculate_errors(
+                component_errors,
+                transformer_errors,
+                output_components,
+                original_components,
+            )
+
+        self._components = output_components
 
         return output_components
 
@@ -258,14 +310,12 @@ class ItemType(type):
         component_errors: list[CustomComponentError],
         transformer_errors: list[CustomTransformerError],
         output_components: dict[str, Any],
+        original_components: dict[str, Any],
     ) -> bool:
         errors: list[ComponentError] = component_errors + transformer_errors
 
-        def handle_suberrors(
-            suberrors: list[ValidationError | Exception], depth: int = 1
-        ):
+        def handle_suberrors(suberrors: list[ValidationError | Exception]):
             for suberror in suberrors:
-                indent = " " * depth * 3
                 match suberror:
                     case UnexpectedValidationError(
                         name=name,
@@ -273,7 +323,7 @@ class ItemType(type):
                         msg=msg,
                     ):
                         msg = f" ({msg})" if msg else ""
-                        yield f"{indent}[bold red]|_[/bold red] Unexpected field [bold green]{name!r}[/bold green] with {value!r}){msg}"
+                        yield f"Unexpected field [x]{name!r}[/x] with [x]{value!r}[/x]{msg}"
                     case MissingValidationError(
                         name=name,
                         expected=expected,
@@ -281,7 +331,7 @@ class ItemType(type):
                         msg=msg,
                     ):
                         msg = f" ({msg})" if msg else ""
-                        yield f"{indent}[bold red]|_[/bold red] Missing field [bold green]{name!r}[/bold green] (expected type {pretty_type(expected)!r}){msg}"
+                        yield f"Missing field [x]{name!r}[/x] (expected type [x]{pretty_type(expected)!r}[/x]){msg}"
                     case ValidationError(
                         name=name,
                         value=value,
@@ -290,41 +340,56 @@ class ItemType(type):
                         msg=msg,
                     ):
                         msg = f" ({msg})" if msg else ""
-                        yield f"{indent}[bold red]|_[/bold red] Expected [bold green]{name!r}[/bold green] as type {pretty_type(expected)!r} (actual {value!r}){msg}"
+                        yield f"Expected [x]{name!r}[/x] as type [x]{pretty_type(expected)!r}[/x] (actual [x]{value!r}[/x]){msg}"
                         yield from handle_suberrors(suberrors)
                     case RecursionError() as err:
                         raise err
                     case err:
-                        yield f"{indent}[bold red]|_[/bold red] {pretty_type(type(err))}: {err.args[0]}"
+                        yield f"[x]{pretty_type(type(err))}[/x]: {err.args[0]}"
 
         for name, component in output_components.items():
             if error := self.validate_component(name, component):
                 errors.append(error)
 
         if errors:
-            messages = []
-            messages.append("[bold grey50]Errors:")
+            messages: list[RenderableType] = [Text("⚠️  Item errors", style="header")]
             for error in errors:
                 match error:
                     case NonExistentComponentError(name=name):
-                        messages.append(
-                            f"[bold red]|_[/bold red] [bold green]'{name}'[/bold green] component does not exist!"
+                        messages.append(f"Component [x]{name!r}[/x] does not exist!")
+                    case ComponentError(
+                        name=name, component=component, suberrors=suberrors
+                    ):
+                        tree = Tree(
+                            f"Component [x]{name!r}[/x] failed validation",
+                            guide_style="red",
                         )
-                    case ComponentError(name=name, suberrors=suberrors):
-                        messages.append(
-                            f"[bold red]|_[/bold red] [bold green]'{name}'[/bold green] failed component validation."
-                        )
-                        messages += list(handle_suberrors(suberrors))
+
+                        for msg in handle_suberrors(suberrors):
+                            tree.add(msg)
+
+                        messages.append(tree)
 
             messages.append("")
-            messages.append("[bold grey50]Resolved components:")
-            messages.append(Pretty(output_components))
+            messages.append(Text("Original components", style="header"))
+            messages.append(
+                Syntax(
+                    json.dumps(original_components, indent=2),
+                    "python",
+                    theme="material",
+                )
+            )
 
-            rich.print(
+            title = f"Item [x]{self.name!r}[/x] failed component validation"
+            subtitle = Text(self.__module__, style="secondary")
+            console.print(
                 Panel(
                     Group(*messages),
-                    title=f"[red]Item [bold green]{self.name!r}[/bold green] [italic grey50](from {self.__module__})[/italic grey50] failed component validation.",
-                )
+                    title=title,
+                    subtitle=subtitle,
+                    highlight=True,
+                ),
+                highlight=True,
             )
 
             return True

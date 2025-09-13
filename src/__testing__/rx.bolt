@@ -4,8 +4,9 @@ from item:base import base_item
 
 class dart(base_item):
     id = "arrow"
+    item_model = "stone"
     item_name = "taco sauce 2 deluxe"
-    on_use = {callback: ~/on_use, replace: true}
+    on_use = {callback: ~/on_use, replace: true, cooldown: 2.5}
 
 
 function ~/on_use:
@@ -13,4 +14,3 @@ function ~/on_use:
 
 
 dart.build()
-

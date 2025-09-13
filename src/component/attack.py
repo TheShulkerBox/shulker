@@ -1,6 +1,6 @@
 from typing import Any
 
-from component.meta import component
+from component.base import component
 from lib.errors import CustomComponentError
 
 
@@ -21,7 +21,7 @@ class attack:
             "operation": "add_value",
         }
 
-    def __call__(self) -> dict[str, Any]:
+    def render(self) -> dict[str, Any]:
         modifiers = []
 
         if self.damage is not None:
@@ -40,5 +40,7 @@ class attack:
             return {"attribute_modifiers": modifiers}
 
         raise CustomComponentError(
-            "Need to define one of ['damage', 'speed', 'knockback']", "attack", self,
+            "Need to define one of ['damage', 'speed', 'knockback']",
+            "attack",
+            self,
         )

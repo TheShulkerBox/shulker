@@ -1,0 +1,31 @@
+import component:throwable as _
+from item:base import base_item
+
+TIME_IN_NET = 5  # seconds
+net_timer = Scoreboard("item.net_timer", criteria="dummy")
+
+
+class net(base_item):
+    id = "cobweb"
+    item_name = "Net"
+    lore = ["Toss at your enemy to ensnare them", "Capture your foes, you dishonorable retiarius"]
+    throwable = {
+        on_tick: ~/on_tick,
+    }
+
+
+function ~/on_tick:
+    particle minecraft:cloud ~ ~ ~ 0.0 0.0 0.0 0.01 1 force
+    store success score $netted_player temp as @p[distance=..1] function ~/../on_net:
+        effect give @s slowness TIME_IN_NET 3
+        effect give @s weakness TIME_IN_NET 8
+
+        net_timer["@s"] = TIME_IN_NET * 20
+
+        playsound minecraft:entity.sheep.shear master @a ~ ~ ~ 1 2
+
+    if TEMP["$netted_player"]:
+        kill @s
+
+
+net.build()

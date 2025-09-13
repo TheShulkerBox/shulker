@@ -58,9 +58,11 @@ class ComponentError(ItemError):
         self.suberrors = suberrors
         self.msg = msg
         super().__init__(msg)
-    
+
     def __str__(self):
-        return str([getattr(self, elem) for elem in dir(self) if not elem.startswith("_")])
+        return str(
+            [getattr(self, elem) for elem in dir(self) if not elem.startswith("_")]
+        )
 
 
 class NonExistentComponentError(ComponentError):

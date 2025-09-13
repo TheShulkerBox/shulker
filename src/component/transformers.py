@@ -2,7 +2,7 @@ from typing import Any
 
 from minecraft_text_components import TextComponent
 
-from component.meta import transformer
+from component.base import transformer
 from lib.text import theme
 from lib.errors import CustomComponentError
 
@@ -13,10 +13,10 @@ class dyed_color:
 
     color: str | Any
 
-    def __call__(self) -> int | None:
+    def render(self) -> int | None:
         if type(color := self.color) is str:
             color = color.removeprefix("#")
-            
+
             if len(color) == 8:
                 color = color[:6]  # handles VSCode auto-picker adding transparency
             elif len(color) != 6:
@@ -33,7 +33,7 @@ class dyed_color:
 class lore:
     lore: str | list[str] | list[dict[str, Any]]
 
-    def __call__(self) -> list[TextComponent]:
+    def render(self) -> list[TextComponent]:
         """Allows you to write lore using regular strings and auto applies formatting"""
 
         if type(lore := self.lore) is str:

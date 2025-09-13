@@ -1,6 +1,6 @@
 from typing import Any
 
-from component.meta import component
+from component.base import component
 from lib.errors import CustomComponentError
 
 
@@ -21,7 +21,7 @@ class armor:
             "operation": "add_value",
         }
 
-    def __call__(self) -> dict[str, Any]:
+    def render(self) -> dict[str, Any]:
         modifiers = []
 
         if self.value is not None:

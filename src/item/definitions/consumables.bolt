@@ -1,0 +1,22 @@
+import component:on_use as _
+
+from ../base import base_item
+
+
+class rations(base_item):
+    id = "dried_kelp"
+    consumable = {
+        consume_seconds: 0.8,
+        on_consume_effects: [
+            {
+                type: "apply_effects",
+                effects: [
+                    {
+                        id: "regeneration",
+                        amplifier: 3,
+                        duration: 3 * 20,
+                    }
+                ]
+            }
+        ]
+    }

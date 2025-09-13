@@ -1,10 +1,10 @@
 from kit:base import Kit
 from item:base import base_item
-# from item:throwable/net import net
-# from item:food/rations import rations
+from item:throwable/net import net
+from item:food/rations import rations
 
 
-Kit(
+footman = Kit(
     name="Footman",
     tagline="A trusty soldier at the front of the battle",
     icon="iron_sword",
@@ -16,8 +16,10 @@ Kit(
     },
     hotbar=[
         base_item(id="iron_sword", item_name="Iron Broadsword"),
-        # net,
+        net,
         base_item(id="pumpkin_pie", count=3),
-        # rations,
+        rations,
     ],
 )
+
+footman.build()

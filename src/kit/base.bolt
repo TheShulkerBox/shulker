@@ -56,16 +56,13 @@ class Kit:
         if self.offhand is not None:
             item replace entity @s weapon.offhand with self.offhand self.offhand.count
 
+    def build(self):
+        function self.loadout:
+            self.apply_loadout()
 
-# @defer
-# def generate_kits():
-#     for kit in Kit._all_kits:
-#         function kit.loadout:
-#             kit.apply_loadout()
-
-#             function ~/../as_mannequin:
-#                 execute summon mannequin function ~/../configure_mannequin:
-#                     function kit.loadout
-#                     if len(kit.hotbar) > 1:
-#                         item replace entity @s weapon.mainhand with kit.hotbar[0]
-#                     data modify entity @s CustomName set value kit.name
+            function ~/../as_mannequin:
+                execute summon mannequin function ~/../configure_mannequin:
+                    function self.loadout
+                    if len(self.hotbar) > 1:
+                        item replace entity @s weapon.mainhand with self.hotbar[0]
+                    SELF.CustomName = self.name

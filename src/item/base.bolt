@@ -1,7 +1,12 @@
-from component:meta import components, transformers
+from component:base import custom_components, custom_transformers
+from lib:shulker_box import SHULKER_BOX_COORDS, SHULKER_BOX
+from server:core import server_tick
 
 from ./meta import ItemType
 
+dynamic_key = Scoreboard("item.dynamic_key", criteria="dummy")
+item_entity_tick = ~/entity_tick
+item_ticking_tag = "item.ticking"
 
 ItemType.ctx = ctx
 
@@ -57,10 +62,19 @@ class base_item(metaclass=ItemType):
     count = 1
     tool = {"can_destroy_blocks_in_creative": False, "rules": []}
 
-    _components = components
-    _transformers = transformers
+    _custom_components = custom_components
+    _custom_transformers = custom_transformers
 
     @classmethod
     def build(self):
         function f"item:{self.name}/give":
-            give @s self
+            MACRO.components = self.components
+            dynamic_key[self.name] += 1
+            MACRO.components.custom_data.dynamic_key = dynamic_key[self.name]
+            item replace block SHULKER_BOX_COORDS container.0 with self.id
+            positioned SHULKER_BOX_COORDS with var MACRO:
+                $item modify block ~ ~ ~ container.0 {"function": "set_components", "components": $(components)}
+
+
+append function server_tick:
+    as @e[type=item, tag=item_ticking_tag] at @s function item_entity_tick

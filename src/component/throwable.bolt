@@ -1,3 +1,49 @@
-# def throwable_component(item):
-#     """Defines an item that can be right-clicked to throw"""
+from component:on_use import on_use, AnimationLiteral
+from item:base import item_entity_tick, item_ticking_tag
 
+from ./base import component
+
+
+@component
+class throwable:
+    on_throw: str = ""
+    on_tick: str = ""
+    power: float = 1.0
+    delay: float = 0.5
+    cooldown: float = 0.25
+    cooldown_group: str = ""
+    animation: AnimationLiteral = "spear"
+    sound: str = ""
+
+    def render(self) -> dict[str, Any]:
+        append function item_entity_tick:
+            if items entity @s contents -self.item function self.on_tick
+
+        self.on_use_callback = f"{self.item.path}/on_throw"
+
+        on_use_component = on_use(
+            callback = self.on_throw,
+            delay = self.delay,
+            cooldown = self.cooldown,
+            animation = self.animation,
+            cooldown_group = self.cooldown_group,
+            sound = self.sound,
+        )
+        on_use_component.item = self.item
+
+        return (
+            on_use_component.render() | {}
+        )
+
+    def post_render(self) -> None:
+        function self.on_use_callback:
+            init_tag = "item.throwable.on_init"
+            anchored eyes run summon item ^ ^ ^.1 {Item: self.item.as_dict(), Tags: [init_tag]}
+            as @n[tag=init_tag] at @s:
+                SELF.Tags = [f"item.{self.item.name}", item_ticking_tag]
+                MACRO = {power: self.power}
+                rotated as @s summon marker with var MACRO:
+                    $execute positioned 0.0 0.0 0.0 run tp ^ ^ ^$(power)
+                    TEMP_STORAGE.vector = SELF.Pos
+                    kill @s
+                SELF.Motion = TEMP_STORAGE.vector

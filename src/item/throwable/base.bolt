@@ -1,5 +1,0 @@
-# from item:base import base_item
-
-# class throwable(base_item):
-#     def on_throw(ticks_alive: int, path: str)
-#         ...

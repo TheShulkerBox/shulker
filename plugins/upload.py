@@ -62,8 +62,12 @@ def tellraw():
     )
 
 
-def make_request(route: str, data: dict[str, str] | str | bytes):
-    if type(data) is dict:
+def make_request(route: str, data: dict[str, str] | str | bytes | None = None):
+    if data is None:
+        resp = requests.get(
+            URL + route, headers=HEADERS | {"Content-Type": "application/json"}
+        )
+    elif type(data) is dict:
         resp = requests.post(
             URL + route,
             data=json.dumps(data),
@@ -72,7 +76,13 @@ def make_request(route: str, data: dict[str, str] | str | bytes):
     else:
         resp = requests.post(URL + route, data=data, headers=HEADERS)
     resp.raise_for_status()
-    print("Success", route, len(data) if route != "command" else data, resp.content)
+    print(
+        "Success",
+        route,
+        (len(data) if route != "command" else data) if data is not None else "",
+        resp.content if route != "websocket" else "",
+    )
+    return resp
 
 
 def beet_default(ctx: Context):
@@ -87,5 +97,7 @@ def beet_default(ctx: Context):
             data=(path).read_bytes(),
         )
         time.sleep(0.05)
-        make_request(route="command", data={"command": "tellraw @a[tag=op] " + tellraw()})
+        make_request(
+            route="command", data={"command": "tellraw @a[tag=op] " + tellraw()}
+        )
         make_request(route="command", data={"command": "reload"})
