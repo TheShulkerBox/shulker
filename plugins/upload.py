@@ -1,15 +1,21 @@
-import subprocess
-import time
-import pytz
-import requests
+import asyncio
+from datetime import datetime
+import re
+import dotenv
 import json
 import os
-import dotenv
-from datetime import datetime
+import httpx
+import subprocess
 
 from beet import Context
+import pytz
+from websockets.asyncio.client import connect
+
+from src.lib.text import theme
+
 
 dotenv.load_dotenv()
+
 
 SERVER_ID = os.environ["BLOOM_SERVER_ID"]
 PACK = "shulkerbox_data_pack.zip"
@@ -19,6 +25,7 @@ HEADERS = {
     "Accept": "application/json",
     "Authorization": "Bearer " + os.environ["BLOOM_API_KEY"],
 }
+ERROR_PATTERN = re.compile(r"\[\d\d:\d\d:\d\d\] \[Server thread/ERROR\]: (.+)")
 
 
 def get_git_user() -> str:
@@ -62,27 +69,80 @@ def tellraw():
     )
 
 
-def make_request(route: str, data: dict[str, str] | str | bytes | None = None):
-    if data is None:
-        resp = requests.get(
-            URL + route, headers=HEADERS | {"Content-Type": "application/json"}
+async def make_request(
+    route: str,
+    data: dict[str, str] | str | bytes | None = None,
+):
+    url = URL + route
+    headers = HEADERS | {"Content-Type": "application/json"}
+
+    async with httpx.AsyncClient() as client:
+        if data is None:
+            resp = await client.get(url, headers=headers)
+        elif isinstance(data, dict):
+            resp = await client.post(url, content=json.dumps(data), headers=headers)
+        else:
+            resp = await client.post(url, content=data, headers=HEADERS)
+        resp.raise_for_status()
+        print(
+            "Success",
+            route,
+            (len(data) if route != "command" else data) if data is not None else "",
+            resp.content if route != "websocket" else "",
         )
-    elif type(data) is dict:
-        resp = requests.post(
-            URL + route,
-            data=json.dumps(data),
-            headers=HEADERS | {"Content-Type": "application/json"},
-        )
-    else:
-        resp = requests.post(URL + route, data=data, headers=HEADERS)
-    resp.raise_for_status()
-    print(
-        "Success",
-        route,
-        (len(data) if route != "command" else data) if data is not None else "",
-        resp.content if route != "websocket" else "",
+        return resp
+
+
+async def watch_for_errors(url: str, token: str):
+    errors = []
+    try:
+        async with connect(
+            url, additional_headers={"Origin": "https://mc.bloom.host"}
+        ) as websocket:
+            print("WebSocket connection established")
+
+            # Authenticate with the server
+            auth_message = {"event": "auth", "args": [token]}
+            await websocket.send(json.dumps(auth_message))
+
+            # Listen for messages
+            async for message in websocket:
+                if (data := json.loads(message)) and (
+                    data["event"] == "console output"
+                ):
+                    for arg in data["args"]:
+                        print(arg)
+                        if "Server thread/ERROR" in arg:
+                            errors.append(ERROR_PATTERN.match(arg).group(1).strip())
+
+    except Exception as err:
+        print(err)
+    finally:
+        return errors
+
+
+async def push_to_server(path: str):
+    resp = await make_request("websocket")
+    data = resp.json()["data"]
+    task = asyncio.create_task(watch_for_errors(data["socket"], data["token"]))
+    await make_request(
+        route=rf"files/write?file={TARGET.replace('/', '%2F')}",
+        data=(path).read_bytes(),
     )
-    return resp
+    await asyncio.sleep(0.1)
+    await make_request(
+        route="command", data={"command": "tellraw @a[tag=op] " + tellraw()}
+    )
+    await make_request(route="command", data={"command": "reload"})
+
+    async with asyncio.timeout(3):
+        errors = await task
+
+    if errors:
+        msg = [{"text": error + "/n", "color": theme.failure} for error in errors]
+        await make_request(
+            route="command", data={"command": f"tellraw @a[tag=op] {json.dumps(msg)}"}
+        )
 
 
 def beet_default(ctx: Context):
@@ -92,12 +152,4 @@ def beet_default(ctx: Context):
         path = ctx.directory / "dist" / PACK
         ctx.data.save(path=path, overwrite=True, zipped=True)
 
-        make_request(
-            route=rf"files/write?file={TARGET.replace('/', '%2F')}",
-            data=(path).read_bytes(),
-        )
-        time.sleep(0.05)
-        make_request(
-            route="command", data={"command": "tellraw @a[tag=op] " + tellraw()}
-        )
-        make_request(route="command", data={"command": "reload"})
+        asyncio.run(push_to_server(path))

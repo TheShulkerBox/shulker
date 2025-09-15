@@ -47,15 +47,18 @@ def nbt_dump(obj: dict[str, Any]):
 
     return serialize(obj)
 
+
 @overload
 def deep_merge_dicts(
     d1: dict[str, Any], d2: dict[str, Any], inplace: Literal[False]
 ) -> dict[str, Any]: ...
-    
+
+
 @overload
 def deep_merge_dicts(
     d1: dict[str, Any], d2: dict[str, Any], inplace: Literal[True]
 ) -> None: ...
+
 
 def deep_merge_dicts(
     d1: dict[str, Any], d2: dict[str, Any], inplace: bool = False

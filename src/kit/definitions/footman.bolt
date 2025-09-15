@@ -1,7 +1,8 @@
 from kit:base import Kit
 from item:base import base_item
-from item:throwable/net import net
-from item:food/rations import rations
+
+from item:definitions/throwable/net import net
+from item:definitions/consumables import rations
 
 
 footman = Kit(

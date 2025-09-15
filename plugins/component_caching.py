@@ -86,7 +86,9 @@ class ByteLiteralValue(BaseModel):
     value: bool
 
 
-LiteralValue = StringLiteralValue | IntLiteralValue | BooleanLiteralValue
+LiteralValue = (
+    StringLiteralValue | IntLiteralValue | BooleanLiteralValue | ByteLiteralValue
+)
 
 
 class LiteralSchema(BaseModel):
@@ -94,6 +96,7 @@ class LiteralSchema(BaseModel):
 
     kind: Literal["literal"]
     value: LiteralValue
+    attributes: list["Attribute"] | None = None
 
 
 class TreeValue(RootModel[dict[str, Union[LiteralSchema, "ReferenceSchema"]]]):
@@ -241,7 +244,7 @@ class EnumSchema(BaseSchema):
 
 class DynamicIndex(BaseModel):
     kind: Literal["dynamic"]
-    accessor: list[Json]
+    accessor: list[str | Any]
 
 
 class StaticIndex(BaseModel):
@@ -251,7 +254,9 @@ class StaticIndex(BaseModel):
 
 class DispatcherSchema(BaseSchema):
     kind: Literal["dispatcher"]
-    parallel_indices: list[DynamicIndex] = Field(..., alias="parallelIndices")
+    parallel_indices: list[StaticIndex | DynamicIndex] = Field(
+        ..., alias="parallelIndices"
+    )
     registry: str
     attributes: list[Attribute] | None = None
 
@@ -271,6 +276,7 @@ class Schema(RootModel):
         | StructSchema
         | EnumSchema
         | DispatcherSchema
+        | LiteralSchema
         | None
     ) = Field(discriminator="kind")
 

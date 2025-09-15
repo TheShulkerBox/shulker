@@ -11,13 +11,14 @@ dependencies = [
   "minecraft-text-components>=3.3.0",
   "beet-plugins @ git+https://github.com/thewii/beet-plugins",
   "pillow>=11.0.0",
-  "requests>=2.32.3",
   "python-dotenv>=1.1.1",
   "pytz>=2025.2",
   "click>=8.2.1",
   "pyyaml>=6.0.2",
   "typeguard>=4.4.4",
   "websockets>=15.0.1",
+  "methodtools>=0.4.7",
+  "httpx>=0.28.1",
 ]
 description = "Add your description here"
 name = "shulker"

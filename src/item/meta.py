@@ -24,7 +24,7 @@ from lib.errors import (
     CustomComponentError,
     MissingValidationError,
 )
-from lib.component_validation import validate_data, SchemaFile
+from lib.component_validation import McdocValidator, SchemaFile
 from lib.rich import console, Tree, Syntax, Group, Panel, RenderableType, Text
 
 
@@ -52,7 +52,7 @@ class ItemType(type):
     registered_items: ClassVar[dict[str, "ItemType"]] = {}
     counter: ClassVar[count] = count()
 
-    # monkeypatched in base.bolt (which is auto-generated via plugins.custom_load)
+    # monkeypatched in base.bolt
     ctx: ClassVar[Context]
 
     _namespace: dict[str, Any]
@@ -83,14 +83,15 @@ class ItemType(type):
         if "custom_data" in component_name:
             return
 
+        mcdoc_validator = cls.ctx.inject(McdocValidator)
+
         schemas: SchemaFile = cls.ctx.meta["item_component_schemas"]
         if (schema := schemas.get(component_name)) is not None:
             if "custom_data" not in component_name:
                 try:
-                    validate_data(
+                    mcdoc_validator.validate_data(
                         component,
                         schema,
-                        cls.ctx.meta["mcdoc"]["mcdoc"],
                         [component_name],
                     )
                 except ValidationError as err:
@@ -198,7 +199,9 @@ class ItemType(type):
         return constructed_components, errors
 
     def handle_custom_transformers(
-        self, custom_transformers: list[Transformer], resolved_components: dict[str, Any]
+        self,
+        custom_transformers: list[Transformer],
+        resolved_components: dict[str, Any],
     ) -> tuple[list[Transformer], list[CustomComponentError]]:
         errors = []
         constructed_transformers = []
@@ -314,16 +317,15 @@ class ItemType(type):
     ) -> bool:
         errors: list[ComponentError] = component_errors + transformer_errors
 
-        def handle_suberrors(suberrors: list[ValidationError | Exception]):
+        def handle_suberrors(tree: Tree, suberrors: list[ValidationError | Exception]):
             for suberror in suberrors:
                 match suberror:
                     case UnexpectedValidationError(
                         name=name,
-                        value=value,
                         msg=msg,
                     ):
                         msg = f" ({msg})" if msg else ""
-                        yield f"Unexpected field [x]{name!r}[/x] with [x]{value!r}[/x]{msg}"
+                        tree.add(f"Unexpected field [x]{name!r}[/x]{msg}")
                     case MissingValidationError(
                         name=name,
                         expected=expected,
@@ -331,21 +333,27 @@ class ItemType(type):
                         msg=msg,
                     ):
                         msg = f" ({msg})" if msg else ""
-                        yield f"Missing field [x]{name!r}[/x] (expected type [x]{pretty_type(expected)!r}[/x]){msg}"
+                        tree.add(
+                            f"Missing field [x]{name!r}[/x] (expected type [x]{pretty_type(expected)!r}[/x]){msg}"
+                        )
                     case ValidationError(
                         name=name,
-                        value=value,
                         expected=expected,
                         suberrors=suberrors,
                         msg=msg,
                     ):
                         msg = f" ({msg})" if msg else ""
-                        yield f"Expected [x]{name!r}[/x] as type [x]{pretty_type(expected)!r}[/x] (actual [x]{value!r}[/x]){msg}"
-                        yield from handle_suberrors(suberrors)
+                        subtree = tree.add(
+                            f"Expected [x]{name!r}[/x] as type [x]{pretty_type(expected)!r}[/x]){msg}"
+                        )
+                        handle_suberrors(subtree, suberrors)
                     case RecursionError() as err:
                         raise err
+                    case ExceptionGroup(exceptions=errors) as err:
+                        subtree = tree.add(err.args[0])
+                        handle_suberrors(subtree, errors)
                     case err:
-                        yield f"[x]{pretty_type(type(err))}[/x]: {err.args[0]}"
+                        tree.add(f"[x]{pretty_type(type(err))}[/x]: {err.args[0]}")
 
         for name, component in output_components.items():
             if error := self.validate_component(name, component):
@@ -361,24 +369,29 @@ class ItemType(type):
                         name=name, component=component, suberrors=suberrors
                     ):
                         tree = Tree(
-                            f"Component [x]{name!r}[/x] failed validation",
+                            Group(
+                                f"Component [x]{name!r}[/x] failed validation",
+                                Syntax(
+                                    json.dumps(component, indent=2),
+                                    "python",
+                                    theme="material",
+                                ),
+                            ),
                             guide_style="red",
                         )
 
-                        for msg in handle_suberrors(suberrors):
-                            tree.add(msg)
-
+                        handle_suberrors(tree, suberrors)
                         messages.append(tree)
 
-            messages.append("")
-            messages.append(Text("Original components", style="header"))
-            messages.append(
-                Syntax(
-                    json.dumps(original_components, indent=2),
-                    "python",
-                    theme="material",
-                )
-            )
+            # messages.append("")
+            # messages.append(Text("Original components", style="header"))
+            # messages.append(
+            #     Syntax(
+            #         json.dumps(original_components, indent=2),
+            #         "python",
+            #         theme="material",
+            #     )
+            # )
 
             title = f"Item [x]{self.name!r}[/x] failed component validation"
             subtitle = Text(self.__module__, style="secondary")

@@ -1,0 +1,45 @@
+from typing import Sequence
+
+kill_self = ~/kill_self
+function kill_self:
+    kill @s
+
+def get_unit_vector():
+    execute
+        rotated as @s
+        positioned 0.0 0.0 0.0
+        positioned ^ ^ ^1
+        summon marker
+        if function kill_self:
+            TEMP_STORAGE.unit_vector = SELF.Pos
+
+    return TEMP_STORAGE.unit_vector
+
+
+def get_vector(vector: DataSource | Sequence[float] = (0.0, 0.0, 0.0)):
+    if isinstance(vector, tuple):
+        if len(vector) != 3:
+            raise ValueError(f"Vector {vector!r} expected to contain 3 values")
+        
+        for elem in vector:
+            if type(elem) is not float:
+                raise ValueError(f"Vector {vector!r} expected to have float elements")
+        
+        execute
+            positioned vector
+            positioned ^ ^ ^1
+            summon marker
+            if function kill_self:
+                TEMP_STORAGE.unit_vector = SELF.Pos
+
+    elif isinstance(vector, DataSource):
+        execute summon marker:
+            SELF.Pos = vector
+            tp ^ ^ ^1
+            TEMP_STORAGE.unit_vector = SELF.Pos
+            kill @s
+    
+    else:
+        raise ValueError("Expected either a `tuple[float, float, float]` OR `DataSource`")
+
+    return TEMP_STORAGE.unit_vector
