@@ -9,6 +9,7 @@ import subprocess
 
 from beet import Context
 import pytz
+import rich
 from websockets.asyncio.client import connect
 
 from src.lib.text import theme
@@ -111,7 +112,7 @@ async def watch_for_errors(url: str, token: str):
                     data["event"] == "console output"
                 ):
                     for arg in data["args"]:
-                        print(arg)
+                        rich.print(arg)
                         if "Server thread/ERROR" in arg:
                             errors.append(ERROR_PATTERN.match(arg).group(1).strip())
 
@@ -139,7 +140,7 @@ async def push_to_server(path: str):
         errors = await task
 
     if errors:
-        msg = [{"text": error + "/n", "color": theme.failure} for error in errors]
+        msg = [{"text": "\n" + error, "color": theme.failure} for error in errors]
         await make_request(
             route="command", data={"command": f"tellraw @a[tag=op] {json.dumps(msg)}"}
         )
