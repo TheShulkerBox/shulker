@@ -344,7 +344,7 @@ class ItemType(type):
                     ):
                         msg = f" ({msg})" if msg else ""
                         subtree = tree.add(
-                            f"Expected [x]{name!r}[/x] as type [x]{pretty_type(expected)!r}[/x]){msg}"
+                            f"Expected [x]{name!r}[/x] as type [x]{pretty_type(expected)!r}[/x]{msg}"
                         )
                         handle_suberrors(subtree, suberrors)
                     case RecursionError() as err:

@@ -136,7 +136,7 @@ async def push_to_server(path: str):
     )
     await make_request(route="command", data={"command": "reload"})
 
-    async with asyncio.timeout(3):
+    async with asyncio.timeout(1):
         errors = await task
 
     if errors:

@@ -95,6 +95,7 @@ class McdocValidator:
         data: Json,
         schema: Schema,
         path: list[str | int],
+        parent: Json | None = None
     ):
         """
         Validates a given JSON-like data structure against a specified schema,
@@ -164,7 +165,7 @@ class McdocValidator:
                 item_errors = []
                 for i, item in enumerate(data):
                     try:
-                        self.validate_data(item, item_schema, path + [i])
+                        self.validate_data(item, item_schema, path + [i], data)
                     except (ValidationError, ExceptionGroup) as e:
                         item_errors.append(e)
                 if item_errors:
@@ -345,6 +346,7 @@ class McdocValidator:
                                         data[field_key],
                                         field_type,
                                         path + [field_key],
+                                        data,
                                     )
                                 except (ValidationError, ExceptionGroup) as e:
                                     struct_errors.append(e)
@@ -364,7 +366,7 @@ class McdocValidator:
                 if remaining_keys:
                     if spread_schema:
                         try:
-                            self.validate_data(data, spread_schema, path)
+                            self.validate_data({key: data[key] for key in remaining_keys}, spread_schema, path, data)
                         except (ValidationError, ExceptionGroup) as e:
                             struct_errors.append(e)
                     else:
@@ -415,7 +417,7 @@ class McdocValidator:
                     match index:
                         case DynamicIndex(accessor=accessors):
                             union_types.extend(
-                                (data[accessor], accessor)
+                                (parent[accessor], accessor)
                                 for accessor in accessors
                                 if type(accessor) is str
                             )
@@ -429,6 +431,7 @@ class McdocValidator:
                             {k: v for k, v in data.items() if k != accessor},
                             found_schema,
                             path,
+                            data,
                         )
                         break
 
