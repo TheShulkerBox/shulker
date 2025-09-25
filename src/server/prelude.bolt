@@ -11,11 +11,15 @@ from bolt_expressions import Scoreboard, Data, ScoreSource, DataSource
 
 from lib.text import theme
 
-TEMP = Scoreboard("temp", criteria="dummy")
-CONST = Scoreboard("const", criteria="dummy")
-SELF = Data.entity("@s")
+SCORE = {
+    temp: Scoreboard("temp", criteria="dummy"),
+    const: Scoreboard("const", criteria="dummy"),
+}
 
-TEMP_STORAGE = Data.storage("shulker:temp")
-MACRO = TEMP_STORAGE.macro
+STORAGE = {
+    temp: Data.storage("shulker:temp")
+}
+STORAGE["macro"] = STORAGE.temp.macro
+SELF = Data.entity("@s")
 
 MAX_INT = 2 ** 31 - 1

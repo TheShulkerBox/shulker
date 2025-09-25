@@ -15,6 +15,6 @@ class Database:
     def get(self, key: str, value: str, destination: DataSource):
         """Get a value from the database by key and value, storing it in destination"""
         
-        MACRO["value"] = value
-        with var MACRO:
+        STORAGE.macro["value"] = value
+        with var STORAGE.macro:
             raw f"$data modify storage {destination._target} {destination._path} set from storage {self.name} data[{$(key): $(value)}]"

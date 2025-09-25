@@ -98,9 +98,9 @@ class Map:
         ```py
         map = Map.state("market")
         # or
-        map = Map.state(TEMP_STORAGE.special_map_id)
+        map = Map.state(STORAGE.temp.special_map_id)
         # or
-        map = Map.state(TEMP["map_id"])
+        map = Map.state(SCORE.temp["map_id"])
 
         if map.state.number_of_barrels > 100:
             say "do a barrel roll!"
@@ -124,20 +124,20 @@ class Map:
 
         if type(map_id) is ScoreSource:
             # If our input is a score, we check against the "hashed_id" field
-            TEMP_STORAGE.macro = {id: map_id}
-            with var TEMP_STORAGE.macro:
+            STORAGE.macro = {id: map_id}
+            with var STORAGE.macro:
                 $data modify storage shulker:temp map_state set from game:meta maps[{hashed_id: $(id)}]
 
         elif type(map_id) in (str, DataSource):
             # Otherwise, we check against the "id" field
-            TEMP_STORAGE.macro = {id: map_id}
-            with var TEMP_STORAGE.macro:
+            STORAGE.macro = {id: map_id}
+            with var STORAGE.macro:
                 $data modify storage shulker:temp map_state set from game:meta maps[{id: $(id)}]
 
         else:
             raise TypeError(f"map_id ({map_id}) must be a str, DataSource, or ScoreSource")
 
-        return TEMP_STORAGE.map
+        return STORAGE.temp.map
 
     @branch
     def is_selected(self) -> Iterator[bool]:

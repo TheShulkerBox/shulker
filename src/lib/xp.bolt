@@ -8,8 +8,8 @@ import math
 
 from lib:helpers import Singleton
 
-xp_levels = TEMP["$levels"]
-xp_points = TEMP["$points"]
+xp_levels = SCORE.temp["$levels"]
+xp_points = SCORE.temp["$points"]
 
 #: we derive this value by finding the level that needs more than "1000" xp points
 #: 1000 points is easy to use as a percentage (multiply by 10)
@@ -31,12 +31,12 @@ class XP(metaclass=Singleton):
         xp set @s TARGET_LEVEL levels
         XP.get_points(xp_points)
         
-        MACRO["points"] = 10 * percent
-        with var MACRO:
+        STORAGE.macro["points"] = 10 * percent
+        with var STORAGE.macro:
             $xp set @s $(points) points
         
-        MACRO["levels"] = xp_levels
-        with var MACRO:
+        STORAGE.macro["levels"] = xp_levels
+        with var STORAGE.macro:
             $xp set @s $(levels) levels
 
     def get_points(self, input: ScoreSource):
@@ -71,4 +71,4 @@ def clamp(value: "int | ScoreSource"):
 
 function xp:set:
     $scoreboard players set @s temp $(percent)
-    XP.set_points(TEMP["@s"])
+    XP.set_points(SCORE.temp["@s"])

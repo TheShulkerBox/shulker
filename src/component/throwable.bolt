@@ -1,8 +1,7 @@
 from component:on_use import on_use, AnimationLiteral
-from lib:vector_utils import get_vector
+from lib:vector_utils import apply_vector
 
 from ./base import component
-
 
 MAX_PICKUP_DELAY = 32767
 BASE_THROW_VECTOR = (0.0, 0.1, 0.3)
@@ -54,5 +53,5 @@ class throwable:
                     })
                     ride @s mount @n[type=item, tag=init_tag]
 
-                SELF.Motion = get_vector(BASE_THROW_VECTOR)
+                SELF.Motion = apply_vector(BASE_THROW_VECTOR)
                 SELF.Tags = [f"item.{self.item.name}", "component.throwable_base"]

@@ -66,9 +66,9 @@ class base_item(metaclass=ItemType):
     @classmethod
     def build(self):
         function f"item:{self.name}/give":
-            MACRO.components = self.components
+            STORAGE.macro.components = self.components
             dynamic_key[self.name] += 1
-            MACRO.components.custom_data.dynamic_key = dynamic_key[self.name]
+            STORAGE.macro.components.custom_data.dynamic_key = dynamic_key[self.name]
             item replace block SHULKER_BOX_COORDS container.0 with self.id
-            positioned SHULKER_BOX_COORDS with var MACRO:
+            positioned SHULKER_BOX_COORDS with var STORAGE.macro:
                 $item modify block ~ ~ ~ container.0 {"function": "set_components", "components": $(components)}

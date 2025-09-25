@@ -13,7 +13,7 @@ def convert_data_source_into_name(data: DataSource) -> str:
 @dataclass
 class loop:
     data: DataSource
-    temp_storage: DataSource = TEMP_STORAGE
+    temp_storage: DataSource = STORAGE.temp
     name: str = ""
     reversed: bool = False
     with_index: bool = False
@@ -41,17 +41,17 @@ class loop:
 
         store result score _loop temp if data var self.data[:]
         execute function ~/loop/{self.name}:
-            TEMP["_loop"] -= 1
-            MACRO["index"] = TEMP["_loop"] * -1
-            with var MACRO:
+            SCORE.temp["_loop"] -= 1
+            STORAGE.macro["index"] = SCORE.temp["_loop"] * -1
+            with var STORAGE.macro:
                 raw f"$data modify {self.temp_storage.item} set from storage {self.temp_storage._target} data[{{$(index)}}]"
 
             if self.with_index:
-                yield (TEMP["_loop"], self.temp_storage.item)
+                yield (SCORE.temp["_loop"], self.temp_storage.item)
             else:
                 yield self.temp_storage.item
             
-            if TEMP["_loop"] > 0:
+            if SCORE.temp["_loop"] > 0:
                 function ~/
     
     @contextmanager

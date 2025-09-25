@@ -24,7 +24,7 @@ function ~/on_tick:
 
         playsound minecraft:entity.sheep.shear master @a ~ ~ ~ 1 2
 
-    if TEMP["$netted_player"]:
+    if SCORE.temp["$netted_player"]:
         kill @s
 
 

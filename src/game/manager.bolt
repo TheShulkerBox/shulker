@@ -21,15 +21,15 @@ function game:map/queue/next:
 
 function game:map/queue/shuffle:
     # copy all maps into temp storage
-    TEMP_STORAGE.maps = GAME_META.all_maps[:].id
-    while loop(TEMP_STORAGE.maps):
+    STORAGE.temp.maps = GAME_META.all_maps[:].id
+    while loop(STORAGE.temp.maps):
         # for each iteration, pick a random index from the remaining maps (0..len-1)
-        MACRO.len = len(TEMP_STORAGE.maps[:]) - 1  # 0..$(len) is inclusive..inclusive in minecraft
-        with var MACRO:
+        STORAGE.macro.len = len(STORAGE.temp.maps[:]) - 1  # 0..$(len) is inclusive..inclusive in minecraft
+        with var STORAGE.macro:
             $execute store result storage shulker:macro index int 1 run random value 0..$(len)
         
         # append that map to the queue and remove it from temp storage
-        with var MACRO:
+        with var STORAGE.macro:
             $data modify storage game:meta map_queue append from storage shulker:temp maps[{$(index)}]
             $data remove storage shulker:temp maps[$(index)]
 

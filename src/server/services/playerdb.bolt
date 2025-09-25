@@ -44,7 +44,7 @@ class PlayerDB(metaclass=Singleton):
         """Get player specific data"""
         
         execute function playerdb:get_self:
-            with var self._copy_uuid(MACRO):
+            with var self._copy_uuid(STORAGE.macro):
                 $data modify storage playerdb:temp player set from storage playerdb:main players[{uuid0: $(uuid0), uuid1: $(uuid1), uuid2: $(uuid2), uuid3: $(uuid3)}]
 
         return self.temp.player
@@ -57,8 +57,8 @@ class PlayerDB(metaclass=Singleton):
             # TODO: improve macro
             self.temp.player = player
             for i in range(4):
-                MACRO[f"uuid{i}"] = player[f"uuid{i}"]
-            with var MACRO:
+                STORAGE.macro[f"uuid{i}"] = player[f"uuid{i}"]
+            with var STORAGE.macro:
                 $data modify storage playerdb:main players[{uuid0: $(uuid0), uuid1: $(uuid1), uuid2: $(uuid2), uuid3: $(uuid3)}].data set from storage playerdb:temp player.data
     
     @cache
@@ -66,7 +66,7 @@ class PlayerDB(metaclass=Singleton):
         """Check if the player exists in the database"""
         
         function playerdb:exists_self:
-            return run with var self._copy_uuid(MACRO):
+            return run with var self._copy_uuid(STORAGE.macro):
                 $return run execute if data storage playerdb:main players[{uuid0: $(uuid0), uuid1: $(uuid1), uuid2: $(uuid2), uuid3: $(uuid3)}]
         
         return playerdb:exists_self
@@ -95,16 +95,16 @@ function playerdb:reset:
 
 prepend function on_join:
     execute function ~/check_uuids:
-        TEMP_STORAGE.player = SELF
+        STORAGE.temp.player = SELF
 
         # 1. check whether our UUID matches our scoreboard UUIDs
         for i in range(4):
-            TEMP[f"uuid{i}"] = TEMP_STORAGE.player.UUID[i]
+            SCORE.temp[f"uuid{i}"] = STORAGE.temp.player.UUID[i]
 
         
         vals = []
         for i in range(4):
-            vals.append(TEMP[f"uuid{i}"] == UUID[i]["@s"])
+            vals.append(SCORE.temp[f"uuid{i}"] == UUID[i]["@s"])
 
         # if so, we are *that* guy
         if all(vals):
@@ -116,7 +116,7 @@ prepend function on_join:
         #    c. player is old, but they changed their name to one that used to exist
         # First we set their UUIDs to the scoreboard
         for i, uuid_score in enumerate(UUID):
-            uuid_score["@s"] = TEMP[f"uuid{i}"]
+            uuid_score["@s"] = SCORE.temp[f"uuid{i}"]
 
         # If we exist in the database, then we are ok!
         if function PlayerDB.exists_self():
