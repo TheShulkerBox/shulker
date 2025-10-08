@@ -10,13 +10,13 @@ maceman = Kit(
     icon="iron_shovel",
 
     armor={
-        "chest": Armor(id="leather_chestplate", color="#3A4DC9", armor={value:4}),
+        "chest": Armor(id="leather_chestplate", dyed_color="#3A4DC9", armor={value:4}),
         "legs": Armor(id="chainmail_leggings"),
-        "feet": Armor(id="leather_boots", color="#454545"),
+        "feet": Armor(id="leather_boots", dyed_color="#454545"),
     },
     hotbar=[
-        #IronMace,
-        Item(id="iron_sword", item_name="Iron Broadsword"),
+        Item(id="mace", item_name="Iron Mace"),
+        Item(id="stone_sword"),
         Food(count=3)
     ],
     offhand=Item(id="shield")
