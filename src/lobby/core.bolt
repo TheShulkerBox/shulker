@@ -1,10 +1,13 @@
 from server:core import server_tick, server_load, clock
-from lib:text import boxed_text
+from lib:text import boxed_text, small_caps
+
+SIDEBAR_TITLE = {"text": small_caps("The Shulker Box"), "color": theme.primary}
 
 food = Scoreboard("food", criteria="food")
 lobby_display = Scoreboard("lobby_display", criteria="dummy")
 
-SIDEBAR_TITLE = boxed_text("The Shulker Box")
+
+
 
 append function server_load:
     # Lobby team creation
@@ -12,6 +15,7 @@ append function server_load:
     team modify lobby color gray
 
     # Setup lobby sidebar
+    lobby_display["*"].reset()
     scoreboard objectives modify lobby_display displayname SIDEBAR_TITLE
     scoreboard objectives modify lobby_display displayautoupdate true
     scoreboard objectives modify lobby_display numberformat fixed ""

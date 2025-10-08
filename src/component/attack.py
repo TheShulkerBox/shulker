@@ -1,11 +1,10 @@
 from typing import Any
 
-from component.base import component
+from component.base import Component
 from lib.errors import CustomComponentError
 
 
-@component
-class attack:
+class Attack(Component):
     damage: float | None = None
     speed: float | None = None
     knockback: float | None = None

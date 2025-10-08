@@ -1,5 +1,6 @@
 from server:core import server_tick, server_load, SERVER_GLOBALS
 from lib:utils import get_player_name
+from lib:text import small_caps
 
 
 #> Events
@@ -56,8 +57,8 @@ function on_join:
     on_join_score["@s"] = 0
 
     execute function ~/welcome_message:
-        title @s title {text: "Welcome back", color: theme.primary, bold: true}
-        title @s subtitle {text: "The Shulker Box", color: theme.secondary, bold: true}
+        title @s title {text: small_caps("Welcome back"), color: theme.primary}
+        title @s subtitle {text: small_caps("The Shulker Box"), color: theme.secondary, bold: true}
 
         as @a[tag=staff] at @s playsound minecraft:entity.experience_orb.pickup master @s ~ ~ ~ 2 1.5
         playsound block.end_portal_frame.fill master @s 0 65 0 2 0.5 1

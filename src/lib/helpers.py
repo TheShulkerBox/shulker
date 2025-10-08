@@ -2,6 +2,7 @@ from collections.abc import Callable, Iterator
 import copy
 from contextlib import contextmanager
 import json
+import re
 from typing import Any, Literal, Protocol, Union, get_args, get_origin, overload
 
 from typeguard import check_type as _check_type, TypeCheckError
@@ -153,3 +154,13 @@ def pretty_type(type_obj) -> str:
         return type_obj.__name__
 
     return str(type_obj)
+
+
+_CAMEL_TO_SNAKE_PAT1 = re.compile(r"(.)([A-Z][a-z]+)")
+_CAMEL_TO_SNAKE_PAT2 = re.compile(r"([a-z0-9])([A-Z])")
+
+def camel_case_to_snake_case(s: str) -> str:
+    """Converts a camelCase or PascalCase string to snake_case."""
+    
+    step1 = _CAMEL_TO_SNAKE_PAT1.sub(r'\1_\2', s)
+    return _CAMEL_TO_SNAKE_PAT2.sub(r'\1_\2', step1).lower()

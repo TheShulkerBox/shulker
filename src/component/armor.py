@@ -1,11 +1,10 @@
 from typing import Any
 
-from component.base import component
+from component.base import Component
 from lib.errors import CustomComponentError
 
 
-@component
-class armor:
+class Armor(Component):
     slot: str
     value: float | None = None
     toughness: float | None = None

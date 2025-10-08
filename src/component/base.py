@@ -1,51 +1,56 @@
-from typing import Any, Callable, Protocol, overload
-from dataclasses import dataclass
+from typing import Any, ClassVar, Self, TYPE_CHECKING
+from dataclasses import dataclass, field
 
-custom_components = []
-custom_transformers = []
+from lib.helpers import camel_case_to_snake_case
 
-
-class Component(Protocol):
-    def render(self) -> dict[str, Any]: ...
-    def post_render(self) -> None: ...
+if TYPE_CHECKING:
+    from item.meta import ItemType
 
 
-class Transformer(Protocol):
-    def render(self) -> Any | None: ...
-    def post_render(self) -> None: ...
+@dataclass
+class Component:
+    registered: ClassVar[list[Self]] = []
+
+    item: "ItemType" = field(kw_only=True)
+    resolved_components: dict[str, Any] = field(kw_only=True)
+    
+    def __init_subclass__(cls, cache: bool = True):
+        cls._skip_cache = not cache
+        new_cls = dataclass(cls)
+        new_cls.__module__ = cls.__module__
+        cls.registered.append(new_cls)
+        return new_cls
+    
+    @classmethod
+    def name(cls) -> str:
+        return camel_case_to_snake_case(cls.__name__)
+    
+    def render(self) -> Any | None:
+        raise NotImplementedError
+
+    def post_render(self, resolved_components: dict[str, Any]) -> None:
+        ...
 
 
-@overload
-def component(cls: type) -> type: ...
+@dataclass
+class Transformer:
+    registered: ClassVar[list[Self]] = []
 
+    item: "ItemType" = field(kw_only=True)
+    resolved_components: dict[str, Any] = field(kw_only=True)
 
-@overload
-def component(cache: bool = True) -> Callable[[type], type]: ...
+    def __init_subclass__(cls):
+        new_cls = dataclass(cls)
+        new_cls.__module__ = cls.__module__
+        cls.registered.append(new_cls)
+        return new_cls
+    
+    @classmethod
+    def name(cls) -> str:
+        return camel_case_to_snake_case(cls.__name__)
+    
+    def render(self) -> Any | None:
+        raise NotImplementedError
 
-
-def component(cls: type | None = None, /, *, cache: bool = True):
-    def wrap(cls: type):
-        cls = dataclass(cls)
-        cls.__module__ = cls.__module__
-        if not hasattr(cls, "post_render"):
-            cls.post_render = lambda *args, **kwargs: None
-        cls._cache = cache
-        custom_components.append(cls)
-        return cls
-
-    # See if we're being called as @component or @component().
-    if cls is None:
-        # We're called with parens.
-        return wrap
-
-    # We're called as @dataclass without parens.
-    return wrap(cls)
-
-
-def transformer(cls: type) -> type:
-    cls = dataclass(cls)
-    cls.__module__ = cls.__module__
-    if not hasattr(cls, "post_render"):
-        cls.post_render = lambda *args, **kwargs: None
-    custom_transformers.append(cls)
-    return cls
+    def post_render(self, resolved_components: dict[str, Any]) -> None:
+        ...

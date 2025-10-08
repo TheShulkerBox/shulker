@@ -1,7 +1,7 @@
 from typing import Literal, Any
 from dataclasses import field
 
-from component:base import component
+from component:base import Component
 from item:meta import ItemType
 from lib:errors import CustomComponentError
 from lib:storage_helpers import storage_path, debug_storage
@@ -22,8 +22,7 @@ AnimationLiteral = (
 )
 
 
-@component
-class on_use:
+class OnUse(Component):
     callback: str
     replace: bool = False
     delay: float = 0.1
@@ -87,7 +86,6 @@ class on_use:
                         
                         db_item_storage = player.data.item[self.item.name]
                         
-                        item = 19
                         if db_item_storage.on_use.slot == "offhand":
                             with var db_item_storage.on_use.item:
                                 if "item_model" in self.resolved_components:
@@ -132,9 +130,9 @@ class on_use:
 
         if self.replace:
             output["max_stack_size"] = 1
-
+        
         return output
 
-    def post_render(self) -> None:
+    def post_render(self, resolved_components: dict[str, Any]) -> None:
         if self.replace:
-            self.resolved_components["use_remainder"] = {"id": self.item.id, "components": dict(self.resolved_components)}
+            resolved_components["use_remainder"] = {"id": self.item.id, "components": dict(resolved_components)}

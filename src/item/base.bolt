@@ -1,4 +1,3 @@
-from component:base import custom_components, custom_transformers
 from lib:shulker_box import SHULKER_BOX_COORDS, SHULKER_BOX
 from server:core import server_tick
 
@@ -60,8 +59,6 @@ class base_item(metaclass=ItemType):
     count = 1
     tool = {"can_destroy_blocks_in_creative": False, "rules": []}
 
-    _custom_components = custom_components
-    _custom_transformers = custom_transformers
 
     @classmethod
     def build(self):

@@ -2,13 +2,12 @@ from typing import Any
 
 from minecraft_text_components import TextComponent
 
-from component.base import transformer
+from component.base import Transformer
 from lib.text import theme
 from lib.errors import CustomComponentError
 
 
-@transformer
-class dyed_color:
+class DyedColor(Transformer):
     """Allows you to write dyed colors using traditional hex formatting"""
 
     color: str | Any
@@ -29,8 +28,7 @@ class dyed_color:
             return int(color, 16)
 
 
-@transformer
-class lore:
+class Lore(Transformer):
     lore: str | list[str] | list[dict[str, Any]]
 
     def render(self) -> list[TextComponent]:

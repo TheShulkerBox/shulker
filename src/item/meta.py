@@ -111,7 +111,7 @@ class ItemType(type):
         errors = []
         constructed_components = []
         for component in custom_components:
-            name: str = component.__name__
+            name: str = component.name()
 
             try:
                 if (data := resolved_components.get(name)) is not None:
@@ -122,7 +122,7 @@ class ItemType(type):
                         field_errors: list[ValidationError] = []
                         reconstructed_data = {}
                         component_fields = {
-                            field.name: field for field in dataclasses.fields(component)
+                            field.name: field for field in dataclasses.fields(component) if field.name not in ("item", "resolved_components")
                         }
 
                         # validate the fields
@@ -169,18 +169,14 @@ class ItemType(type):
 
                         # attempt to calculate component
                         try:
-                            constructed_component = component(**reconstructed_data)
-                            constructed_component.item = self
-                            # TODO block writes to this (maybe?)
-                            constructed_component.resolved_components = dict(
-                                resolved_components
-                            )
+                            constructed_component = component(item=self, resolved_components=dict(resolved_components), **reconstructed_data)
                             output = constructed_component.render()
                             constructed_components.append(constructed_component)
                         except Exception as err:
+                            # breakpoint()
                             raise ComponentError(name, data, [err])
 
-                        if component._cache:
+                        if not component._skip_cache:
                             self._component_cache[name] = output
                     else:
                         output = self._component_cache[name]
@@ -206,7 +202,7 @@ class ItemType(type):
         errors = []
         constructed_transformers = []
         for transformer in custom_transformers:
-            name = transformer.__name__
+            name: str = transformer.name()
 
             try:
                 if (data := resolved_components.get(name)) is not None:
@@ -218,6 +214,9 @@ class ItemType(type):
 
                     # validate the fields
                     for field in dataclasses.fields(transformer):
+                        if field.name in ("item", "resolved_components"):
+                            continue
+
                         if check_type(data, field.type):
                             reconstructed_data[field.name] = data
                             continue
@@ -245,8 +244,7 @@ class ItemType(type):
                         raise ComponentError(name, data, field_errors)
 
                     try:
-                        constructed_transformer = transformer(**reconstructed_data)
-                        constructed_transformer.item = self
+                        constructed_transformer = transformer(item=self, resolved_components=dict(resolved_components), **reconstructed_data)
                         if (value := constructed_transformer.render()) is not None:
                             resolved_components[name] = value
                         constructed_transformers.append(constructed_transformer)
@@ -280,21 +278,21 @@ class ItemType(type):
         )
 
         custom_components, component_errors = self.handle_custom_components(
-            self._custom_components, output_components
+            Component.registered, output_components
         )
         custom_transformers, transformer_errors = self.handle_custom_transformers(
-            self._custom_transformers, output_components
+            Transformer.registered, output_components
         )
-
-        for component_or_transformer in chain(custom_components, custom_transformers):
-            if component_or_transformer.__class__.__name__ in original_components:
-                component_or_transformer.post_render()
 
         if "id" in output_components:
             self.id = output_components.pop("id")
 
         if "count" in output_components:
             self.count = output_components.pop("count")
+
+        for component_or_transformer in chain(custom_components, custom_transformers):
+            if component_or_transformer.name() in original_components:
+                component_or_transformer.post_render(output_components)
 
         if not self._has_errored:
             self._has_errored = self.calculate_errors(

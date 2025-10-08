@@ -1,14 +1,13 @@
-from component:on_use import on_use, AnimationLiteral
+from component:on_use import OnUse, AnimationLiteral
+from component:base import Component
 from lib:vector_utils import apply_vector
 
-from ./base import component
 
 MAX_PICKUP_DELAY = 32767
 BASE_THROW_VECTOR = (0.0, 0.1, 0.3)
 
 
-@component
-class throwable:
+class Throwable(Component):
     on_throw: str = ""
     on_tick: str = ""
     power: float = 1.0
@@ -18,25 +17,28 @@ class throwable:
     animation: AnimationLiteral = "spear"
     sound: str = ""
 
-    def render(self) -> dict[str, Any]:
+    def render(self):
         append function item_entity_tick:
             if items entity @s contents -self.item function self.on_tick
 
         self.on_use_callback = f"{self.item.path}/on_throw"
 
-        on_use_component = on_use(
+        on_use_component = OnUse(
             callback = self.on_throw,
             delay = self.delay,
             cooldown = self.cooldown,
             animation = self.animation,
             cooldown_group = self.cooldown_group,
             sound = self.sound,
+
+            item = self.item,
+            resolved_components = dict(self.resolved_components),
         )
         on_use_component.item = self.item
 
         return on_use_component.render()
 
-    def post_render(self) -> None:
+    def post_render(self, resolved_components: dict[str, Any]) -> None:
         function self.on_use_callback:
             init_tag = "item.throwable.on_init"
 
