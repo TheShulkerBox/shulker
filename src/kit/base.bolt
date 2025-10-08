@@ -31,6 +31,8 @@ class Kit:
         
         if self.offhand is not None:
             self._all_items.append(self.offhand)
+        
+        self.build()
 
     @property
     def id(self) -> str:

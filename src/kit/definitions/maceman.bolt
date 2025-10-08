@@ -22,8 +22,6 @@ maceman = Kit(
     offhand=Item(id="shield")
 )
 
-maceman.build()
-
 # # Maceman [id:#314]
 
 # data modify storage kits:temp kit.hotbar append value {Slot:0b, id:'iron_shovel', name:'Iron Mace', joke_name:'Big Mace', tip:'Stun active - crit to stun enemy', fake_enchant:1b, attack:{damage:7.5, speed:0.7}, tag:{kit:{stun:1b}, hot_replace:1b}}

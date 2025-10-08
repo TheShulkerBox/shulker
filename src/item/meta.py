@@ -68,6 +68,7 @@ class ItemType(type):
         cls.registered_items[name] = new_cls = super().__new__(
             cls, name, bases, namespace
         )
+        new_cls.build()
         return new_cls
 
     @classmethod

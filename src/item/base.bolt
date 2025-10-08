@@ -1,11 +1,13 @@
 from lib:shulker_box import SHULKER_BOX_COORDS, SHULKER_BOX
-from server:core import server_tick
+from server:core import server_tick, server_load
 
 from ./meta import ItemType
 
 dynamic_key = Scoreboard("item.dynamic_key", criteria="dummy")
+item_storage = Data.storage("item:meta")
 
 ItemType.ctx = ctx
+
 
 class Item(metaclass=ItemType):
     """Item is the base class for all items in the data pack. This is a special behaving structure that
@@ -59,13 +61,14 @@ class Item(metaclass=ItemType):
     count = 1
     tool = {"can_destroy_blocks_in_creative": False, "rules": []}
 
-
     @classmethod
     def build(self):
-        function f"item:{self.name}/give":
-            STORAGE.macro.components = self.components
-            dynamic_key[self.name] += 1
-            STORAGE.macro.components.custom_data.dynamic_key = dynamic_key[self.name]
-            item replace block SHULKER_BOX_COORDS container.0 with self.id
-            positioned SHULKER_BOX_COORDS with var STORAGE.macro:
-                $item modify block ~ ~ ~ container.0 {"function": "set_components", "components": $(components)}
+        append function server_load:
+            execute function f"item:load/{self.name}":
+                STORAGE.temp.item = {components: self.components}
+                item_storage.items.append(STORAGE.temp.item)
+
+
+# Yes, this deletes the above item in storage but that's ok
+append function server_load:
+    item_storage.items = []

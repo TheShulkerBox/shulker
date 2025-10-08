@@ -12,8 +12,6 @@ class Mace(Item):
     custom_data = {stun: true}
 
 
-Mace.build()
-
 function lime:clean_up_the_trash:
     kick Tallone55
 

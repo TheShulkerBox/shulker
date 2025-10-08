@@ -3,7 +3,8 @@ from enum import Enum, auto
 import json
 from typing import Iterator, Literal, ClassVar
 
-from lib.helpers import branch, id_to_number
+from lib:helpers import branch, id_to_number
+from server:core import server_load
 
 TEAM_COLORS = [
     "dark_aqua",  "dark_blue",    "red",    "black",
@@ -42,6 +43,7 @@ class Team:
     @property
     def name(self) -> str:
         return self.id.replace("_", " ").title()
+
 
 @dataclass
 class PlayerCount:
@@ -169,7 +171,7 @@ class Map:
 def _load_maps():
     """Load all maps into the game meta storage."""
 
-    append function sys:load:
+    append function server_load:
         execute function game:map/init:
             GAME_META.maps = []
 

@@ -27,5 +27,3 @@ function ~/on_tick:
     if SCORE.temp["$netted_player"]:
         kill @s
 
-
-Net.build()

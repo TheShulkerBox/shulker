@@ -11,6 +11,3 @@ class Dart(Item):
 
 function ~/on_use:
     say hi
-
-
-Dart.build()
