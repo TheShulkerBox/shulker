@@ -8,7 +8,7 @@ dynamic_key = Scoreboard("item.dynamic_key", criteria="dummy")
 ItemType.ctx = ctx
 
 class Item(metaclass=ItemType):
-    """item is the base class for all items in the data pack. This is a special behaving structure that
+    """Item is the base class for all items in the data pack. This is a special behaving structure that
     barely resembles a class leveraging metaclasses.
 
     The basic structure is to define all components as "class variables" and then use custom methods
@@ -25,7 +25,7 @@ class Item(metaclass=ItemType):
     This item just uses vanilla components to define a stone item with a custom name and lore.
 
     ```
-    class custom_item(item):
+    class CustomItem(Item):
         id = "minecraft:custom_item"
         item_name = {text: "Custom Item", color: theme.primary}
         lore = ["This is a custom item.", "It has special behavior."]
@@ -37,7 +37,7 @@ class Item(metaclass=ItemType):
     Here, we define a basic `test_component` that converts a `bool` into a new set of vanilla components.
 
     ```
-    class custom_item_2(item):
+    class CustomItem2(Item):
         id = "minecraft:custom_item_2"
         item_name = {text: "Custom Item 2", color: theme.primary}
         lore = ["This is another custom item.", "It has special behavior."]
@@ -55,7 +55,7 @@ class Item(metaclass=ItemType):
     when providing multiple input types for a component, such as a color that can be either a string or an integer.
     """
 
-    id = None
+    id = "paper"
     count = 1
     tool = {"can_destroy_blocks_in_creative": False, "rules": []}
 

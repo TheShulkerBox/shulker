@@ -2,8 +2,10 @@ from ../base import Item
 
 
 class Rations(Item):
-    """"""
-    id = "dried_kelp"
+    """Quick healing food that can be eaten quickly in battle."""
+
+    item_model = "dried_kelp"
+    item_name = "Rations"
     consumable = {
         consume_seconds: 0.8,
         on_consume_effects: [
