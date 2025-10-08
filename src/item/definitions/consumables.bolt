@@ -1,9 +1,8 @@
-import component:on_use as _
-
-from ../base import base_item
+from ../base import Item
 
 
-class rations(base_item):
+class Rations(Item):
+    """"""
     id = "dried_kelp"
     consumable = {
         consume_seconds: 0.8,

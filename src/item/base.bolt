@@ -7,7 +7,7 @@ dynamic_key = Scoreboard("item.dynamic_key", criteria="dummy")
 
 ItemType.ctx = ctx
 
-class base_item(metaclass=ItemType):
+class Item(metaclass=ItemType):
     """item is the base class for all items in the data pack. This is a special behaving structure that
     barely resembles a class leveraging metaclasses.
 

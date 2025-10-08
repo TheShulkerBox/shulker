@@ -1,8 +1,8 @@
 import component:on_use as _
-from item:base import base_item
+from item:base import Item
 
 
-class dart(base_item):
+class Dart(Item):
     id = "arrow"
     item_model = "stone"
     item_name = "taco sauce 2 deluxe"
@@ -13,4 +13,4 @@ function ~/on_use:
     say hi
 
 
-dart.build()
+Dart.build()

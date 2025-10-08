@@ -1,0 +1,6 @@
+from ../base import Item
+
+
+class Food(Item):
+    id = "rotten_potato"
+    item_id = "pumpkin_pie"

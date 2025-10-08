@@ -1,19 +1,19 @@
 from dataclasses import dataclass, field
 from typing import ClassVar, NamedTuple
 
-from item:base import base_item
+from item:base import Item
 from item:meta import ItemType
 from lib:helpers import id_to_number
 
 ARMOR_SLOTS = ["head", "chest", "legs", "feet"]
 
-item_type = base_item | tuple[base_item, int]
+item_type = Item | tuple[Item, int]
 
 @dataclass
 class Kit:
     name: str
     tagline: str
-    icon: base_item
+    icon: Item
 
     armor: dict[str, item_type] = field(default_factory=dict)
     hotbar: list[item_type] = field(default_factory=list)

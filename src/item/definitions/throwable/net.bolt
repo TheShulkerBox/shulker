@@ -1,11 +1,11 @@
 import component:throwable as _
-from item:base import base_item
+from item:base import Item
 
 TIME_IN_NET = 5  # seconds
 net_timer = Scoreboard("item.net_timer", criteria="dummy")
 
 
-class net(base_item):
+class Net(Item):
     id = "cobweb"
     item_name = "Net"
     lore = ["Toss at your enemy to ensnare them", "Capture your foes, you dishonorable retiarius"]
@@ -28,4 +28,4 @@ function ~/on_tick:
         kill @s
 
 
-net.build()
+Net.build()

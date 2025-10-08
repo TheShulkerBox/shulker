@@ -8,7 +8,7 @@ from beet import Context
 
 from component.base import Component, Transformer
 from lib.helpers import (
-    title_case_to_snake_case,
+    camel_case_to_snake_case,
     nbt_dump,
     deep_merge_dicts,
     check_type,
@@ -60,12 +60,6 @@ class ItemType(type):
     def __new__(cls, name: str, bases: list[type], namespace: dict[str, Any]):
         if name == "item":
             return super().__new__(cls, name, bases, namespace)
-
-        if name.lower() != name:
-            raise ItemError(
-                f"item '{name}' should be defined with `snake_case` "
-                f"('{title_case_to_snake_case(name)}')."
-            )
 
         namespace["_component_cache"] = {}
         namespace["_has_errored"] = False
@@ -408,7 +402,7 @@ class ItemType(type):
 
     @property
     def name(self):
-        return self.__name__
+        return camel_case_to_snake_case(self.__name__)
 
     def has_id(self):
         return self.id is not None

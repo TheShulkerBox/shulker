@@ -1,8 +1,8 @@
 from kit:base import Kit
-from item:base import base_item
+from item:base import Item
 
-from item:definitions/throwable/net import net
-from item:definitions/consumables import rations
+from item:definitions/throwable/net import Net
+from item:definitions/consumables import Rations
 
 
 footman = Kit(
@@ -11,15 +11,15 @@ footman = Kit(
     icon="iron_sword",
 
     armor={
-        "chest": base_item(id="iron_chestplate"),
-        "legs": base_item(id="leather_leggings"),
-        "feet": base_item(id="iron_boots"),
+        "chest": Item(id="iron_chestplate"),
+        "legs": Item(id="leather_leggings"),
+        "feet": Item(id="iron_boots"),
     },
     hotbar=[
-        base_item(id="iron_sword", item_name="Iron Broadsword"),
-        net,
-        base_item(id="pumpkin_pie", count=3),
-        rations,
+        Item(id="iron_sword", item_name="Iron Broadsword"),
+        # net,
+        Item(id="pumpkin_pie", count=3),
+        Rations,
     ],
 )
 

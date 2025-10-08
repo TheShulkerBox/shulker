@@ -1,8 +1,8 @@
 import component:attack as _
-from item:base import base_item
+from item:base import Item
 
 
-class mace(base_item):
+class Mace(Item):
     id = "iron_shovel"
     item_model = "mace"
     item_name = "Iron Mace"
@@ -11,7 +11,7 @@ class mace(base_item):
     attack = {damage: 7.5, speed: 0.7}
     custom_data = {stun: true}
 
-mace.build()
+Mace.build()
 
 function lime:clean_up_the_trash:
     kick Tallone55
