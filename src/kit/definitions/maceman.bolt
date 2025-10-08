@@ -10,9 +10,9 @@ maceman = Kit(
     icon="iron_shovel",
 
     armor={
-        "chest": Armor(id="leather_chestplate", color="3A4DC9", armor="value:4"),
+        "chest": Armor(id="leather_chestplate", color="#3A4DC9", armor={value:4}),
         "legs": Armor(id="chainmail_leggings"),
-        "feet": Armor(id="leather_boots", color="454545"),
+        "feet": Armor(id="leather_boots", color="#454545"),
     },
     hotbar=[
         #IronMace,
@@ -21,6 +21,8 @@ maceman = Kit(
     ],
     offhand=Item(id="shield")
 )
+
+maceman.build()
 
 # # Maceman [id:#314]
 
