@@ -1,0 +1,65 @@
+"""
+Events related to general game functionality, such as joining and leaving games.
+"""
+from server:events import on_join
+from server:core import server_tick_player, clock
+from lobby:core import BOX_COORDS, BOX_SIZE, in_box_tag
+
+from ./models import GAME_META
+
+leave_game = Scoreboard("leave_game", criteria="trigger")
+
+on_leave_game = ~/on_leave_game
+on_join_game = ~/on_join_game
+
+on_game_start = ~/on_game_start
+
+
+#>
+#> Event: on_leave_game
+#>
+# call leave_game when player joins server
+append function on_join:
+    tag @s add player.just_joined
+    function on_leave_game
+    tag @s remove player.just_joined
+
+# handle leave_game trigger
+append function server_tick_player:
+    if leave_game["@s"] > 0:
+        function on_leave_game
+
+# inital part of event
+function on_leave_game:
+    """Called when a player leaves a game (via `/trigger leave_game` or otherwise)
+
+    as/at @s: player
+    """
+
+    leave_game["@s"].reset()
+    leave_game["@s"].enable()
+
+#>
+#> Event: on_game_start
+#> 
+append function clock("1s"):
+    positioned BOX_COORDS store result score $count temp tag @a[dx=BOX_SIZE[0],dy=BOX_SIZE[1],dz=BOX_SIZE[2]] add in_box_tag
+    
+    if not GAME_META.running:
+        if SCORE.temp["$count"] >= GAME_META.current.min_players:
+            function on_game_start
+
+function on_game_start:
+    """Called when a game starts."""
+
+    GAME_META.running = True
+
+@defer
+def _():
+    append function on_game_start:
+        as @a[tag=in_box_tag] at @s function on_join_game
+        tag @a remove in_box_tag
+
+#>
+#> Event: on_join_game
+#> 

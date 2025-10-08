@@ -7,6 +7,9 @@ append function sys:load:
     if not GAME_META.map_queue:
         GAME_META.map_queue = []
         function game:map_queue/shuffle
+    
+    if not GAME_META.running:
+        GAME_META.running = False
 
 
 function game:map/queue/next:

@@ -1,12 +1,16 @@
 from server:core import server_tick, server_load, clock
 from lib:text import boxed_text, small_caps
+# from game:events import on_leave_game
 
 SIDEBAR_TITLE = {"text": small_caps("The Shulker Box"), "color": theme.primary}
 
+LOBBY_SPAWN = (0, 65, 0, -90, 0)  # x, y, z, yaw, pitch
+BOX_COORDS = (71, 65, -1)  # x, y, z
+BOX_SIZE = (3, 5, 3)  # dx, dy, dz
+
 food = Scoreboard("food", criteria="food")
 lobby_display = Scoreboard("lobby_display", criteria="dummy")
-
-
+in_box_tag = "lobby.in_box"
 
 
 append function server_load:
@@ -35,3 +39,10 @@ append function clock("10s"):
         effect give @a[team=lobby] resistance infinite 3 true
         effect give @a[team=lobby] speed infinite 1 true
         effect give @a[team=lobby] weakness infinite 0 true
+
+
+# append function on_leave_game:
+#     tp @s LOBBY_SPAWN
+
+#     team join lobby @s
+#     gamemode adventure @s

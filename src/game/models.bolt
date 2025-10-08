@@ -1,4 +1,4 @@
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from enum import Enum, auto
 import json
 from typing import Iterator, Literal, ClassVar
@@ -43,6 +43,11 @@ class Team:
     def name(self) -> str:
         return self.id.replace("_", " ").title()
 
+@dataclass
+class PlayerCount:
+    min: int
+    max: int = 100
+
 
 @dataclass
 class Map:
@@ -52,11 +57,12 @@ class Map:
     teams: list[Team]
     tags: list[str]
 
+    player_count: PlayerCount
+    
     # eventually, all maps will be 0 0 0 in their own dimension
     location: tuple[int, int, int]
     dimension: str = "overworld"
 
-    max_player_count: int = MAX_INT
 
     def __post_init__(self):
         """Register the map in the global list of maps to be processed later."""

@@ -4,8 +4,7 @@ from typing import ClassVar, NamedTuple
 from item:base import Item
 from item:meta import ItemType
 from lib:helpers import id_to_number
-
-ARMOR_SLOTS = ["head", "chest", "legs", "feet"]
+from lib:const import ARMOR_SLOTS
 
 item_type = Item | tuple[Item, int]
 
