@@ -1,4 +1,4 @@
-loot_table minecraft:yellow_shulker_box {
+loot_table minecraft:blocks/yellow_shulker_box {
     "type": "minecraft:block",
     "pools": [
         {
@@ -66,3 +66,4 @@ loot_table minecraft:yellow_shulker_box {
 
 SHULKER_BOX_COORDS = "0 50 0"
 SHULKER_BOX = Data.block(SHULKER_BOX_COORDS)
+SHULKER_DROP_CONTENTS = "stick[custom_data={drop_contents:1b}]"

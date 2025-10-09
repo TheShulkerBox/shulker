@@ -1,5 +1,6 @@
 from typing import Literal, Any
 from dataclasses import field
+from nbtlib.tag import Byte
 
 from component:base import Component
 from item:meta import ItemType
@@ -20,6 +21,14 @@ AnimationLiteral = (
     | Literal["toot_horn"]
     | Literal["brush"]
 )
+
+# thrown_item_scores: dict[str, ScoreSource] = {}
+
+# def thrown_item_score(item: str):
+#     if item not in thrown_item_scores:
+#         thrown_item_scores[item] = Scoreboard(f"thrown_item_{item}", criteria=f"minecraft.dropped:minecraft.{item}")
+    
+#     return thrown_item_scores[item]
 
 
 class OnUse(Component):
@@ -55,58 +64,21 @@ class OnUse(Component):
         function on_use_path:
             advancement revoke @s only on_use_path
             
-            player = PlayerDB.get_self()
-            STORAGE.temp.self = SELF
+            if self.replace:
+                # mainhand items get used over offhand so we check that first
+                unless items entity @s weapon.mainhand self.item.conditional_string():
+                    STORAGE.macro.item = SELF.equipment.offhand
+                    STORAGE.macro.item.slot = "offhand"
 
-            db_item_storage = player.data.item[self.item.name]
-
-            store success score $offhand temp if items entity @s weapon.offhand self.item.conditional_string()
-
-            if SCORE.temp["$offhand"]:
-                db_item_storage.on_use.slot = "offhand"
-                db_item_storage.on_use.item = STORAGE.temp.self.equipment.offhand
-            else:
-                db_item_storage.on_use.slot = STORAGE.temp.self.SelectedItemSlot
-                with var db_item_storage.on_use:
-                    raw f"$data modify {db_item_storage.on_use.item} set from {STORAGE.temp.self.Inventory}[{{Slot: $(slot)b}}]"
-            
-            
-            tag @s add item.on_use_component.return_item
-            
+                if items entity @s weapon.mainhand self.item.conditional_string():
+                    STORAGE.macro.item = SELF.SelectedItem
+                    STORAGE.macro.item.slot = "mainhand"
+                
             function self.callback
 
-            PlayerDB.save(player)
-
             if self.replace:
-                schedule function ~/return_item 2t replace
-                
-                function ~/return_item:
-                    as @a[tag=item.on_use_component.return_item]:
-                        player = PlayerDB.get_self()
-                        
-                        db_item_storage = player.data.item[self.item.name]
-                        
-                        if db_item_storage.on_use.slot == "offhand":
-                            with var db_item_storage.on_use.item:
-                                if "item_model" in self.resolved_components:
-                                    item replace entity @s weapon.offhand with stone[item_model=self.resolved_components["item_model"]]
-                                else:
-                                    item replace entity @s weapon.offhand with stone
-                                $item modify entity @s weapon.offhand {function: 'set_components', components: $(components)}
-                        else:
-                            with var db_item_storage.on_use.item.components["minecraft:custom_data"]:
-                                $data modify storage shulker:temp macro.slot set from storage \
-                                    playerdb:temp player.Inventory[{components: {"minecraft:custom_data": {item_id: $(item_id), dynamic_key: $(dynamic_key)}}}]
-
-                            STORAGE.macro.components = db_item_storage.on_use.item.components
-                            STORAGE.macro.id = db_item_storage.on_use.item.id
-                            with var STORAGE.macro:
-                                if "item_model" in self.resolved_components:
-                                    val = self.resolved_components["item_model"]
-                                    raw f"$item replace entity @s hotbar.$(slot) with stone[item_model={val}]"
-                                else:
-                                    $item replace entity @s hotbar.$(slot) with $(id)
-                                $item modify entity @s hotbar.$(slot) {function: 'set_components', components: $(components)}
+                execute function ~/return_item with var STORAGE.macro.item:
+                    $item modify entity @s weapon.$(slot) {function: 'set_components', components: $(components)}
 
         output = {
             "consumable": {

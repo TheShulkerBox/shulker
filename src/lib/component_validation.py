@@ -95,7 +95,7 @@ class McdocValidator:
         data: Json,
         schema: Schema,
         path: list[str | int],
-        parent: Json | None = None
+        parent: Json | None = None,
     ):
         """
         Validates a given JSON-like data structure against a specified schema,
@@ -366,7 +366,12 @@ class McdocValidator:
                 if remaining_keys:
                     if spread_schema:
                         try:
-                            self.validate_data({key: data[key] for key in remaining_keys}, spread_schema, path, data)
+                            self.validate_data(
+                                {key: data[key] for key in remaining_keys},
+                                spread_schema,
+                                path,
+                                data,
+                            )
                         except (ValidationError, ExceptionGroup) as e:
                             struct_errors.append(e)
                     else:

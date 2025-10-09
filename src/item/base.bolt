@@ -1,4 +1,4 @@
-from lib:shulker_box import SHULKER_BOX_COORDS, SHULKER_BOX
+from lib:shulker_box import SHULKER_BOX_COORDS, SHULKER_BOX, SHULKER_DROP_CONTENTS
 from server:core import server_tick, server_load
 
 from ./meta import ItemType
@@ -63,12 +63,22 @@ class Item(metaclass=ItemType):
 
     @classmethod
     def build(self):
-        append function server_load:
-            execute function f"item:load/{self.name}":
-                STORAGE.temp.item = {components: self.components}
-                item_storage.items.append(STORAGE.temp.item)
+        # append function server_load:
+        #     execute function f"item:load/{self.name}":
+        #         STORAGE.temp.item = {components: self.components}
+        #         STORAGE.macro.name = self.name
+        #         with var STORAGE.macro:
+        #             $data modify storage item:meta item.$(name) set from storage shulker:temp item
+        
+        function f"item:give/{self.name}":
+            SHULKER_BOX.Items = [{id: self.id, components: self.components}]
+            dynamic_key[self.name] += 1
+            SHULKER_BOX.Items[0].components."minecraft:custom_data".dynamic_key = dynamic_key[self.name]
+            if SHULKER_BOX.Items[0].components."minecraft:use_remainder":  # stupid hack
+                SHULKER_BOX.Items[0].components."minecraft:use_remainder".components."minecraft:custom_data".dynamic_key = dynamic_key[self.name]
+            loot give @s mine SHULKER_BOX_COORDS SHULKER_DROP_CONTENTS
 
 
 # Yes, this deletes the above item in storage but that's ok
 append function server_load:
-    item_storage.items = []
+    item_storage.item = {}

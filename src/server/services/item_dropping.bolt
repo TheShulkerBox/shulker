@@ -1,0 +1,26 @@
+from server:core import server_tick
+
+item_processed_tag = "item.processed"
+
+handle_item = ~/handle_item
+
+
+append function server_tick:
+    as @e[type=item, tag=item_processed_tag] at @s function handle_item
+
+
+function handle_item:
+    # Handles items that have been processed by item dropping services.
+
+    SELF.PickupDelay = 0
+    STORAGE.temp.uuid.remove()
+
+    on origin:
+        STORAGE.temp.uuid = SELF.UUID
+
+    if STORAGE.temp.uuid:
+        SELF.Owner = STORAGE.temp.uuid
+    else:
+        kill @s
+
+    tag @s add item_processed_tag

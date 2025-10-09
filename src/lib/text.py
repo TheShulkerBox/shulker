@@ -61,7 +61,8 @@ def boxed_text(
         ]
     )
 
+
 def small_caps(text: str) -> str:
     """Converts a string to small caps."""
-    
+
     return "".join(SMALL_CAPS_MAP.get(c, c) for c in text.lower())

@@ -5,6 +5,7 @@ from typing import Any, ClassVar, Self
 from itertools import chain, count
 
 from beet import Context
+from bolt import Runtime
 
 from component.base import Component, Transformer
 from lib.helpers import (
@@ -117,7 +118,9 @@ class ItemType(type):
                         field_errors: list[ValidationError] = []
                         reconstructed_data = {}
                         component_fields = {
-                            field.name: field for field in dataclasses.fields(component) if field.name not in ("item", "resolved_components")
+                            field.name: field
+                            for field in dataclasses.fields(component)
+                            if field.name not in ("item", "resolved_components")
                         }
 
                         # validate the fields
@@ -164,7 +167,11 @@ class ItemType(type):
 
                         # attempt to calculate component
                         try:
-                            constructed_component = component(item=self, resolved_components=dict(resolved_components), **reconstructed_data)
+                            constructed_component = component(
+                                item=self,
+                                resolved_components=dict(resolved_components),
+                                **reconstructed_data,
+                            )
                             output = constructed_component.render()
                             constructed_components.append(constructed_component)
                         except Exception as err:
@@ -239,7 +246,11 @@ class ItemType(type):
                         raise ComponentError(name, data, field_errors)
 
                     try:
-                        constructed_transformer = transformer(item=self, resolved_components=dict(resolved_components), **reconstructed_data)
+                        constructed_transformer = transformer(
+                            item=self,
+                            resolved_components=dict(resolved_components),
+                            **reconstructed_data,
+                        )
                         if (value := constructed_transformer.render()) is not None:
                             resolved_components[name] = value
                         constructed_transformers.append(constructed_transformer)
@@ -445,11 +456,9 @@ class ItemType(type):
         if not kwargs:
             raise ItemError(f"Cannot instantiate `{self.name}` without changes!")
 
+        runtime = self.ctx.inject(Runtime)
+
         # generate unique name
-        name = (
-            self.ctx.generate.path(self.name + "_generated_{incr}")
-            .replace(":", "_")
-            .replace("/", "_")
-        )
+        name = "zz_" + runtime.get_nested_location().split("/").pop() + f"_{next(self.counter)}"
 
         return type(name, (self,), kwargs)
