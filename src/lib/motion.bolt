@@ -1,0 +1,139 @@
+from collections.abc import Sequence
+import math
+
+from lib:storage_helpers import loop, debug_storage
+
+STEPS = 3
+STEP_SIZES = [1, 0.1, 0.01]
+
+root = ~/
+remove_enchantment = ~/remove_enchantment
+
+def create_motion_enchantments(coordinate_scale: list[int], direction: list[int], step_size: float):
+    return {
+        "anvil_cost": 0,
+        "description": "Motion",
+        "effects": {
+            "minecraft:tick": [
+                {
+                    "effect": {
+                        "type": "minecraft:all_of",
+                        "effects": [
+                            {
+                                "type": "minecraft:apply_impulse",
+                                "coordinate_scale": coordinate_scale,
+                                "direction": direction,
+                                "magnitude": { "type": "minecraft:linear", "base": 0, "per_level_above_first": step_size }
+                            },
+                            {
+                                "type": "minecraft:run_function",
+                                "function": remove_enchantment
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        "max_cost": { "base": 0, "per_level_above_first": 0 },
+        "max_level": 255,
+        "min_cost": { "base": 0, "per_level_above_first": 0},
+        "slots": [ "any" ],
+        "supported_items": "minecraft:stick",
+        "weight": 1
+    }
+
+
+def enchantment_name(axis: str, step_size: float, type: str = "rel", direction: str = "pos"):
+    return f"{root}/{type}/{direction}_{axis}_{str(step_size).replace(".", "_")}"
+
+
+for axis in "xyz":
+    for step_size in STEP_SIZES:
+        enchantment enchantment_name(axis, step_size) create_motion_enchantments(
+            coordinate_scale = [1, 1, 1],
+            direction = [int(axis == "x"), int(axis == "y"), int(axis == "z")],
+            step_size = step_size,
+        )
+        enchantment enchantment_name(axis, step_size, direction="neg") create_motion_enchantments(
+            coordinate_scale = [1, 1, 1],
+            direction = [-int(axis == "x"), -int(axis == "y"), -int(axis == "z")],
+            step_size = step_size,
+        )
+        enchantment enchantment_name(axis, step_size, type="abs") create_motion_enchantments(
+            coordinate_scale = [int(axis == "x"), int(axis == "y"), int(axis == "z")],
+            direction = [0, 0, 1],
+            step_size = step_size,
+        )
+        enchantment enchantment_name(axis, step_size, type="abs", direction="neg") create_motion_enchantments(
+            coordinate_scale = [int(axis == "x"), int(axis == "y"), int(axis == "z")],
+            direction = [0, 0, -1],
+            step_size = step_size,
+        )
+
+
+function remove_enchantment:
+    clear @s *[custom_data~{apply_motion: true}]
+
+
+def apply_motion_vector(vector: DataSource | Sequence[float] = (0.0, 0.0, 0.0), type: str = "rel"):
+    """Applies a motion vector to an entity"""
+
+    if isinstance(vector, tuple):
+        generated_enchantments = {}
+        for axis, value in zip("xyz", vector):
+            if math.isclose(value, 0.0):
+                continue
+            elif abs(value) > 255:
+                raise ValueError(f"Vector component {value} too large to represent with enchantments")
+            
+            parts = []
+            value = round(value, STEPS) * (10 ** (STEPS - 1))
+            for i in range(STEPS):
+                parts.insert(0, int(value % 10))
+                value = value // 10
+            
+            for part, step_size in zip(parts, STEP_SIZES):
+                if part >= 1:
+                    if value < 0:
+                        generated_enchantments[enchantment_name(axis, step_size, type, "neg")] = part
+                    else:
+                        generated_enchantments[enchantment_name(axis, step_size, type, "pos")] = part
+        
+        item replace entity @s saddle with stick[enchantments=generated_enchantments, equippable={slot: saddle}, custom_data={apply_motion: true}]
+    
+    elif isinstance(vector, DataSource):
+        STORAGE.macro = {enchantments: {}}
+
+        for i, axis in enumerate("xyz"):
+            if (vector[i] != 0) and (-255 < vector[i] < 255):
+                SCORE.temp["$original_value"] = (vector[i] * (10 ** (STEPS - 1)))
+                
+                if SCORE.temp["$original_value"] < 0:
+                    SCORE.temp["$value"] = SCORE.temp["$original_value"] * -1
+                else:
+                    SCORE.temp["$value"] = SCORE.temp["$original_value"]
+
+                for i, step_size in zip(range(STEPS), reversed(STEP_SIZES)):
+                    if i == STEPS - 1:
+                        STORAGE.macro.part = SCORE.temp["$value"]
+                    else:
+                        STORAGE.macro.part = SCORE.temp["$value"] % 10
+                        SCORE.temp["$value"] = SCORE.temp["$value"] / 10
+
+                    if STORAGE.macro.part != 0:
+                        if SCORE.temp["$original_value"] > 0:
+                            name = enchantment_name(axis, step_size, type, "pos")
+                            with var STORAGE.macro:
+                                raw f'$data modify storage shulker:temp macro.enchantments."{name}" set value $(part)'
+                        else:
+                            name = enchantment_name(axis, step_size, type, "neg")
+                            with var STORAGE.macro:
+                                raw f'$data modify storage shulker:temp macro.enchantments."{name}" set value $(part)'
+        
+        if STORAGE.macro.enchantments:
+            with var STORAGE.macro:
+                $item replace entity @s saddle with stick[enchantments=$(enchantments), equippable={slot: saddle}, custom_data={apply_motion: true}]
+            
+    
+    else:
+        raise TypeError(f"Vector must be a tuple or DataSource: {vector}")

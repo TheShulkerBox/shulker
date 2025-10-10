@@ -5,8 +5,10 @@ Put things that should be available at all times.
 Note: It's really common to have conflicts so be careful what is all defined here!
 """
 
+from contextlib import contextmanager
 from typing import Any
 
+from bolt.contrib.defer import Defer
 from bolt_expressions import Scoreboard, Data, ScoreSource, DataSource
 
 from lib.text import theme

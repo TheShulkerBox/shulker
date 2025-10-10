@@ -38,13 +38,6 @@ function game:map/queue/shuffle:
             $data remove storage shulker:temp maps[$(index)]
 
 
-@defer
-def generate_custom_queuing():
-    for map in Map._all_maps:
-        function f"game:map/queue/enqueue_{map.id}":
-            GAME_META.map_queue.append(map.id)
-
-
 function game:start:
     ...
 

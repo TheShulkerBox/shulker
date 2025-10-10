@@ -2,7 +2,7 @@ from kit:base import Kit
 from item:base import Item
 
 from item:definitions/food import Food
-from item:definitions/throwable/net import Net
+# from item:definitions/throwable/net import Net
 from item:definitions/consumables import Rations
 
 
@@ -18,7 +18,7 @@ footman = Kit(
     },
     hotbar=[
         Item(id="iron_sword", item_name="Iron Broadsword"),
-        # net,
+        # Net,
         Food(count=3),
         Rations,
     ],

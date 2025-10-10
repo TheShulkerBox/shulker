@@ -1,5 +1,6 @@
 import component:on_use as _
 from item:base import Item
+from lib:motion import apply_motion_vector
 
 
 class Dart(Item):
@@ -10,4 +11,18 @@ class Dart(Item):
 
 
 function ~/on_use:
-    say hi
+    apply_motion_vector((0, 1.5, 2))
+
+
+class PoisonDart(Item):
+    id = "arrow"
+    item_model = "poisonous_potato"
+    item_name = "poison taco sauce 3 deluxe"
+    on_use = {callback: ~/on_use_poison, replace: true, cooldown: 0.5}
+
+
+function ~/on_use_poison:
+    STORAGE.temp.vector = [0] * 3
+    for i in range(3):
+        store result storage shulker:temp vector[i] double 0.01 random value -500..500
+    apply_motion_vector(STORAGE.temp.vector)

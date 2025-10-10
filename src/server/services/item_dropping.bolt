@@ -6,7 +6,7 @@ handle_item = ~/handle_item
 
 
 append function server_tick:
-    as @e[type=item, tag=item_processed_tag] at @s function handle_item
+    as @e[type=item, tag=!item_processed_tag] at @s function handle_item
 
 
 function handle_item:

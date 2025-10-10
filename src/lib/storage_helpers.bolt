@@ -79,6 +79,8 @@ def debug_storage(*args):
     for arg in args:
         if isinstance(arg, DataSource):
             output.append({storage: arg._target, nbt: str(arg._path)})
+        elif isinstance(arg, ScoreSource):
+            output.append({score: {name: arg.scoreholder, objective: arg.objective}})
         else:
             output.append(arg)
         output.append(" ")

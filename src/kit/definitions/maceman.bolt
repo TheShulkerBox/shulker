@@ -1,6 +1,6 @@
+import component:armor as _
 from kit:base import Kit
 from item:base import Item
-
 from item:definitions/food import Food
 from item:definitions/armor import Armor 
 
@@ -10,7 +10,7 @@ maceman = Kit(
     icon="iron_shovel",
 
     armor={
-        "chest": Armor(id="leather_chestplate", dyed_color="#3A4DC9", armor={value:4}),
+        "chest": Armor(id="leather_chestplate", dyed_color="#3A4DC9", armor={value: 4}),
         "legs": Armor(id="chainmail_leggings"),
         "feet": Armor(id="leather_boots", dyed_color="#454545"),
     },

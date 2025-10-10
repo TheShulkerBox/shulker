@@ -72,6 +72,9 @@ class Map:
         self._all_maps.append(self)
         self.hashed_id = id_to_number(self.id)
 
+        function f"game:map/queue/enqueue_{self.id}":
+            GAME_META.map_queue.append(self.id)
+
     @property
     def name(self) -> str:
         return self.id.replace("_", " ").title()

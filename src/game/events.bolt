@@ -42,24 +42,40 @@ function on_leave_game:
 #>
 #> Event: on_game_start
 #> 
+move_players_to_game = ~/move_players_to_game
 append function clock("1s"):
     positioned BOX_COORDS store result score $count temp tag @a[dx=BOX_SIZE[0],dy=BOX_SIZE[1],dz=BOX_SIZE[2]] add in_box_tag
     
     if not GAME_META.running:
-        if SCORE.temp["$count"] >= GAME_META.current.min_players:
+        if GAME_META.dev_mode or (SCORE.temp["$count"] >= GAME_META.current.min_players):
             function on_game_start
+    else:
+        function move_players_to_game
+
+
+function ~/move_players_to_game:
+    as @a[tag=in_box_tag] at @s function on_join_game
+    tag @a remove in_box_tag
+
 
 function on_game_start:
     """Called when a game starts."""
 
     GAME_META.running = True
 
+
 @defer
 def _():
     append function on_game_start:
-        as @a[tag=in_box_tag] at @s function on_join_game
-        tag @a remove in_box_tag
+        function move_players_to_game
 
 #>
 #> Event: on_join_game
 #> 
+function on_join_game:
+    """Called when a player joins a game"""
+
+    if not GAME_META.running:
+        return fail
+    
+    
