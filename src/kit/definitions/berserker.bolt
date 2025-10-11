@@ -1,0 +1,16 @@
+
+# # Berzerker [id:#5]
+
+# data modify storage kits:temp kit.hotbar append value {Slot:0b, id:'iron_sword', name:'Iron Greatsword', joke_name:'Blackbeard\'s Blade'}
+# data modify storage kits:temp kit.hotbar append value {Slot:1b, id:'pumpkin_pie', Count:2b}
+
+# data modify storage kits:temp kit.offhand set value {id:'potion', name:'Berserker Potion', joke_name:'Concoction o\' Moon Sugar', tip:'Provides incredible speed and damage', color:6881329, tag:{custom_potion_effects:[{id:"minecraft:speed",amplifier:1,duration:240},{id:"minecraft:strength",amplifier:7,duration:240},{id:"minecraft:weakness",amplifier:4,duration:240}]}}
+
+# #> descriptions for GUI and tellraw
+# data modify storage kits:temp kit.desc.name set value 'Berserker'
+# data modify storage kits:temp kit.desc.tagline set value 'The Lethal Weapon'
+# data modify storage kits:temp kit.desc.armor set value 0
+# data modify storage kits:temp kit.desc.icon set value {id:'potion',tag:{CustomPotionColor:6881329}}
+
+# function kits:process/main
+# data modify storage kits:main kit.berserker set from storage kits:temp out

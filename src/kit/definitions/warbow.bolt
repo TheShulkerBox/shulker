@@ -1,0 +1,27 @@
+
+# # Warbow [id:#12]
+
+# data modify storage kits:temp kit.extra append value {id:'amethyst_shard', name:'Spyglass Shard', lore:["Ouch! It's a bit sharp"], attack:{damage:2, speed:1.8}}
+# data modify storage kits:temp kit.extra append value {heavy_arrow:1b, id:'tipped_arrow', name:'Heavy Arrow', tip:'Packs a mighty punch', color:6184542, Count:1b, tag:{spawn:1b, custom_potion_effects:[{id:"minecraft:invisibility",amplifier:0,duration:0}]}}
+
+# data modify storage kits:temp kit.hotbar append value {Slot:0b, id:'bow', name:'Warbow', joke_name:'High-Powered Rifle', lore:['A high-caliber bow with extended reload times'], fake_enchant:1b}
+# data modify storage kits:temp kit.hotbar append value {Slot:2b, id:'stick', Count:17b, name:'Warbow Ammo'}
+# data modify storage kits:temp kit.hotbar append value {Slot:3b, id:'pumpkin_pie', Count:3b}
+# data modify storage kits:temp kit.hotbar append value {Slot:4b, id:'spyglass', name: 'Spyglass', lore:['Fragile, use with caution!'], attack:{damage:4, speed:1.0}, tag:{Enchantments:[{id:"minecraft:knockback", lvl:3}]}}
+
+# data modify storage kits:temp kit.armor append value {Slot:2b, id:'iron_chestplate'}
+# data modify storage kits:temp kit.armor append value {Slot:1b, id:'leather_leggings', color:14594611}
+# data modify storage kits:temp kit.armor append value {Slot:0b, id:'leather_boots', color:14594611}
+
+# #> descriptions for GUI and tellraw
+# data modify storage kits:temp kit.desc.name set value 'Warbow'
+# data modify storage kits:temp kit.desc.tagline set value 'Specializes in long-range combat'
+# data modify storage kits:temp kit.desc.armor set value 4.5
+# data modify storage kits:temp kit.desc.health set value 16.0
+
+# data modify storage kits:temp kit.desc.abilities append value {name:'Focus', desc:['Hold the bow back to focus your shot', 'Focus shots deal extra damage!']}
+# data modify storage kits:temp kit.desc.abilities append value {name:'Stamina', desc:['Holding the bow for long periods of time induces hunger']}
+# data modify storage kits:temp kit.desc.icon set value {id:'spectral_arrow'}
+
+# function kits:process/main
+# data modify storage kits:main kit.warbow set from storage kits:temp out

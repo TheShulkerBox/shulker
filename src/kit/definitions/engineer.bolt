@@ -1,0 +1,44 @@
+
+# # Engineer [id: #308]
+
+# data modify storage kits:temp kit.hotbar append value {Slot:0b, id:'iron_pickaxe', name:'Engineer\'s Pickaxe', joke_name:'Hook o\' Craftin\'', attack:{damage:4, speed:1.6}, tag:{Enchantments:[{id:"minecraft:knockback",lvl:1}]}}
+# data modify storage kits:temp kit.hotbar append value {Slot:1b, id:'cooked_mutton', Count:4b}
+
+# data modify storage kits:temp kit.offhand set value {id:'knowledge_book', desc:{ignore:1b}, tag:{Recipes:[]}}
+
+# data modify storage kits:temp kit.armor append value {Slot:2b, id:'leather_chestplate', armor:{value:8}, color:8421504}
+# data modify storage kits:temp kit.armor append value {Slot:1b, id:'chainmail_leggings'}
+# data modify storage kits:temp kit.armor append value {Slot:0b, id:'leather_boots', color:14903808}
+
+# data modify storage kits:temp kit.extra append value {id:'netherite_scrap', jname:'{"text": "Scrap", "color": "red"}', tip:'Used in all of engineer crafting recipes', tag:{persist:1b, kit:{item:'scrap'}, CustomModelData:101003}}
+
+# data modify storage kits:temp kit.extra append value {id:'stone_pressure_plate', jname:'{"text": "Trap - Right Click", "color": "yellow"}', tag:{persist:1b, kit:{item:'trap'}}, tip:'Places a trap underneath you'}
+# data modify storage kits:temp kit.extra append value {id:'iron_ingot', jname:'{"text": "Armor Pack - Throw", "color": "yellow"}', tip:'Provides a bit of extra armor', tag:{persist:1b, kit:{item:'armor_pack'}, droppable:2b, CustomModelData:101006}}
+# data modify storage kits:temp kit.extra append value {id:'note_block', jname:'{"text": "Portable Resupply Crate - Throw", "color": "yellow"}', tip:'Provides a single resupply anywhere', Count:1b, tag:{persist:1b, kit:{item:'crate'},droppable:2b, CustomModelData:101007}}
+
+# data modify storage kits:temp kit.extra append value {id:'fletching_table', jname:'{"text": "Arrow Crate - Right Click", "color": "yellow"}', tip:'Places an ammo crate for archers', tag:{persist:1b, kit:{item:'arrow_supply'}}}
+# data modify storage kits:temp kit.extra append value {id:'spawner', jname:'{"text": "Bird Cage - Right Click", "color": "yellow"}', tip:'Places a parrot-powered remotely-triggered explosive cage', lore:['Supported via parrot technologies'], tag:{droppable:1b, persist:1b, kit:{item:'bird_cage'}}}
+# data modify storage kits:temp kit.extra append value {id:'smithing_table', jname:'{"text": "Armor Table - Right Click", "color": "yellow"}', tip:'Places an armor upgrade table to give extra armor to teammates', tag:{persist:1b, kit:{item:'armor_table'}}}
+# data modify storage kits:temp kit.extra append value {id:'blaze_rod', jname:'{"text": "Spanner - Right Click", "color": "yellow"}', tip:'Allows you to interact with structures', tag:{persist:1b, kit:{item:'spanner'}}}
+# data modify storage kits:temp kit.extra append value {id:'barrel', jname:'{"text": "Warp Barrel - Right Click", "color": "yellow"}', tip:'Places a barrel that you can warp back to', tag:{persist:1b, kit:{item:'warp_barrel'}}}
+
+# data modify storage kits:temp kit.extra append value {id:'gunpowder', jname:'{"text": "Smoke Bomb - Right Click", "color": "yellow"}', tip:'Disappear in a mist of smoke back to your warp barrel', tag:{persist:1b, kit:{item:'smoke_bomb'}}}
+# data modify storage kits:temp kit.extra append value {id:'sugar_cane', jname:'{"text": "Bird Whistle - Right Click", "color": "yellow"}', tip:'Call your bird to trigger your remote explosion', tag:{persist:1b, kit:{item:'bird_whistle'}}}
+
+# data modify storage kits:temp kit.extra append value {id:'crossbow', jname:'{"text": "Rapid Fire Ballista", "color": "yellow"}', fake_enchant:1b, tag:{kit:{item:'ballista', type:'rapid'}}}
+# data modify storage kits:temp kit.extra append value {id:'crossbow', jname:'{"text": "Power Ballista", "color": "yellow"}', fake_enchant:1b, tag:{kit:{item:'ballista', type:'power'}}}
+# data modify storage kits:temp kit.extra append value {id:'tipped_arrow', jname:'{"text": "Ballista Bolt", "color": "yellow"}', tag:{kit:{item:'ballista_bolt'},CustomPotionColor:7960696}}
+
+
+# #> descriptions for GUI and tellraw
+# data modify storage kits:temp kit.desc.name set value 'Engineer'
+# data modify storage kits:temp kit.desc.tagline set value 'A crafty tactician with several tricks'
+# data modify storage kits:temp kit.desc.armor set value 6.5
+# data modify storage kits:temp kit.desc.icon set value {id:'iron_pickaxe'}
+
+# data modify storage kits:temp kit.desc.abilities append value {name:'Scrap', desc:['Generates naturally and via damage dealt on foes']}
+# data modify storage kits:temp kit.desc.abilities append value {name:'Crafting', desc:['Craft items in your inventory to aid in battle']}
+
+
+# function kits:process/main
+# data modify storage kits:main kit.engineer set from storage kits:temp out

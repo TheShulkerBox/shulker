@@ -1,0 +1,24 @@
+
+# # Witch Doctor [id:#21]
+
+# data modify storage kits:temp kit.hotbar append value {Slot:0b, id:'stone_sword', name:'Sacrificial Knife', joke_name:'Dagger o\' Skulls', tip:'Slay enemies to get totems for your team!', tag:{CustomModelData:102002}}
+# data modify storage kits:temp kit.hotbar append value {Slot:1b, id:'suspicious_stew', tag:{effects:[{id:"minecraft:saturation", duration:4}]}}
+
+# data modify storage kits:temp kit.armor append value {Slot:2b, id:'leather_chestplate', color:8333766}
+# data modify storage kits:temp kit.armor append value {Slot:1b, id:'leather_leggings', color:10103263}
+# data modify storage kits:temp kit.armor append value {Slot:0b, id:'leather_boots', color:8333766}
+
+# data modify storage kits:temp kit.extra append value {Slot:2b, id:'totem_of_undying', lore:['Constructed from the ashes', 'At what cost..'], tag:{persist:1b,droppable:1b}}
+
+
+# #> descriptions for GUI and tellraw
+# data modify storage kits:temp kit.desc.name set value 'Witch Doctor'
+# data modify storage kits:temp kit.desc.tagline set value 'A mysterious doctor who can provide invulnerability'
+# data modify storage kits:temp kit.desc.armor set value 3
+# data modify storage kits:temp kit.desc.icon set value {id:'totem_of_undying'}
+
+# data modify storage kits:temp kit.desc.abilities append value {name:'Mysterious Arts', desc:['Converts enemies to totems upon killing them', 'Toss totems to teammates']}
+
+
+# function kits:process/main
+# data modify storage kits:main kit.witch_doctor set from storage kits:temp out

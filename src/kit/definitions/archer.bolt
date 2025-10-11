@@ -1,0 +1,42 @@
+from kit:base import Kit
+from item:base import Item
+from item:definitions/food import Food
+from item:definitions/armor import Armor 
+
+archer = Kit(
+    name="Archer",
+    tagline="A valiant bowman",
+    icon="bow",
+
+    armor={
+        "chest": Armor(id="leather_chestplate"),
+        "legs": Armor(id="leather_leggings"),
+        "feet": Armor(id="leather_boots")
+    },
+    hotbar=[
+        Item(id="wooden_sword", item_name="Wooden Dagger"),
+        Item(id="bow", item_name="Longbow"),
+        Item(id="arrow", count=20),
+        Food(count=2)
+    ]
+)
+
+# # Archer [id:#11]
+
+# data modify storage kits:temp kit.hotbar append value {Slot:0b, id:'wooden_sword', name:'Wooden Dagger', joke_name:'Plank o\' Nails'}
+# data modify storage kits:temp kit.hotbar append value {Slot:1b, id:'bow', name:'Longbow', joke_name:'Pointy Stick Launcher'}
+# data modify storage kits:temp kit.hotbar append value {Slot:2b, id:'arrow', Count:20b}
+# data modify storage kits:temp kit.hotbar append value {Slot:3b, id:'pumpkin_pie', Count:2b}
+# data modify storage kits:temp kit.armor append value {Slot:2b, id:'leather_chestplate', color:10060381}
+# data modify storage kits:temp kit.armor append value {Slot:1b, id:'leather_leggings', color:10060381}
+# data modify storage kits:temp kit.armor append value {Slot:0b, id:'leather_boots', color:8349512}
+
+# #> descriptions for GUI and tellraw
+# data modify storage kits:temp kit.desc.name set value 'Archer'
+# data modify storage kits:temp kit.desc.tagline set value 'A valiant bowman'
+# data modify storage kits:temp kit.desc.armor set value 3
+# data modify storage kits:temp kit.desc.icon set value {id:'bow'}
+
+
+# function kits:process/main
+# data modify storage kits:main kit.archer set from storage kits:temp out

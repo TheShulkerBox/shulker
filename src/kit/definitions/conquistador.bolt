@@ -1,0 +1,24 @@
+
+# # Conquistador [id:#312]
+
+# data modify storage kits:temp kit.hotbar append value {Slot:0b, id:'iron_sword', name:'Iron Cutlass', joke_name:'Iron Cut-ya-up-lass', attack:{damage:5, speed:1.6}, tag:{hot_replace:1b, kit:{charge:0b}}}
+# data modify storage kits:temp kit.hotbar append value {Slot:1b, Count:16b, id:'light_gray_banner', name:'Conquistador\'s Banner', joke_name:'Hulk', tag:{banner:1b, persist:1b}}
+
+# data modify storage kits:temp kit.offhand set value {id:'lingering_potion', name:'Charge', color:16769876, tag:{ability:1b}}
+
+# data modify storage kits:temp kit.hotbar append value {Slot:2b, id:'pumpkin_pie', Count:2b}
+
+# data modify storage kits:temp kit.armor append value {Slot:2b, id:'leather_chestplate', color:11337728, armor:{value:3}}
+# data modify storage kits:temp kit.armor append value {Slot:1b, id:'golden_leggings'}
+# data modify storage kits:temp kit.armor append value {Slot:0b, id:'iron_boots'}
+
+# data modify storage kits:temp kit.extra append value {Slot:8b, id:'golden_sword', name:'Raw Might', joke_name:'Moxxy', tip:'Launch players when you hit them!', attack:{damage:10, speed:3.0}, tag:{hot_replace:1b, kit:{charge:1b}, spawn:1b, Enchantments:[{"id":"minecraft:knockback","lvl":3}]}}
+
+# #> descriptions for GUI and tellraw
+# data modify storage kits:temp kit.desc.name set value 'Conquistador'
+# data modify storage kits:temp kit.desc.tagline set value 'Charges into the fight to rally teammates!'
+# data modify storage kits:temp kit.desc.armor set value 4
+# data modify storage kits:temp kit.desc.icon set value {id:'red_banner'}
+
+# function kits:process/main
+# data modify storage kits:main kit.conquistador set from storage kits:temp out

@@ -1,0 +1,31 @@
+
+# # Ranger [id:#313]
+
+# #> these define extra weapons that ranger uses
+# #>   slicer:fake_enchanted sword
+# #>   triple:triple shot crossbow
+# #>   rapid:rapid fire shot crossbow   
+# data modify storage kits:temp kit.extra append value {slicer:1b, Slot:0b, id:'wooden_sword', name:'Wooden Shortsword', tip:'Avoid taking damage to maintain diamond sword damage', fake_enchant:1b, tag:{spawn:1b, deathmsg: {verb: 'sliced'}}}
+# data modify storage kits:temp kit.extra append value {rapid:1b,  Slot:1b, id:'crossbow', name:'Crossbow', tag:{spawn:1b, Charged:1b, ChargedProjectiles:[{id:"arrow",Count:1b, tag:{Rapid:1b}},{},{}]}}
+
+# # normal loadout
+# data modify storage kits:temp kit.hotbar append value {Slot:0b, id:'wooden_sword', name:'Wooden Shortsword', wooden:1b}
+# data modify storage kits:temp kit.hotbar append value {Slot:1b, triple:1b, id:'crossbow', name:'Crossbow', tag:{Charged:1b, ChargedProjectiles:[{id:"arrow",Count:1b},{id:"arrow",Count:1b},{id:"arrow",Count:1b}]}}
+# data modify storage kits:temp kit.hotbar append value {Slot:2b, id:'sweet_berries', name:'Natural Berries', tip:'Nutrition rich berries', Count:3b}
+# data modify storage kits:temp kit.hotbar append value {Slot:3b, id:'arrow', name:'Bolt', Count:12b}
+
+# data modify storage kits:temp kit.armor append value {Slot:2b, id:'leather_chestplate', color:6192150}
+# data modify storage kits:temp kit.armor append value {Slot:1b, id:'leather_leggings', color:6192150}
+# data modify storage kits:temp kit.armor append value {Slot:0b, id:'leather_boots', color:6192150}
+
+# #> descriptions for GUI and tellraw
+# data modify storage kits:temp kit.desc.name set value 'Ranger'
+# data modify storage kits:temp kit.desc.tagline set value 'A swift and skilled crossbowman'
+# data modify storage kits:temp kit.desc.armor set value 3
+# data modify storage kits:temp kit.desc.icon set value {id:'crossbow'}
+
+# data modify storage kits:temp kit.desc.abilities append value {name:'Crossbow Specialist', desc:['Can shoot 3 arrows at once or consecutively']}
+
+
+# function kits:process/main
+# data modify storage kits:main kit.ranger set from storage kits:temp out

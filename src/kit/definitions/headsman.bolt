@@ -1,0 +1,24 @@
+
+# # Headsman [id: #306]
+
+# data modify storage kits:temp kit.hotbar append value {Slot:0b, id:'iron_axe', name:'Headsman\'s Axe', tip:'Instakills enemies at low health', lore:['Instakills enemies at low health', '(Red particles display on low health enemies)'], attack:{damage:5, speed:1}}
+# data modify storage kits:temp kit.hotbar append value {Slot:1b, id:'stone_sword', name:'Serrated Blade', tip:'Clears healing and regen on hit', attack:{damage:4, speed:1.6}}
+# data modify storage kits:temp kit.hotbar append value {Slot:2b, id:'bell', jname:'{"text":"Death\'s Toll", "color":"red"}', tip:'Curse your opponents with this arrow', lore:['Shoot a target with this to curse them', '(Beheading activates earlier)']}
+# data modify storage kits:temp kit.hotbar append value {Slot:4b, id:'pumpkin_pie', Count:3b}
+
+# data modify storage kits:temp kit.armor append value {Slot:2b, id:'leather_chestplate', color:2500134, armor:{value:4}}
+# data modify storage kits:temp kit.armor append value {Slot:1b, id:'leather_leggings', color:8064561}
+# data modify storage kits:temp kit.armor append value {Slot:0b, id:'leather_boots', color:2500134}
+
+# data modify storage kits:temp kit.extra append value {Slot:4b, id:'crossbow', Count:2b, tag:{Charged:1b, ChargedProjectiles:[{id:'tipped_arrow', Count:1b, tag:{CustomPotionColor:1644825}}]}}
+
+# #> descriptions for GUI and tellraw
+# data modify storage kits:temp kit.desc.name set value 'Headsman'
+# data modify storage kits:temp kit.desc.tagline set value 'Has a tendancy to chop heads and spill blood'
+# data modify storage kits:temp kit.desc.armor set value 3.5
+# data modify storage kits:temp kit.desc.icon set value {id:'bell'}
+
+# data modify storage kits:temp kit.desc.abilities append value {name:'Beheading', desc:['Can instant kill enemies at low health', 'Red particles indicate low health']}
+
+# function kits:process/main
+# data modify storage kits:main kit.headsman set from storage kits:temp out

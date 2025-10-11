@@ -1,0 +1,31 @@
+
+# # Swashbuckler [id:#316]
+
+# data modify storage kits:temp kit.extra append value {tin:1b, id:'stone_sword', name:'Tin Cutlass', desc:{ignore:1b}, attack:{damage:5, speed:1.6}, tag:{Damage:0, spawn:1b, cutlass:1b, replace: 1b}}
+# data modify storage kits:temp kit.extra append value {silver:1b, id:'iron_sword', name:'Silver Cutlass', desc:{ignore:1b}, attack:{damage:6, speed:1.6}, tag:{Damage:0, spawn:1b, cutlass:1b, replace: 1b}}
+# data modify storage kits:temp kit.extra append value {platinum:1b, id:'diamond_sword', jname:'{"text": "Platinum Cutlass", "color": "#F3EDFF"}', desc:{ignore:1b}, attack:{damage:7, speed:1.6}, tag:{Damage:0, spawn:1b, cutlass:1b, replace: 1b}}
+# data modify storage kits:temp kit.extra append value {titanium:1b, id:'netherite_sword', jname:'{"text": "Titanium Cutlass", "color": "#D0BAFE"}', desc:{ignore:1b}, attack:{damage:8, speed:1.6}, tag:{Damage:0, spawn:1b, cutlass:1b, replace: 1b}}
+# data modify storage kits:temp kit.extra append value {titanium:2b, id:'netherite_sword', jname:'{"text": "Titanium+ Cutlass", "color": "#D0BAFE"}', desc:{ignore:1b}, attack:{damage:8, speed:1.6}, tag:{Damage:0, spawn:1b, cutlass:1b, replace: 1b}, fake_enchant:1b}
+# data modify storage kits:temp kit.extra append value {titanium:3b, id:'netherite_sword', jname:'{"text": "Titanium++ Cutlass", "color": "#D0BAFE"}', desc:{ignore:1b}, attack:{damage:8, speed:1.6}, tag:{Damage:0, spawn:1b, cutlass:1b, replace: 1b}, fake_enchant:1b}
+# data modify storage kits:temp kit.extra[].lore set value ["This sword can only handle a limited number of strikes!"]
+
+# data modify storage kits:temp kit.hotbar append value {gold:1b, Slot:0b, id:'golden_sword', name:'Golden Cutlass', attack:{damage:4.5, speed:1.6}, tag:{cutlass:1b, replace: 2b}}
+# data modify storage kits:temp kit.hotbar append value {Slot:1b, id:'crossbow', name:'Musket', tag:{ChargedProjectiles:[{id:"arrow",Count:1b}], Charged:1b, musket:1b}}
+# data modify storage kits:temp kit.hotbar append value {Slot:2b, id:'cooked_chicken', Count:3b}
+
+# data modify storage kits:temp kit.offhand set value {id:'lingering_potion', name:'Ability: Parry', tip:'Parrying your enemy will upgrade your cutlass', color:16769876, tag:{ability:1b}, parry:1b}
+
+# data modify storage kits:temp kit.armor append value {Slot:2b, id:'leather_chestplate', color:8545380, armor:{value:5.5}, chestplate:1b}
+# data modify storage kits:temp kit.armor append value {Slot:1b, id:'leather_leggings', color:13606526}
+# data modify storage kits:temp kit.armor append value {Slot:0b, id:'golden_boots', color:5850164}
+
+# data modify storage kits:temp kit.extra append value {id:'leather_chestplate', color:8545380, armor:{value:5}, tag:{Enchantments:[{id:"minecraft:thorns",lvl:1s}]}, chestplate_parry:1b}
+
+# #> descriptions for GUI and tellraw
+# data modify storage kits:temp kit.desc.name set value 'Swashbuckler'
+# data modify storage kits:temp kit.desc.tagline set value 'A rum drinkin\' pirate'
+# data modify storage kits:temp kit.desc.armor set value 7
+# data modify storage kits:temp kit.desc.icon set value {id:'golden_sword'}
+
+# function kits:process/main
+# data modify storage kits:main kit.swashbuckler set from storage kits:temp out

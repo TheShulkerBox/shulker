@@ -1,0 +1,23 @@
+
+# # Barbarian [id:#2]
+
+# data modify storage kits:temp kit.hotbar append value {Slot:0b, id:'iron_axe', name:'Iron Battleaxe', joke_name:'Axe o\' War', attack:{damage:9, speed:0.7}}
+# data modify storage kits:temp kit.hotbar append value {Slot:1b, id:'wooden_sword', name:'Wooden Club', joke_name:'Beatin\' Stick', tag:{CustomModelData:104006,Enchantments:[{id:"minecraft:knockback",lvl:1}]}}
+# data modify storage kits:temp kit.hotbar append value {Slot:2b, id:'pumpkin_pie', Count:2b}
+
+# data modify storage kits:temp kit.offhand set value {id:'lingering_potion', name:'Ability: Rage', lore:['Kill players to increase rage!', 'Gain incredible power on use'], color:10878976, tag:{ability:1b}}
+
+# data modify storage kits:temp kit.armor append value {Slot:2b, id:'leather_chestplate', armor:{value:9}, color:10040115}
+# data modify storage kits:temp kit.armor append value {Slot:1b, id:'chainmail_leggings', armor:{value:0}}
+# data modify storage kits:temp kit.armor append value {Slot:0b, id:'iron_boots', armor:{value:0}}
+
+# #> descriptions for GUI and tellraw
+# data modify storage kits:temp kit.desc.name set value 'Barbarian'
+# data modify storage kits:temp kit.desc.tagline set value 'A ruthless axeman filled with rage'
+# data modify storage kits:temp kit.desc.armor set value 4.5
+# data modify storage kits:temp kit.desc.icon set value {id:'iron_axe'}
+
+# # data modify storage kits:temp kit.desc.abilities append value {name:'Rage', desc:['As you kill enemies, you gain rage', 'Use your rage ability to gain incredible power!']}
+
+# function kits:process/main
+# data modify storage kits:main kit.barbarian set from storage kits:temp out

@@ -1,0 +1,24 @@
+
+# # Bombardier [id:#14]
+
+# data modify storage kits:temp kit.hotbar append value {Slot:0b, id:'stone_sword', name:'Stone Cutlass', tag:{Enchantments:[{id:'minecraft:sweeping', lvl:3s}]}}
+# data modify storage kits:temp kit.hotbar append value {Slot:1b, id:'glowstone_dust', name:'Flash Bomb', tip:'Drop to blind nearby players', tag:{CustomModelData:101004, droppable:3b, bomb:{flash:1b}}}
+# data modify storage kits:temp kit.hotbar append value {Slot:2b, id:'charcoal', name:'Pitch Puck', tip:'Drop to damage players', tag:{CustomModelData:101005, droppable:3b, bomb:{pitch:1b}}}
+# data modify storage kits:temp kit.hotbar append value {Slot:3b, id:'blaze_powder', name:'Flame Bomb', tip:'Drop to spew hot flames in an area', tag:{droppable:3b, bomb:{flame:1b}}}
+
+# data modify storage kits:temp kit.offhand set value {id:'pumpkin_pie', Count:3b}
+
+# data modify storage kits:temp kit.armor append value {Slot:2b, id:'chainmail_chestplate', armor:{value:8}}
+# data modify storage kits:temp kit.armor append value {Slot:1b, id:'leather_leggings', color:6513507}
+# data modify storage kits:temp kit.armor append value {Slot:0b, id:'iron_boots'}
+
+# #> descriptions for GUI and tellraw
+# data modify storage kits:temp kit.desc.name set value 'Bombardier'
+# data modify storage kits:temp kit.desc.tagline set value 'A tactical, yet explosive artist'
+# data modify storage kits:temp kit.desc.armor set value 6
+# data modify storage kits:temp kit.desc.icon set value {id:'gunpowder'}
+
+# data modify storage kits:temp kit.desc.abilities append value {name:'Bombs', desc:['Carries many bombs but can only throw two at a time', 'Hold a bomb to throw it further (shown on xp bar)!']}
+
+# function kits:process/main
+# data modify storage kits:main kit.bombardier set from storage kits:temp out

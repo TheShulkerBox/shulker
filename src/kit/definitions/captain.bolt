@@ -1,0 +1,25 @@
+
+# # Captain [id: #25]
+
+# #> Enable rework loadout
+# execute if data storage services:feature_flag flags[{name:'Captain Rewrite', enabled: true}] run return run function kits:logic/captain/loadout_rework
+
+# data modify storage kits:temp kit.hotbar append value {Slot:0b, id:'stone_sword', name:'Stone Sabre', joke_name:'Captain\'s Sabre'}
+# data modify storage kits:temp kit.hotbar append value {Slot:1b, id:'pumpkin_pie', Count:2b}
+
+# data modify storage kits:temp kit.offhand set value {id:'lingering_potion', name:'Ability: War Cry', tip:'Gives extra health to nearby teammates', color:16762896, tag:{ability:1b,custom_potion_effects:[{id:"minecraft:regeneration",amplifier:3,duration:20}]}}
+
+# data modify storage kits:temp kit.armor append value {Slot:2b, id:'golden_chestplate'}
+# data modify storage kits:temp kit.armor append value {Slot:1b, id:'leather_leggings', color:7954355}
+# data modify storage kits:temp kit.armor append value {Slot:0b, id:'iron_boots'}
+
+# #> descriptions for GUI and tellraw
+# data modify storage kits:temp kit.desc.name set value 'Captain'
+# data modify storage kits:temp kit.desc.tagline set value 'Leader of the charge'
+# data modify storage kits:temp kit.desc.armor set value 4.5
+# data modify storage kits:temp kit.desc.icon set value {id:'yellow_banner'}
+
+# data modify storage kits:temp kit.desc.abilities append value {name:'Active Speed', desc:['Gains and gives Speed I to nearby teammates'], jdesc:['{"text": "A natural leader", "italic": true}']}
+
+# function kits:process/main
+# data modify storage kits:main kit.captain set from storage kits:temp out

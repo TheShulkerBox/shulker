@@ -1,0 +1,24 @@
+
+# # Juggernaut [id: #13]
+
+# data modify storage kits:temp kit.hotbar append value {Slot:0b, id:'netherite_shovel', name:'Maul', joke_name:'Maul o\' Reachin\'', attack:{damage:8, speed:0.6}, tag:{Enchantments:[{id:"minecraft:knockback",lvl:1}]}}
+# data modify storage kits:temp kit.hotbar append value {Slot:1b, id:'pumpkin_pie', Count:2b}
+# data modify storage kits:temp kit.hotbar append value {Slot:1b, id:'cooked_beef', Count:1b}
+
+# data modify storage kits:temp kit.offhand set value {id:'lingering_potion', name:'Ability: Dash', tip:'Strip armor for leap and power', color:9109421, tag:{ability:1b}}
+
+# data modify storage kits:temp kit.armor append value {dashing:0b, Slot:2b, id:'netherite_chestplate', armor:{value:8, toughness:0}}
+# data modify storage kits:temp kit.armor append value {Slot:1b, id:'chainmail_leggings'}
+# data modify storage kits:temp kit.armor append value {Slot:0b, id:'diamond_boots'}
+
+# # data modify storage kits:temp kit.extra append value {dashing:1b, Slot:2b, id:'netherite_chestplate', armor:{kb_resist:1.0, value:13, toughness:20}, fake_enchant:1b, tag:{dashing:1b}}
+
+# #> descriptions for GUI and tellraw
+# data modify storage kits:temp kit.desc.name set value 'Juggernaut'
+# data modify storage kits:temp kit.desc.tagline set value 'A raw, tanky brute'
+# data modify storage kits:temp kit.desc.armor set value 10
+# data modify storage kits:temp kit.desc.icon set value {id:'netherite_shovel'}
+
+
+# function kits:process/main
+# data modify storage kits:main kit.juggernaut set from storage kits:temp out

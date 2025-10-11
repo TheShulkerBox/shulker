@@ -1,0 +1,45 @@
+from kit:base import Kit
+from item:base import Item
+from item:definitions/food import Food
+from item:definitions/armor import Armor 
+
+assassin = Kit(
+    name="Assassin",
+    tagline="A stealthy yet vicious backstabber",
+    icon="tipped_arrow", #{id:'tipped_arrow', tag:{CustomPotionColor:1644825}}
+
+    armor={
+        "chest": Armor(id="leather_chestplate", dyed_color="#191919"),
+        "legs": Armor(id="leather_leggings", dyed_color="#191919"),
+        "feet": Armor(id="leather_boots", dyed_color="#191919"),
+    },
+    hotbar=[
+        Item(id="iron_sword", item_name="Iron Dagger"),
+        Item(id="bow", item_name="Dart Caster"),
+        Food(count=2),
+        Item(id="tipped_arrow", item_name="Blindness Dart")
+    ]
+)
+
+# # Assassin [id:#3]
+
+# data modify storage kits:temp kit.hotbar append value {Slot:0b, id:'iron_sword', name:'Iron Dagger', joke_name:'Silver Butterknife', tag:{CustomModelData:102001}}
+# data modify storage kits:temp kit.hotbar append value {Slot:1b, id:'bow', name:'Dart Caster', joke_name:'Eyepatch Deployer', tag:{CustomModelData:102003}}
+# data modify storage kits:temp kit.hotbar append value {Slot:2b, id:'pumpkin_pie', Count:2b}
+# data modify storage kits:temp kit.hotbar append value {Slot:3b, id:'tipped_arrow', name:'Blindness Dart', lore:['Blinds the target for 2 seconds', 'Gain +1 Dart on kill'], color:1644825, tag:{persist:1b,custom_potion_effects:[{id:"minecraft:blindness",amplifier:0,duration:80}]}}
+
+# data modify storage kits:temp kit.armor append value {Slot:2b, id:'leather_chestplate', color:1644825}
+# data modify storage kits:temp kit.armor append value {Slot:1b, id:'leather_leggings', color:1644825}
+# data modify storage kits:temp kit.armor append value {Slot:0b, id:'leather_boots', armor:{value:1, speed:0.01}, color:1644825}
+
+# #> descriptions for GUI and tellraw
+# data modify storage kits:temp kit.desc.name set value 'Assassin'
+# data modify storage kits:temp kit.desc.tagline set value 'A stealthy yet vicious backstabber'
+# data modify storage kits:temp kit.desc.armor set value 3
+# data modify storage kits:temp kit.desc.icon set value {id:'tipped_arrow', tag:{CustomPotionColor:1644825}}
+
+# data modify storage kits:temp kit.desc.abilities append value {name:'Backstab', desc:['Instantly kill when sneakily striking behind the back']}
+# data modify storage kits:temp kit.desc.abilities append value {name:'Jump Boost II', desc:['Crouching while not holding a sword']}
+
+# function kits:process/main
+# data modify storage kits:main kit.assassin set from storage kits:temp out

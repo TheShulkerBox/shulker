@@ -1,0 +1,25 @@
+
+# # Pikeman [id: #304]
+
+# data modify storage kits:temp kit.hotbar append value {weak_pike:0b, Slot:0b, id:'stick', name:'Steel Pike', joke_name:'Super Pointy Stick', attack:{damage:1, speed:0.7}, tag:{spawn:1b, hot_replace:1b, Enchantments:[{id:'minecraft:knockback',lvl:1},{id:'minecraft:sharpness',lvl:9}]}}
+# data modify storage kits:temp kit.hotbar append value {Slot:1b, id:'pumpkin_pie', Count:3b}
+# data modify storage kits:temp kit.hotbar append value {Slot:2b, id:'lingering_potion', name:'Circle of Steel', tip:'Throw to create a reinforcement field', lore:['Creates a reinforced area when thrown', 'Teammates inside get buffed damage'], color:17772695, tag:{custom_potion_effects:[{id:"minecraft:speed",amplifier:1b,duration:0}]}}
+
+# data modify storage kits:temp kit.armor append value {fortified:0b, Slot:2b, id:'netherite_chestplate', armor:{value:3, toughness:3, kb_resist:0.4d}}
+# data modify storage kits:temp kit.armor append value {Slot:1b, id:'iron_leggings'}
+# data modify storage kits:temp kit.armor append value {Slot:0b, id:'netherite_boots', armor:{value: 2, toughness:1}}
+
+# data modify storage kits:temp kit.extra append value {fortified:1b, Slot:2b, id:'netherite_chestplate', armor:{value:5, toughness:3, kb_resist:1.0d}, fake_enchant:1b}
+# data modify storage kits:temp kit.extra append value {weak_pike:1b, Slot:0b, id:'stick', name:'Steel Pike', joke_name:'Super Pointy Stick', attack:{damage:1, speed:0.7}, tag:{spawn:1b, hot_replace:1b, Enchantments:[{id:'minecraft:knockback',lvl:1}]}}
+
+# #> descriptions for GUI and tellraw
+# data modify storage kits:temp kit.desc.name set value 'Pikeman'
+# data modify storage kits:temp kit.desc.tagline set value 'A hearty solider through attrition'
+# data modify storage kits:temp kit.desc.armor set value 5
+# data modify storage kits:temp kit.desc.icon set value {id:'stick'}
+
+# data modify storage kits:temp kit.desc.abilities append value {name:'Hearty Spirit', desc:['Boosted health by 5 hearts']}
+# data modify storage kits:temp kit.desc.abilities append value {name:'Foritication', desc:['Crouching will fortify your position', 'Gain knockback resistance and armor!']}
+
+# function kits:process/main
+# data modify storage kits:main kit.pikeman set from storage kits:temp out

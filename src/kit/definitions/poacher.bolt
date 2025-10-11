@@ -1,0 +1,25 @@
+
+# # Poacher [id: #4]
+
+# data modify storage kits:temp kit.hotbar append value {Slot:0b, id:'iron_sword', name:'Iron Knife', joke_name:'Steel Rapier', tag:{CustomModelData:102001}}
+# data modify storage kits:temp kit.hotbar append value {Slot:1b, id:'crossbow', name:'Crossbow', joke_name:'Sailor\'s Tears', tag:{hot_replace:1b,Charged:1b,ChargedProjectiles:[{id:"minecraft:arrow",Count:1b}]}}
+# data modify storage kits:temp kit.hotbar append value {Slot:2b, id:'dead_bush', name:'Snare', tip:'Shift to place a snare to entrap your foes'}
+# data modify storage kits:temp kit.hotbar append value {Slot:3b, id:'arrow', name:'Bolt', Count:3b, desc:{append:' (7x Fletching Sticks)', extra:['Fletch more arrows via sticks', 'Maxinum of 4 arrows can be held at a time']}}
+# data modify storage kits:temp kit.hotbar append value {Slot:4b, id:'stick', name:'Action: Fletch Arrow', tip:'Hold to fletch arrows (maxes at 4 arrows)', desc:{ignore:1b}, lore:['Craft arrows from the environment','(Max of 4 arrows at a time)'], Count:7b, armor:{speed:-0.05}}
+
+# data modify storage kits:temp kit.offhand set value {id:'cooked_rabbit', Count:2b}
+
+# data modify storage kits:temp kit.armor append value {Slot:2b, id:'leather_chestplate', color:10720799}
+# data modify storage kits:temp kit.armor append value {Slot:1b, id:'leather_leggings', color:8350244}
+# data modify storage kits:temp kit.armor append value {Slot:0b, id:'leather_boots', color:6179336}
+
+# #> descriptions for GUI and tellraw
+# data modify storage kits:temp kit.desc.name set value 'Poacher'
+# data modify storage kits:temp kit.desc.tagline set value 'A vicious hunter who entraps their foes'
+# data modify storage kits:temp kit.desc.armor set value 3
+# data modify storage kits:temp kit.desc.icon set value {id:'dead_bush'}
+
+# data modify storage kits:temp kit.desc.abilities append value {name:'Passive Speed', desc:['Continuous Speed I']}
+
+# function kits:process/main
+# data modify storage kits:main kit.poacher set from storage kits:temp out

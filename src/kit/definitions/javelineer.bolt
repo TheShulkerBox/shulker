@@ -1,0 +1,25 @@
+
+# # Javelineer [id: #311]
+
+# data modify storage kits:temp kit.hotbar append value {Slot:0b, id:'wooden_sword', name:'Wooden Spear', tag:{Enchantments:[{id:'knockback', lvl:1s}]}}
+# data modify storage kits:temp kit.hotbar append value {Slot:1b, id:'pumpkin_pie', Count:2b}
+
+# # 3 javelins
+# data modify storage kits:temp kit.hotbar append value {Slot:2b, id:'trident', name:'Javelin', desc:{prepend:'3x'}, tip:'Faster throws deals more damage', attack:{damage:6.5, speed:1.1}}
+# data modify storage kits:temp kit.hotbar append value {Slot:3b, id:'trident', name:'Javelin', desc:{ignore:1b}, tip:'Faster throws deals more damage', attack:{damage:6.5, speed:1.1}}
+# data modify storage kits:temp kit.hotbar append value {Slot:4b, id:'trident', name:'Javelin', desc:{ignore:1b}, tip:'Faster throws deals more damage', attack:{damage:6.5, speed:1.1}}
+
+# data modify storage kits:temp kit.armor append value {Slot:2b, id:'chainmail_chestplate', armor:{value:4}}
+# data modify storage kits:temp kit.armor append value {Slot:1b, id:'chainmail_leggings'}
+# data modify storage kits:temp kit.armor append value {Slot:0b, id:'chainmail_boots'}
+
+# #> descriptions for GUI and tellraw
+# data modify storage kits:temp kit.desc.name set value 'Javelineer'
+# data modify storage kits:temp kit.desc.tagline set value 'Strong armed javelin thrower'
+# data modify storage kits:temp kit.desc.armor set value 6
+# data modify storage kits:temp kit.desc.icon set value {id:'trident'}
+
+# data modify storage kits:temp kit.desc.abilities append value {name:'Power Throw', desc:['Holding tridents back longer will increase power', 'Shifting will speed up the power gain']}
+
+# function kits:process/main
+# data modify storage kits:main kit.javelineer set from storage kits:temp out

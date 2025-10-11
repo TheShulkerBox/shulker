@@ -1,0 +1,17 @@
+
+# # Swordsman [id:#15]
+
+# data modify storage kits:temp kit.hotbar append value {Slot:0b, id:'diamond_sword', name:'Longsword', joke_name:'Bejewelled Cutlass'}
+# data modify storage kits:temp kit.offhand set value {id:'cooked_mutton', Count:2b}
+# data modify storage kits:temp kit.armor append value {Slot:2b, id:'iron_chestplate'}
+# data modify storage kits:temp kit.armor append value {Slot:1b, id:'leather_leggings', color:9004619}
+# data modify storage kits:temp kit.armor append value {Slot:0b, id:'iron_boots'}
+
+# #> descriptions for GUI and tellraw
+# data modify storage kits:temp kit.desc.name set value 'Swordsman'
+# data modify storage kits:temp kit.desc.tagline set value 'The mighty swordsman'
+# data modify storage kits:temp kit.desc.armor set value 5
+# data modify storage kits:temp kit.desc.icon set value {id:'diamond_sword'}
+
+# function kits:process/main
+# data modify storage kits:main kit.swordsman set from storage kits:temp out

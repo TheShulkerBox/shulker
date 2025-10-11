@@ -1,0 +1,30 @@
+
+# # Spearfisher [id:#23]
+
+# #> 2 tridents (we reference the first one to make sure they match)
+# data modify storage kits:temp kit.hotbar append value {Slot:0b, id:'trident', name:'Fishing Spear', desc:{prepend:'2x'}}
+# data modify storage kits:temp kit.hotbar append value {Slot:1b, id:'trident', name:'Fishing Spear', desc:{ignore:1b}}
+
+# #> 2 mutton
+# data modify storage kits:temp kit.offhand set value {id:'pumpkin_pie', Count:2b}
+
+# #> 3 nets
+# data modify storage kits:temp kit.hotbar append value {Slot:2b, id:'cobweb', name:'Net', tip:'Toss at your enemy to ensnare them', desc:{prepend:'3x'}, lore:['Capture your foes', 'You dishonorable retiarius!'], tag:{droppable:3b, timer:100, CustomModelData:101001}}
+# data modify storage kits:temp kit.hotbar append value {Slot:3b, id:'cobweb', name:'Net', tip:'Toss at your enemy to ensnare them', desc:{ignore:1b}, lore:['Capture your foes', 'You dishonorable retiarius!'], tag:{droppable:3b, timer:100, CustomModelData:101001}}
+# data modify storage kits:temp kit.hotbar append value {Slot:4b, id:'cobweb', name:'Net', tip:'Toss at your enemy to ensnare them', desc:{ignore:1b}, lore:['Capture your foes', 'You dishonorable retiarius!'], tag:{droppable:3b, timer:100, CustomModelData:101001}}
+
+# data modify storage kits:temp kit.extra append value {id:'cooked_salmon', tip:'Pass some to your friends', tag:{persist:1b, droppable:1b}, Count:2b}
+
+# #> armor
+# data modify storage kits:temp kit.armor append value {Slot:2b, id:'leather_chestplate', color:1882747}
+# data modify storage kits:temp kit.armor append value {Slot:1b, id:'leather_leggings'}
+# data modify storage kits:temp kit.armor append value {Slot:0b, id:'golden_boots'}
+
+# #> descriptions for GUI and tellraw
+# data modify storage kits:temp kit.desc.name set value 'Spearfisher'
+# data modify storage kits:temp kit.desc.tagline set value 'Chum Bucket'
+# data modify storage kits:temp kit.desc.armor set value 3
+# data modify storage kits:temp kit.desc.icon set value {id:'cobweb'}
+
+# function kits:process/main
+# data modify storage kits:main kit.spearfisher set from storage kits:temp out

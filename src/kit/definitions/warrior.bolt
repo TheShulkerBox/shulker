@@ -1,0 +1,21 @@
+
+# # Warrior [id: #1]
+
+# data modify storage kits:temp kit.hotbar append value {Slot:0b, id:'stone_sword', name:'Stone Sword', joke_name:'Blade o\' Rock'}
+# data modify storage kits:temp kit.hotbar append value {Slot:1b, id:'stone_axe', name:'Stone Hatchet', joke_name:'Hatchet o\' Rock', attack:{damage:7.5, speed:0.6}}
+# data modify storage kits:temp kit.hotbar append value {Slot:2b, id:'pumpkin_pie', Count:2b}
+
+# data modify storage kits:temp kit.offhand set value {id:'shield', tag:{Damage:300}}
+
+# data modify storage kits:temp kit.armor append value {Slot:2b, id:'iron_chestplate'}
+# data modify storage kits:temp kit.armor append value {Slot:1b, id:'chainmail_leggings'}
+# data modify storage kits:temp kit.armor append value {Slot:0b, id:'iron_boots'}
+
+# #> descriptions for GUI and tellraw
+# data modify storage kits:temp kit.desc.name set value 'Warrior'
+# data modify storage kits:temp kit.desc.tagline set value 'A sturdy, yet reliable axeman'
+# data modify storage kits:temp kit.desc.armor set value 6
+# data modify storage kits:temp kit.desc.icon set value {id:'stone_axe'}
+
+# function kits:process/main
+# data modify storage kits:main kit.warrior set from storage kits:temp out

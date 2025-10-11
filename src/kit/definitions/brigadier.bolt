@@ -1,0 +1,31 @@
+
+# # Brigadier [id: #305]
+
+# data modify storage kits:temp kit.hotbar append value {id:'arrow', name:'Blunderbuss Bullets'}
+
+# # equipment
+# data modify storage kits:temp kit.hotbar append value {Slot:0b, id:'stone_sword', name:'Stone Rapier'}
+# data modify storage kits:temp kit.hotbar append value {Slot:1b, id:'crossbow', name:'Blunderbuss', lore:['A short-ranged blaster', 'Sneak to handle the recoil'], tag:{hot_replace:1b}}
+
+# # food
+# data modify storage kits:temp kit.hotbar append value {Slot:2b, id:'pumpkin_pie', Count:4b}
+
+# # molotov
+# data modify storage kits:temp kit.hotbar append value {Slot:3b, id:'lingering_potion', name:'Molotov', tip:'Throw to create a fiery obstacle', color:16772695, tag:{custom_potion_effects:[{id:"minecraft:blindness",amplifier:1b,duration:0},{id:"minecraft:slowness",amplifier:1b,duration:0}, {id:"minecraft:haste",amplifier:1b,duration:0}]}}
+
+# # ammo
+# data modify storage kits:temp kit.hotbar append value {Slot:4b, id:'stick', Count:3b, name:'Blunderbuss Ammo'}
+
+# # armor
+# data modify storage kits:temp kit.armor append value {Slot:2b, id:'golden_chestplate', armor:{value:6}}
+# data modify storage kits:temp kit.armor append value {Slot:1b, id:'leather_leggings', color:4868682, armor:{value:2}}
+# data modify storage kits:temp kit.armor append value {Slot:0b, id:'iron_boots'}
+
+# #> descriptions for GUI and tellraw
+# data modify storage kits:temp kit.desc.name set value 'Brigadier'
+# data modify storage kits:temp kit.desc.tagline set value 'A trusty blunderbuss wielder'
+# data modify storage kits:temp kit.desc.armor set value 4
+# data modify storage kits:temp kit.desc.icon set value {id:'golden_chestplate'}
+
+# function kits:process/main
+# data modify storage kits:main kit.brigadier set from storage kits:temp out

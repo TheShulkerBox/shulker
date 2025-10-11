@@ -1,0 +1,27 @@
+
+# # Medic [id:#24]
+
+# data modify storage kits:temp kit.hotbar append value {Slot:0b, id:'iron_shovel', name:'Iron Spade', joke_name:'Gravedigger\'s Trowel', attack:{damage:4.0, speed:1.6}, tag:{Enchantments:[{}]}}
+# data modify storage kits:temp kit.hotbar append value {Slot:1b, id:'lingering_potion', name:'Instant Health', color:16718151, tip:'Splash healing for only your teammates', desc:{prepend:'2x'}, tag:{custom_potion_effects:[{id:"minecraft:instant_health",amplifier:0,duration:0}]}}
+# data modify storage kits:temp kit.hotbar append value {Slot:2b, id:'lingering_potion', name:'Instant Health', color:16718151, tip:'Splash healing for only your teammates', desc:{ignore:1b}, tag:{custom_potion_effects:[{id:"minecraft:instant_health",amplifier:0,duration:0}]}}
+# data modify storage kits:temp kit.hotbar append value {Slot:3b, id:'paper', name:'Bandage', tip:'Pass to teammates to provide remote healing', desc:{prepend:'3x'}, tag:{kit:{bandage:1b},droppable:2b, droppable_tip:'Hold while not at full health to use!', CustomModelData:101002}}
+# data modify storage kits:temp kit.hotbar append value {Slot:4b, id:'paper', name:'Bandage', tip:'Pass to teammates to provide remote healing', desc:{ignore:1b}, tag:{kit:{bandage:1b},droppable:2b, droppable_tip:'Hold while not at full health to use!', CustomModelData:101002}}
+# data modify storage kits:temp kit.hotbar append value {Slot:5b, id:'paper', name:'Bandage', tip:'Pass to teammates to provide remote healing', desc:{ignore:1b}, tag:{kit:{bandage:1b},droppable:2b, droppable_tip:'Hold while not at full health to use!', CustomModelData:101002}}
+# data modify storage kits:temp kit.hotbar append value {Slot:7b, id:'splash_potion', name:'Regeneration', tip:['Regeneration II (0:30)'], desc:{prepend:'2x'}, tag:{custom_potion_effects:[{id:"minecraft:regeneration",amplifier:2,duration:600}]}}
+# data modify storage kits:temp kit.hotbar append value {Slot:8b, id:'splash_potion', name:'Regeneration', tip:['Regeneration II (0:30)'], desc:{ignore:1b}, tag:{custom_potion_effects:[{id:"minecraft:regeneration",amplifier:2,duration:600}]}}
+
+# data modify storage kits:temp kit.offhand set value {id:'cooked_mutton', Count:3b}
+
+# data modify storage kits:temp kit.armor append value {Slot:2b, id:'leather_chestplate', color:16777215}
+# data modify storage kits:temp kit.armor append value {Slot:1b, id:'leather_leggings', color:11544614}
+# data modify storage kits:temp kit.armor append value {Slot:0b, id:'leather_boots', color:16777215}
+
+# #> descriptions for GUI and tellraw
+# data modify storage kits:temp kit.desc.name set value 'Medic'
+# data modify storage kits:temp kit.desc.tagline set value 'Doctor, Doctor!'
+# data modify storage kits:temp kit.desc.armor set value 3
+# data modify storage kits:temp kit.desc.health set value 28.0
+# data modify storage kits:temp kit.desc.icon set value {id:'lingering_potion', tag:{CustomPotionColor:16718151}}
+
+# function kits:process/main
+# data modify storage kits:main kit.medic set from storage kits:temp out
