@@ -75,10 +75,10 @@ function remove_enchantment:
     clear @s *[custom_data~{apply_motion: true}]
 
 
-def apply_motion_vector(vector: DataSource | Sequence[float] = (0.0, 0.0, 0.0), type: str = "rel"):
+def apply_motion_vector(vector: DataSource | list[float], type: str = "rel"):
     """Applies a motion vector to an entity"""
 
-    if isinstance(vector, tuple):
+    if isinstance(vector, list):
         generated_enchantments = {}
         for axis, value in zip("xyz", vector):
             if math.isclose(value, 0.0):
@@ -99,7 +99,7 @@ def apply_motion_vector(vector: DataSource | Sequence[float] = (0.0, 0.0, 0.0), 
                     else:
                         generated_enchantments[enchantment_name(axis, step_size, type, "pos")] = part
         
-        item replace entity @s saddle with stick[enchantments=generated_enchantments, equippable={slot: saddle, equip_sound: {sound_id: ""}}, custom_data={apply_motion: true}]
+        item replace entity @s saddle with stick[enchantments=generated_enchantments, equippable={slot: "saddle", equip_sound: {sound_id: ""}}, custom_data={apply_motion: true}]
     
     elif isinstance(vector, DataSource):
         STORAGE.macro = {enchantments: {}}

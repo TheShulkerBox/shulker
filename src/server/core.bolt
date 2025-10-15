@@ -20,6 +20,9 @@ server_load = ~/load
 server_tick = ~/tick
 server_tick_player = ~/tick/player
 
+#> Adv Paths
+root_advancement = ~/root
+
 
 SERVER_GLOBALS = Scoreboard("server.globals", criteria="dummy")
 
@@ -49,11 +52,14 @@ def clock(speed: str):
     return path
 
 
+clock("1t")  # default clock at 1t, cached
+
+
 prepend function_tag minecraft:load {
     "values": [server_load]
 }
 
-function server_load:
+append function server_load:
     forceload add 0 0
     tellraw @a[tag=staff] boxed_text(
         {
@@ -69,14 +75,10 @@ function server_load:
     Expression.init()
 
 
-@defer
-def tick_players_last():
-    """Some things rely on ordering for ticking players. The general `sys:tick/player` is done
-    last for those who don't care about ordering (most things).
-    """
-
-    append function server_load:
-        as @a at @s function server_tick_player
-
-
-clock("1t")  # default clock at 1t, cached
+advancement root_advancement {
+    "criteria": {
+        "impossible": {
+            "trigger": "minecraft:impossible"
+        }
+    }
+}

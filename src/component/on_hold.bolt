@@ -1,0 +1,66 @@
+from component:on_use import AnimationLiteral
+from component:base import Component
+from server:events import on_player_reset, on_end_tick
+from server:core import root_advancement
+
+on_using_timer = Scoreboard("component.on_using", criteria="dummy")
+
+
+class on_hold(Component):
+    tick_callback: str = ""
+    release_callback: str = ""
+    cooldown: float = 5
+    cooldown_group: str = ""
+    animation: AnimationLiteral = "bow"
+    sound: str = ""
+
+    def render(self):
+        on_using_path = f"{self.item.path}/on_using"
+        advancement on_using_path {
+            "parent": root_advancement,
+            "criteria": {
+                "requirement": {
+                    "trigger": "minecraft:using_item",
+                    "conditions": {
+                        "item": {
+                            "predicates": {
+                                "minecraft:custom_data": {"item_id": self.item.name}
+                            }
+                        }
+                    }
+                }
+            },
+            "rewards": {
+                "function": on_using_path
+            }
+        }
+
+        function on_using_path:
+            on_using_timer["@s"] += 1
+            if self.tick_callback:
+                function self.tick_callback
+        
+        if self.release_callback:
+            on_hold_ticking = f"{self.item.path}/on_hold_tick"
+            on_release_function = f"{self.item.path}/on_release"
+            
+            append function server_tick_player:
+                execute function on_hold_ticking:
+                    if entity @s[advancements={on_using_path=false}, scores={on_using_timer=1..}] function on_release_function
+
+            function on_release_function:
+                function self.release_callback
+
+        
+        return {
+            consumable: {
+                consume_seconds: 2e8,
+                animation: self.animation,
+                sound: {sound_id: self.sound},
+                has_consume_particles: false,
+            }
+        }
+
+
+append function on_player_reset:
+    on_using_timer["@s"].reset()

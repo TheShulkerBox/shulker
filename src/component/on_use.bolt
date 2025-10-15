@@ -8,6 +8,7 @@ from lib:errors import CustomComponentError
 from lib:storage_helpers import storage_path, debug_storage
 from lib:helpers import deep_merge_dicts
 from server:services/playerdb import PlayerDB
+from server:core import root_advancement
 
 
 AnimationLiteral = (
@@ -16,10 +17,11 @@ AnimationLiteral = (
     | Literal["drink"]
     | Literal["block"]
     | Literal["bow"]
-    | Literal["spear"]
+    | Literal["trident"]
     | Literal["spyglass"]
     | Literal["toot_horn"]
     | Literal["brush"]
+    | Literal["spear"]
 )
 
 # thrown_item_scores: dict[str, ScoreSource] = {}
@@ -46,6 +48,7 @@ class OnUse(Component):
         
         on_use_path = f"{self.item.path}/on_use"
         advancement on_use_path {
+            "parent": root_advancement,
             "criteria": {
                 "requirement": {
                     "trigger": "minecraft:consume_item",

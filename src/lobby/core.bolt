@@ -41,6 +41,12 @@ append function clock("10s"):
         effect give @a[team=lobby] weakness infinite 0 true
 
 
+lobby_wall = ~/wall
+append function clock("2t"):
+    execute function lobby_wall:
+        particle enchant -35.0 65 0 0 1 6 0 40
+        particle crit -35.0 65 0 0 1 6 0 10
+
 # append function on_leave_game:
 #     tp @s LOBBY_SPAWN
 

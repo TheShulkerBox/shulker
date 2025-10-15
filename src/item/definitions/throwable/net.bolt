@@ -1,4 +1,4 @@
-# import component:throwable as _
+# import component:on_hold as _
 # from item:base import Item
 
 # TIME_IN_NET = 5  # seconds
@@ -9,12 +9,13 @@
 #     id = "cobweb"
 #     item_name = "Net"
 #     lore = ["Toss at your enemy to ensnare them", "Capture your foes, you dishonorable retiarius"]
-#     throwable = {
-#         on_tick: ~/on_tick,
+#     on_hold = {
+#         tick_callback: ~/tick,
+#         release_callback: ~/on_release,
 #     }
 
 
-# function ~/on_tick:
+# function ~/tick:
 #     particle minecraft:cloud ~ ~ ~ 0.0 0.0 0.0 0.01 1 force
 #     store success score $netted_player temp as @p[distance=..1] function ~/../on_net:
 #         effect give @s slowness TIME_IN_NET 3

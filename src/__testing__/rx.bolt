@@ -1,4 +1,5 @@
 import component:on_use as _
+from component:on_hold import on_using_timer
 from item:base import Item
 from lib:motion import apply_motion_vector
 
@@ -7,11 +8,11 @@ class Dart(Item):
     id = "arrow"
     item_model = "stone"
     item_name = "taco sauce 2 deluxe"
-    on_use = {callback: ~/on_use, replace: true, cooldown: 0.5}
+    on_use = {callback: ~/on_use, replace: true, cooldown: 0.1}
 
 
 function ~/on_use:
-    apply_motion_vector((0, 1.5, 2))
+    apply_motion_vector([0.0, 1.5, 2.0])
 
 
 class PoisonDart(Item):
@@ -28,3 +29,25 @@ function ~/on_use_poison:
     apply_motion_vector(STORAGE.temp.vector)
 
 
+class Potato(Item):
+    id = "stone"
+    item_model = "potato"
+    item_name = "Bouncing Betty"
+    max_damage = 101
+    on_hold = {tick_callback: ~/potato/tick, release_callback: ~/potato/release}
+    use_effects = {can_sprint: true, speed_multiplier: 0.7}
+    max_stack_size = 1
+
+
+function ~/potato/tick:
+    STORAGE.macro = {damage: max(0, 100 - (2 * on_using_timer["@s"]))}
+    unless items entity @s weapon.mainhand Potato.conditional_string():
+        with var STORAGE.macro:
+            $item modify entity @s weapon.offhand {function: "set_components", components: {damage: $(damage)}}
+
+    if items entity @s weapon.mainhand Potato.conditional_string():
+        with var STORAGE.macro:
+            $item modify entity @s weapon.mainhand {function: "set_components", components: {damage: $(damage)}}
+
+function ~/potato/release:
+    say surprise!
