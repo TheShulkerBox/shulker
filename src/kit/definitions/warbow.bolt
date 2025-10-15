@@ -1,3 +1,26 @@
+import component:armor as _
+from kit:base import Kit
+from item:base import Item
+from item:definitions/food import Food
+from item:definitions/armor import Armor 
+
+warbow = Kit(
+    name="Warbow",
+    tagline="Specializes in long-range combat",
+    icon="tipped_arrow",
+
+    armor={
+        "chest": Armor(id="iron_chestplate"),
+        "legs": Armor(id="leather_leggings", dyed_color="#DEB233"),
+        "feet": Armor(id="leather_boots", dyed_color="#DEB233"),
+    },
+    hotbar=[
+        Item(id="bow", item_name="Warbow"),
+        #Wabow Ammo,
+        Food(count=3),
+        #Spyglass
+    ],
+)
 
 # # Warbow [id:#12]
 
