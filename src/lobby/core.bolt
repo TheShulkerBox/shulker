@@ -31,14 +31,15 @@ append function server_tick:
     team join lobby @a[team=]
 
 
-append function clock("10s"):
+effect_apply_speed = "1"
+append function clock(f"{effect_apply_speed}s"):
     # Lobby Effects
     execute function lobby:effects/apply:
-        effect give @a[team=lobby,scores={food=..19}] saturation 2 1 true
-        effect give @a[team=lobby] regeneration 2 6 true
-        effect give @a[team=lobby] resistance 2 3 true
-        effect give @a[team=lobby] speed 2 1 true
-        effect give @a[team=lobby] weakness 2 0 true
+        effect give @a[team=lobby,scores={food=..19}] saturation effect_apply_speed 1 true
+        effect give @a[team=lobby] regeneration effect_apply_speed 6 true
+        effect give @a[team=lobby] resistance effect_apply_speed 3 true
+        effect give @a[team=lobby] speed effect_apply_speed 1 true
+        effect give @a[team=lobby] weakness effect_apply_speed 0 true
 
 
 lobby_wall = ~/wall
