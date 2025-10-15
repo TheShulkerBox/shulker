@@ -52,14 +52,11 @@ def clock(speed: str):
     return path
 
 
-clock("1t")  # default clock at 1t, cached
-
-
 prepend function_tag minecraft:load {
     "values": [server_load]
 }
 
-append function server_load:
+function server_load:
     forceload add 0 0
     tellraw @a[tag=staff] boxed_text(
         {
@@ -73,6 +70,10 @@ append function server_load:
         box_color=theme.secondary,
     )
     Expression.init()
+
+
+# needs to be after server_load
+clock("1t")  # default clock at 1t, cached
 
 
 advancement root_advancement {
