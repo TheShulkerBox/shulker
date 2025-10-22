@@ -2,6 +2,7 @@ from ../models import Map, Team, MapTag, PlayerCount
 
 map = Map(
     id="the_hall",
+    gamemode="capture_the_flag",
     tags=[
         MapTag.Deathmatch,
         MapTag.All,

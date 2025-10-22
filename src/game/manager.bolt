@@ -2,6 +2,7 @@ from lib:storage_helpers import loop
 from server:core import server_load
 
 from ./models import GAME_META, Map
+from ./events import on_start_game
 
 
 append function server_load:
@@ -38,9 +39,9 @@ function game:map/queue/shuffle:
             $data remove storage shulker:temp maps[$(index)]
 
 
-function game:start:
-    ...
+append function on_game_start:
+    
 
-
-function game:loop:
-    ...
+    for map in Map._all_maps:
+        if GAME_META.current.map.id == map.id:
+            function map.on_game_start

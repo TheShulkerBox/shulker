@@ -16,6 +16,7 @@ require:
 
 pipeline:
   - mecha
+  - plugins.minecraft_namespace_checker
 
 data_pack:
   load: [vendor/persist]

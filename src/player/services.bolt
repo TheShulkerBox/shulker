@@ -1,0 +1,9 @@
+from server:events import on_end_tick
+
+
+player_tick = ~/tick
+
+
+append function on_end_tick:
+    as @a as @s run function player_tick
+    advancement revoke @a through root_advancement

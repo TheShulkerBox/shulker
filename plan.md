@@ -11,13 +11,13 @@ Create a MVP of CTF with atleast footman.
   - leaving game
 
 ### Events
-- leave_game
-- join_game
-- start_game
-- stop_game
-- player_death
-- player_respawn
-- player_kill
+- `leave_game`
+- `join_game`
+- `start_game`
+- `stop_game`
+- `player_death`
+- `player_respawn`
+- `player_kill`
 
 ### CTF
 
@@ -29,30 +29,30 @@ Create a MVP of CTF with atleast footman.
     - Flag Bearer
     - Winner
     - Players[]
-      - carrying_flag
-      - stats
+      - `carrying_flag`
+      - `stats`
 - Map
-  - stats
+  - `stats`
 
 ### Transitions
-- event: start_game(map)
+- event: `start_game(map)`
 
-- event: end_game(map)
+- event: `end_game(map)`
 
-- event: close_game(map)
+- event: `close_game(map)`
 
-- event: on_kill(killer, victim)
-  - killer.team.points += 1
-  - victim.carrying_flag = false
-  - victim.respawn
+- event: `on_kill(killer, victim)`
+  - `killer.team.points += 1`
+  - `victim.carrying_flag = false`
+  - `victim.respawn`
 
-- event: on_flag_pickup(player, victim_team)
-  - player.carrying_flag = true
+- event: `on_flag_pickup(player, victim_team)`
+  - `player.carrying_flag = true`
 
-- event: on_flag_cap(player)
-  - player.team.points += 20
-  - player.carrying_flag = false
+- event: `on_flag_cap(player)`
+  - `player.team.points += 20`
+  - `player.carrying_flag = false`
 
-- event: leave_game(player)
+- event: `leave_game(player)`
 
-- event: join_game(player)
+- event: `join_game(player)`

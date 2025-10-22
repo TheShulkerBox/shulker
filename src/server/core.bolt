@@ -18,7 +18,6 @@ from bolt_expressions import Scoreboard, Expression
 #> Function Paths
 server_load = ~/load
 server_tick = ~/tick
-server_tick_player = ~/tick/player
 
 #> Adv Paths
 root_advancement = ~/root
@@ -52,9 +51,7 @@ def clock(speed: str):
     return path
 
 
-prepend function_tag minecraft:load {
-    "values": [server_load]
-}
+prepend function_tag minecraft:load { "values": [server_load] }
 
 function server_load:
     forceload add 0 0
@@ -77,9 +74,5 @@ clock("1t")  # default clock at 1t, cached
 
 
 advancement root_advancement {
-    "criteria": {
-        "impossible": {
-            "trigger": "minecraft:impossible"
-        }
-    }
+    "criteria": { "impossible": { "trigger": "minecraft:impossible" } }
 }

@@ -56,6 +56,7 @@ class Map:
     _all_maps: ClassVar[list["Map"]] = []
 
     id: str
+    gamemode: str
     teams: list[Team]
     tags: list[str]
 
@@ -74,7 +75,7 @@ class Map:
 
         function f"game:map/queue/enqueue_{self.id}":
             GAME_META.map_queue.append(self.id)
-
+    
     @property
     def name(self) -> str:
         return self.id.replace("_", " ").title()
@@ -96,6 +97,12 @@ class Map:
         """Called every second for the map (even when not active)."""
 
         return f"game:map/{self.id}/effects"
+    
+    @property
+    def on_game_start(self) -> str:
+        """..."""
+
+        return f"game:map/{self.id}/on_game_start"
 
     @classmethod
     def get(self, map_id: str | DataSource | ScoreSource) -> DataSource:
@@ -107,11 +114,11 @@ class Map:
         - a ScoreSource (an objective + selector/name) (runtime)
         
         ```py
-        map = Map.state("market")
+        map = Map.get("market")
         # or
-        map = Map.state(STORAGE.temp.special_map_id)
+        map = Map.get(STORAGE.temp.special_map_id)
         # or
-        map = Map.state(SCORE.temp["map_id"])
+        map = Map.get(SCORE.temp["map_id"])
 
         if map.state.number_of_barrels > 100:
             say "do a barrel roll!"
@@ -121,6 +128,7 @@ class Map:
         ```json
         {
             id: "market",
+            gamemode: "capture_the_flag"
             hashed_id: 123456789,
             teams: [...],
             max_player_count: 16,

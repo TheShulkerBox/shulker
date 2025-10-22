@@ -2,6 +2,7 @@ from ../models import Map, Team, MapTag, PlayerCount
 
 map = Map(
     id="market",
+    gamemode="capture_the_flag",
     tags=[
         MapTag.Competitive,
         MapTag.CTF,

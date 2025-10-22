@@ -2,6 +2,7 @@ from component:on_use import AnimationLiteral
 from component:base import Component
 from server:events import on_player_reset, on_end_tick
 from server:core import root_advancement
+from player:services import player_tick
 
 on_using_timer = Scoreboard("component.on_using", criteria="dummy")
 
@@ -23,16 +24,12 @@ class on_hold(Component):
                     "trigger": "minecraft:using_item",
                     "conditions": {
                         "item": {
-                            "predicates": {
-                                "minecraft:custom_data": {"item_id": self.item.name}
-                            }
+                            "predicates": { "minecraft:custom_data": {"item_id": self.item.name} }
                         }
                     }
                 }
             },
-            "rewards": {
-                "function": on_using_path
-            }
+            "rewards": { "function": on_using_path }
         }
 
         function on_using_path:
@@ -44,7 +41,7 @@ class on_hold(Component):
             on_hold_ticking = f"{self.item.path}/on_hold_tick"
             on_release_function = f"{self.item.path}/on_release"
             
-            append function server_tick_player:
+            append function player_tick:
                 execute function on_hold_ticking:
                     if entity @s[advancements={on_using_path=false}, scores={on_using_timer=1..}] function on_release_function
 
@@ -56,7 +53,7 @@ class on_hold(Component):
             consumable: {
                 consume_seconds: 2e8,
                 animation: self.animation,
-                sound: {sound_id: self.sound},
+                sound: { sound_id: self.sound },
                 has_consume_particles: false,
             }
         }

@@ -1,6 +1,6 @@
 from lib:utils import get_player_name
 from lib:text import small_caps
-from server:core import server_tick, server_load, SERVER_GLOBALS, root_advancement, server_tick_player
+from server:core import server_tick, server_load, SERVER_GLOBALS, root_advancement
 
 
 #> Events
@@ -66,9 +66,9 @@ function on_join:
         playsound block.end_portal_frame.fill master @s 0 65 0 2 0.5 1
 
 
-
 player_count = SERVER_GLOBALS["player_count"]
 last_player_count = SERVER_GLOBALS["last_player_count"]
+
 
 append function server_tick:
     # detect player cnt
@@ -77,11 +77,6 @@ append function server_tick:
         as @a[tag=staff] at @s playsound minecraft:block.note_block.bass master @s ~ ~ ~ 0.5 0.42
 
     last_player_count = player_count
-
-
-function on_end_tick:
-    as @a as @s run function server_tick_player
-    advancement revoke @a through root_advancement
 
 
 @defer

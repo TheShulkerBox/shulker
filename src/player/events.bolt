@@ -1,0 +1,36 @@
+on_death = ~/on_death
+on_kill = ~/on_kill
+
+
+advancement on_kill {
+  "criteria": {
+    "kill": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": { "type": "minecraft:player" }
+      }
+    }
+  },
+  "rewards": { "function": on_kill }
+}
+
+
+function on_kill:
+    advancement revoke @s only on_kill
+
+
+advancement on_death {
+  "criteria": {
+    "kill": {
+      "trigger": "minecraft:entity_killed_player",
+      "conditions": {
+        "entity": { "type": "minecraft:player" }
+      }
+    }
+  },
+  "rewards": { "function": on_death }
+}
+
+
+function on_death:
+    advancement revoke @s only on_death
