@@ -1,17 +1,11 @@
-from ../models import Map, Team, MapTag, PlayerCount
+# from lib:custom_resources/map import map
 
-map = Map(
-    id="the_hall",
-    gamemode="capture_the_flag",
-    tags=[
-        MapTag.Deathmatch,
-        MapTag.All,
-    ],
-    teams=[
-        Team(id="deathmatch_1", color="dark_gray", spawn=(1000, 63, 4016, 180, 0)),
-        Team(id="deathmatch_2", color="dark_gray", spawn=(1000, 63, 3984, 0, 0)),
-    ],
-    location=(1000, 63, 4000),
-    dimension="overworld",
-    player_count=PlayerCount(min=2)
-)
+# map the_hall {
+#     "gamemode": "capture_the_flag",
+#     "tags": ["deathmatch", "active"],
+#     "teams": [
+#         {"id": "team_1", "color": "dark_gray", "spawn": [1000, 63, 4016, 180, 0]},
+#         {"id": "team_2", "color": "dark_gray", "spawn": [1000, 63, 3984, 0, 0]}
+#     ],
+#     "location": [1000, 63, 4000],
+# }

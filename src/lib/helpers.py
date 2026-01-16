@@ -165,3 +165,9 @@ def camel_case_to_snake_case(s: str) -> str:
 
     step1 = _CAMEL_TO_SNAKE_PAT1.sub(r"\1_\2", s)
     return _CAMEL_TO_SNAKE_PAT2.sub(r"\1_\2", step1).lower()
+
+
+def snake_case_to_pascal_case(s: str) -> str:
+    """Converts a snake_case string to PascalCase."""
+
+    return "".join(word.capitalize() for word in s.split("_"))

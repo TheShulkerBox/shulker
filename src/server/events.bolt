@@ -71,7 +71,7 @@ last_player_count = SERVER_GLOBALS["last_player_count"]
 
 
 append function server_tick:
-    # detect player cnt
+    # detect player count
     store result score var player_count if entity @a
     if player_count < last_player_count:
         as @a[tag=staff] at @s playsound minecraft:block.note_block.bass master @s ~ ~ ~ 0.5 0.42

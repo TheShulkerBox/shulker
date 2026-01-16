@@ -1,5 +1,9 @@
 # Shulker Rewrite
 
+## Current
+- [ ] Fix up the codebase so that we can deploy
+- [ ] Nested resources for maps
+
 ## Objective
 
 Create a MVP of CTF with atleast footman.

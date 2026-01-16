@@ -19,6 +19,7 @@ dependencies = [
   "websockets>=15.0.1",
   "methodtools>=0.4.7",
   "httpx>=0.28.1",
+  "pydantic>=2.12.5",
 ]
 description = "Add your description here"
 name = "shulker"

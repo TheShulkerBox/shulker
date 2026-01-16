@@ -29,25 +29,25 @@ function ~/on_use_poison:
     apply_motion_vector(STORAGE.temp.vector)
 
 
-class Potato(Item):
-    id = "stone"
-    item_model = "potato"
-    item_name = "Bouncing Betty"
-    max_damage = 101
-    on_hold = {tick_callback: ~/potato/tick, release_callback: ~/potato/release}
-    use_effects = {can_sprint: true, speed_multiplier: 0.7}
-    max_stack_size = 1
+# class Potato(Item):
+#     id = "stone"
+#     item_model = "potato"
+#     item_name = "Bouncing Betty"
+#     max_damage = 101
+#     on_hold = {tick_callback: ~/potato/tick, release_callback: ~/potato/release}
+#     use_effects = {can_sprint: true, speed_multiplier: 0.7}
+#     max_stack_size = 1
 
 
-function ~/potato/tick:
-    STORAGE.macro = {damage: max(0, 100 - (2 * on_using_timer["@s"]))}
-    unless items entity @s weapon.mainhand Potato.conditional_string():
-        with var STORAGE.macro:
-            $item modify entity @s weapon.offhand {function: "set_components", components: {damage: $(damage)}}
+# function ~/potato/tick:
+#     STORAGE.macro = {damage: max(0, 100 - (2 * on_using_timer["@s"]))}
+#     unless items entity @s weapon.mainhand Potato.conditional_string():
+#         with var STORAGE.macro:
+#             $item modify entity @s weapon.offhand {function: "set_components", components: {damage: $(damage)}}
 
-    if items entity @s weapon.mainhand Potato.conditional_string():
-        with var STORAGE.macro:
-            $item modify entity @s weapon.mainhand {function: "set_components", components: {damage: $(damage)}}
+#     if items entity @s weapon.mainhand Potato.conditional_string():
+#         with var STORAGE.macro:
+#             $item modify entity @s weapon.mainhand {function: "set_components", components: {damage: $(damage)}}
 
-function ~/potato/release:
-    say surprise!
+# function ~/potato/release:
+#     say surprise!

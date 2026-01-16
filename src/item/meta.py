@@ -459,6 +459,10 @@ class ItemType(type):
         runtime = self.ctx.inject(Runtime)
 
         # generate unique name
-        name = "zz_" + runtime.get_nested_location().split("/").pop() + f"_{next(self.counter)}"
+        name = (
+            "zz_"
+            + runtime.get_nested_location().split("/").pop()
+            + f"_{next(self.counter)}"
+        )
 
         return type(name, (self,), kwargs)

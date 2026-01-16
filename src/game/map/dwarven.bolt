@@ -1,23 +1,23 @@
-from ../models import Map, Team, MapTag, PlayerCount
+# from ../models import Map, Team, MapTag, PlayerCount
 
-map = Map(
-    id="dwarven",
-    gamemode="capture_the_flag",
-    tags=[
-        MapTag.Competitive,
-        MapTag.CTF,
-        MapTag.All,
-    ],
-    teams=[
-        Team(id="smalls", color="red", spawn=(0, 0, 0, 0, 0)),
-        Team(id="bigs", color="blue", spawn=(0, 0, 0, 0, 0)),
-    ],
-    location=(0, 65, 0),
-    dimension="overworld",
-    player_count=PlayerCount(min=2)
-)
+# map = Map(
+#     id="dwarven",
+#     gamemode="capture_the_flag",
+#     tags=[
+#         MapTag.Competitive,
+#         MapTag.CTF,
+#         MapTag.All,
+#     ],
+#     teams=[
+#         Team(id="smalls", color="red", spawn=(0, 0, 0, 0, 0)),
+#         Team(id="bigs", color="blue", spawn=(0, 0, 0, 0, 0)),
+#     ],
+#     location=(0, 65, 0),
+#     dimension="overworld",
+#     player_count=PlayerCount(min=2)
+# )
 
 
-function map.init:
-    # Teleport players to the center of the map
-    tp @a 0 65 0 -90 0
+# function map.init:
+#     # Teleport players to the center of the map
+#     tp @a 0 65 0 -90 0

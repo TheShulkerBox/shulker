@@ -1,0 +1,195 @@
+# class Team(BaseModel):
+#     id: str
+#     color: str
+#     spawn: tuple[int, int, int, int, int]  # coords, yaw, pitch
+
+#     @validator("color")
+#     def validate_color(cls, color: str):
+#         if color not in TEAM_COLORS:
+#             raise ValueError(f"{color!r} needs to be one of: {TEAM_COLORS}")
+
+#         return color
+
+#     @property
+#     def name(self) -> str:
+#         return self.id.replace("_", " ").title()
+
+
+# class PlayerCount(BaseModel):
+#     min: int = 4
+#     max: int = 100
+
+#     @validator("max")
+#     def max_at_least_min(cls, max_v: int, values: dict[str, int]):
+#         min_v = values.get("min")
+
+#         if min_v is not None and max_v < min_v:
+#             raise ValueError(f"max ({max_v}) must be >= min ({min_v})")
+
+#         return max_v
+
+
+# class Map(BaseModel):
+#     # global registry of maps
+#     _all_maps: ClassVar[list["Map"]] = []
+
+#     gamemode: str
+#     teams: list[Team]
+#     tags: list[Tag]
+#     player_count: PlayerCount
+
+#     # eventually, all maps will be 0 0 0 in their own dimension
+#     location: tuple[int, int, int]
+#     dimension: str = "overworld"
+
+#     @cached_property
+#     def hashed_id(self):
+#         return id_to_number(self.id)
+
+#     @validator("tags")
+#     def tags(self, v: list[Tag]):
+#         v.append(Tag.All)
+#         return v
+    
+#     @classmethod
+#     def generate(cls, data: Any):
+#         data = next(data).evaluate()
+#         map = cls.parse_obj(data)
+
+#         function ~/../map/queue/enqueue_{map.id}:
+#             GAME_META.map_queue.append(map.id)
+
+
+
+#     def __post_init__(self):
+#         """Register the map in the global list of maps to be processed later."""
+        
+#         self._all_maps.append(self)
+#         self.hashed_id = id_to_number(self.id)
+
+#         function f"game:map/queue/enqueue_{self.id}":
+#             GAME_META.map_queue.append(self.id)
+    
+#     @property
+#     def name(self) -> str:
+#         return self.id.replace("_", " ").title()
+
+#     @property
+#     def init(self) -> str:
+#         """Called when the map is initialized."""
+
+#         return f"game:map/{self.id}/init"
+    
+#     @property
+#     def tick(self) -> str:
+#         """Called every tick for the map while active."""
+
+#         return f"game:map/{self.id}/tick"
+    
+#     @property
+#     def effects(self) -> str:
+#         """Called every second for the map (even when not active)."""
+
+#         return f"game:map/{self.id}/effects"
+    
+#     @property
+#     def on_game_start(self) -> str:
+#         """..."""
+
+#         return f"game:map/{self.id}/on_game_start"
+
+#     @classmethod
+#     def get(self, map_id: str | DataSource | ScoreSource) -> DataSource:
+#         """Returns a storage location for storing map-specific state for a map with the given ID.
+
+#         `map_id` can be:
+#         - a string (compile-time)
+#         - a DataSource (like a storage location) (runtime)
+#         - a ScoreSource (an objective + selector/name) (runtime)
+        
+#         ```py
+#         map = Map.get("market")
+#         # or
+#         map = Map.get(STORAGE.temp.special_map_id)
+#         # or
+#         map = Map.get(SCORE.temp["map_id"])
+
+#         if map.state.number_of_barrels > 100:
+#             say "do a barrel roll!"
+#         ```
+
+#         Data-layout for output:
+#         ```json
+#         {
+#             id: "market",
+#             gamemode: "capture_the_flag"
+#             hashed_id: 123456789,
+#             teams: [...],
+#             max_player_count: 16,
+#             tags: [...],
+#             location: [0, 65, 0],
+#             dimension: "overworld",
+
+#             state: { ... }  # custom per-map state,
+#         }
+#         ```
+#         """
+
+#         if type(map_id) is ScoreSource:
+#             # If our input is a score, we check against the "hashed_id" field
+#             STORAGE.macro = {id: map_id}
+#             with var STORAGE.macro:
+#                 $data modify storage shulker:temp map_state set from game:meta maps[{hashed_id: $(id)}]
+
+#         elif type(map_id) in (str, DataSource):
+#             # Otherwise, we check against the "id" field
+#             STORAGE.macro = {id: map_id}
+#             with var STORAGE.macro:
+#                 $data modify storage shulker:temp map_state set from game:meta maps[{id: $(id)}]
+
+#         else:
+#             raise TypeError(f"map_id ({map_id}) must be a str, DataSource, or ScoreSource")
+
+#         return STORAGE.temp.map
+
+#     @branch
+#     def is_selected(self) -> Iterator[bool]:
+#         """Implements `if` statement behavior for checking if this map is the current map.
+
+#         ```
+#         if MyMap.is_selected():
+#             say "this only occurs if my map is selected"
+#         ```
+#         """
+
+#         if GAME_META.current.map.id == self.id:
+#             yield True
+
+
+#     def as_data(self):
+#         """Convert the map into a data representation that can be stored in storage (or used as dict)."""
+
+#         return json.dumps(asdict(self))
+
+
+# @defer
+# def _load_maps():
+#     """Load all maps into the game meta storage."""
+
+#     append function server_load:
+#         execute function game:map/init:
+#             GAME_META.maps = []
+
+#             # pre load all map pool keys
+#             GAME_META.map_pools = {}
+#             for tag in MapTag.__dict__:
+#                 if not tag.startswith("_"):
+#                     GAME_META.map_pools[tag] = []
+
+#             # append our map to meta data
+#             for map in Map._all_maps:
+#                 GAME_META.maps.append(map.as_data())
+                
+#                 # add map ids to their respective pools
+#                 for map_tag in map.tags:
+#                     GAME_META.map_pools[map_tag].append(map.id)

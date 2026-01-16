@@ -1,21 +1,9 @@
-from ../models import Map, Team, MapTag, PlayerCount
-
-map = Map(
-    id="market",
-    gamemode="capture_the_flag",
-    tags=[
-        MapTag.Competitive,
-        MapTag.CTF,
-        MapTag.All,
-    ],
-    teams=[
-        Team(id="smalls", color="red", spawn=(0, 0, 0, 0, 0)),
-        Team(id="bigs", color="blue", spawn=(0, 0, 0, 0, 0)),
-    ],
-    location=(0, 65, 0),
-    dimension="overworld",
-    player_count=PlayerCount(min=2)
-)
-
-function ~/effects:
-    particle minecraft:heart 0 65 0 0 0 0 0 1 force @a
+# map ctf:market {
+#     gamemode: "capture_the_flag",
+#     tags: ["competitive", "ctf"],
+#     teams: [
+#         {id: "smalls", color: "red", spawn: [0, 0, 0, 0, 0]},
+#         {id: "bigs", color: "blue", spawn: [0, 0, 0, 0, 0]}
+#     ],
+#     location: [0, 65, 0],
+# }
