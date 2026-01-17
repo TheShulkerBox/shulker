@@ -5,7 +5,6 @@ from pydantic.v1 import BaseModel, validator
 import json
 
 from server:core import server_load
-from lib:helpers import id_to_number, branch
 from lib:const import TEAM_COLORS
 from lib:custom_resources import CustomResource
 
@@ -19,6 +18,7 @@ from ./models/tag import Tag
 #   map_pools: dict[str, list[str]],  # tag -> list of map ids
 # }
 GAME_META = Data.storage("game:meta")
+GAME_ROM = STORAGE.rom.game
 
 
 class Team(BaseModel):
@@ -53,105 +53,34 @@ class PlayerCount(BaseModel):
 
 
 class Map(CustomResource):
-    # global registry of maps
-    _all_maps: ClassVar[list["Map"]] = []
-
     gamemode: str
     teams: list[Team]
     tags: list[Tag]
-    player_count: PlayerCount
+    player_count: PlayerCount = PlayerCount()
 
     # eventually, all maps will be 0 0 0 in their own dimension
     location: tuple[int, int, int]
     dimension: str = "overworld"
 
-    @property
-    def hashed_id(self):
-        return id_to_number(self.id)
+    @classmethod
+    def storage(self):
+        return GAME_ROM.maps
 
-    @validator("tags", check_fields=False)
-    def tags(self, v: list[Tag]):
-        v.append(Tag.All)
+    @validator("tags")
+    def add_all_tag(cls, v: list[Tag]):
+        v.append("all")
         return v
     
-    @classmethod
-    def generate(cls, data: Any):
-        data = next(data).evaluate()
-        map = cls.parse_obj(data)
+    @property
+    def path(self) -> str:
+        return f"game:maps/{self.id}"
 
-
-append function server_load:
-    execute function game:map/init:
-        GAME_META.maps = []
-
-        # init map_pools
-        GAME_META.map_pools = {}
-        for tag in Tag.__dict__:
-            if not tag.startswith("_"):
-                GAME_META.map_pools[tag] = []
-
-
-def generate_map(map: Map):
-    GAME_META.maps.append(map.as_data())
-                
-    # add map ids to their respective pools
-    for map_tag in map.tags:
-        GAME_META.map_pools[map_tag].append(map.id)
-
+    # def on_load(self, map_id: str):
+    #     append function game:map/init:
+    #         # add map ids to their respective pools
+    #         for map_tag in self.tags:
+    #             GAME_META.map_pools[str(map_tag)].append(self.id)
+    
 
 macro map path=brigadier:string data=mecha:nested_json:
-    generate_map(Map.generate(data))
-
-
-def get_map(map_id: str | DataSource | ScoreSource) -> DataSource:
-    """Returns a storage location for storing map-specific state for a map with the given ID.
-
-    `map_id` can be:
-    - a string (compile-time)
-    - a DataSource (like a storage location) (runtime)
-    - a ScoreSource (an objective + selector/name) (runtime)
-    
-    ```py
-    map = get_map("market")
-    # or
-    map = get_map(STORAGE.temp.special_map_id)
-    # or
-    map = get_map(SCORE.temp["map_id"])
-
-    if map.state.number_of_barrels > 100:
-        say "do a barrel roll!"
-    ```
-
-    Data-layout for output:
-    ```json
-    {
-        id: "market",
-        gamemode: "capture_the_flag"
-        hashed_id: 123456789,
-        teams: [...],
-        max_player_count: 16,
-        tags: [...],
-        location: [0, 65, 0],
-        dimension: "overworld",
-
-        state: { ... }  # custom per-map state,
-    }
-    ```
-    """
-
-    if type(map_id) is ScoreSource:
-        # If our input is a score, we check against the "hashed_id" field
-        STORAGE.macro = {id: map_id}
-        with var STORAGE.macro:
-            $data modify storage shulker:temp map_state set from game:meta maps[{hashed_id: $(id)}]
-
-    elif type(map_id) in (str, DataSource):
-        # Otherwise, we check against the "id" field
-        STORAGE.macro = {id: map_id}
-        with var STORAGE.macro:
-            $data modify storage shulker:temp map_state set from game:meta maps[{id: $(id)}]
-
-    else:
-        raise TypeError(f"map_id ({map_id}) must be a str, DataSource, or ScoreSource")
-
-    return STORAGE.temp.map
+    Map.generate(id=path, data=data)

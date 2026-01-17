@@ -1,10 +1,26 @@
 # Shulker Rewrite
 
 ## Current
-- [ ] Fix up the codebase so that we can deploy
-- [ ] Nested resources for maps
+- [x] Fix up the codebase so that we can deploy
+- [x] Nested resources for maps
+- [/] MVP for duels
 
-## Objective
+## MVP for Duels
+Create a working duels map with atleast 2 kits.
+
+- [x] Duel map model + state modeling
+- [/] Map state handling
+- [ ] Duel game manager
+- [/] Joining/leaving duels
+- [ ] Start/stop duel games
+- [ ] Player death/respawn handling
+- [ ] Kill tracking and stats
+- [ ] Basic lobby
+- [ ] Spectator
+
+
+
+## Objective 2
 
 Create a MVP of CTF with atleast footman.
 

@@ -1,5 +1,3 @@
-# from https://github.com/TheNuclearNexus/CallOfChaos/blob/rework-1.21/plugins/macros.py
-
 from dataclasses import dataclass, field
 from typing import Any, List, Literal
 from beet import Context
@@ -19,6 +17,7 @@ from mecha import (
     AstNode,
     CommandSpec,
     Mecha,
+    NbtParser,
     NbtPathParser,
     Parser,
     Visitor,
@@ -28,6 +27,7 @@ from mecha import (
 from mecha.utils import string_to_number, number_to_string
 from nbtlib import Base, Serializer as NbtSerializer
 from tokenstream import InvalidSyntax, TokenStream, set_location
+
 
 
 @dataclass
@@ -105,7 +105,7 @@ def path_contains_macro(path: AstNbtPath):
                 component.index.evaluate()
             ):
                 return True
-
+            
             if isinstance(component.index, AstMacroArgument):
                 return True
 
@@ -142,7 +142,7 @@ class CommandSerializer(Visitor):
                 result.append(token)
             else:
                 argument = node.arguments[argument_index]
-
+                print(str(argument) + "\n")
                 if isinstance(argument, AstNbt) and nbt_contains_macro(
                     argument.evaluate()
                 ):
@@ -413,10 +413,32 @@ class MacroRangeParser:
         )
 
 
+def modify_nbt(original_nbt: Parser) -> Parser:
+    if isinstance(original_nbt, NbtParser):
+        parse_nbt = AlternativeParser([MacroParser(("nbt", "string"), AstMacroNbtArgument), original_nbt])
+        original_nbt.list_or_array_element_parser = parse_nbt
+        original_nbt.recursive_parser = parse_nbt
+        return parse_nbt
+
+    elif isinstance(original_nbt, AlternativeParser):
+        for alterative in original_nbt.parsers:
+            if isinstance(alterative, NbtParser):
+                return modify_nbt(alterative)
+            else:
+                modified = modify_nbt(alterative)
+                if isinstance(modified, NbtParser):
+                    return modified
+                
+        return original_nbt
+    else:
+        print(f"Warning! 'nbt' parser was not a NbtParser. Instead it was {type(original_nbt)}")
+        return original_nbt
+    
+
 def get_parsers(parsers: dict[str, Parser]):
-    parse_nbt = macro(
-        parsers, ("nbt", "string"), node_type=AstMacroNbtArgument, priority=True
-    )
+    parse_nbt: Parser = parsers["nbt"]
+
+    parse_nbt = modify_nbt(parse_nbt)
 
     return {
         "typed_macro": parse_typed_macro,
@@ -428,7 +450,7 @@ def get_parsers(parsers: dict[str, Parser]):
         "phrase": macro(parsers, "phrase", priority=True),
         "greedy": macro(parsers, "greedy", priority=True),
         "entity": macro(parsers, "entity", priority=True),
-        "nbt": parse_nbt,
+        # "nbt": parse_nbt,
         "nbt_path": AlternativeParser(
             [parsers["nbt_path"], MacroNbtPathParser(nbt_compound_parser=parse_nbt)]
         ),

@@ -1,0 +1,38 @@
+#> Handles joining duels via trigger
+# When you attempt 
+
+from server:core import server_tick, server_load
+
+from ./models import DuelsMap, DuelsMapState, DUELS_STORAGE
+from ./core import duels_map_id
+
+join_duel = Scoreboard("join_duel", criteria="trigger")
+
+
+# Check player count in selected duels map (selected by trigger command when requesting to join)
+# Reference duels occupancy data structure (dictionary?) for appropriate map
+append function server_tick:
+    join_duel["@a"].enable()  # TODO: only enable if in LOBBY
+    as @a[scores={join_duel=1..}] function on_attempt_join
+
+
+success = ~/success
+
+function ~/attempt:
+    requested_map = DuelsMap.get(join_duel["@s"])
+    with DuelsMapState.modify(join_duel["@s"]) as map_state:
+        # Compare whether duels lobby is full or not
+        if map_state.current_player_count < requested_map.max_player_count:
+            function success
+        else:
+            tellraw @s {text: "That arena is full!", color: theme.failure}
+
+    join_duel["@s"].reset()
+
+
+function success:
+    # TODO Add players to teams, teleport to appropriate spawn rooms
+    tellraw @s {text: "Successfully joined the arena!", color: theme.success}
+    map_state.current_player_count += 1
+    duels_map_id["@s"] = join_duel["@s"]
+    

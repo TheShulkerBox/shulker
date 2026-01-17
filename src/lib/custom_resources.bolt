@@ -1,0 +1,178 @@
+from collections.abc import Callable
+from contextlib import contextmanager
+import json
+from pydantic.v1 import BaseModel, validator, Field, PrivateAttr
+from typing import ClassVar
+
+from ./helpers import id_to_number
+from ./rom import load_rom
+
+from server:core import server_load
+
+
+class CustomBaseModel(BaseModel):
+    class Config:
+        underscore_attrs_are_private = True
+        use_enum_values = True
+    
+    def dict(self):
+        return json.loads(self.json())
+
+
+class CustomResource(CustomBaseModel):
+    """Defines a custom resource which can be registered via a bolt macro"""
+
+    id: str
+    hashed_id: int = -1
+    
+    # storage: DataSource
+    _resources: ClassVar[dict[str, "CustomResource"]] = {}
+
+    @validator("id")
+    def hash_id(cls, value: str, values: dict[str, Any]):
+        """Numerical representation of id"""
+        values["hashed_id"] = id_to_number(value)
+        return value
+
+    @classmethod
+    def generate(cls, id: Any, data: Any):
+        """Generates the resource from the macro"""
+
+        id = id.value
+
+        # Convert the json into actual dict
+        data = data.evaluate()
+        data["id"] = id
+
+        # Parse it into pydantic object and save it
+        resource = cls.parse_obj(data)
+        cls._resources[id] = resource
+
+        # Save to read-only storage
+        append function load_rom:
+            resource.storage().append(resource.dict())
+
+        # Call on_load for custom load stuff
+        resource.on_load(id)
+    
+    @classmethod
+    def get(cls, resource_id: str | DataSource | ScoreSource) -> DataSource:
+        """Returns a storage location for storing custom resource data for a map with the given ID.
+
+        ## Example
+        For the case of maps, `resource_id` is a map id and can be:
+        - a string (compile-time)
+        - a DataSource (like a storage location) (runtime)
+        - a ScoreSource (an objective + selector/name) (runtime)
+        
+        ```py
+        map = Map.get("etherlok")
+        # or
+        map = Map.get(STORAGE.temp.special_map_id)
+        # or
+        map = Map.get(SCORE.temp["map_id"])
+
+        tp @a map.location
+        ```
+
+        Example data-layout for output (might not be up to date):
+        ```json
+        {
+            location: [3000, 60, 4000],
+            spawns: [
+                [2998, 58, 4002],
+                [3032, 58, 4009],
+            ],
+        }
+        ```
+        """
+        
+        output = STORAGE.temp.resource
+
+        # If our input is a score, we check against the "hashed_id" field
+        if type(resource_id) is ScoreSource:
+            STORAGE.macro = {id: resource_id}
+            with var STORAGE.macro:
+                raw f"$data modify {output} set from {cls.storage()}[{{hashed_id: $(id)}}]"
+
+        # Otherwise, we check against the "id" field (works for strings AND storage)
+        elif type(resource_id) in (str, DataSource):
+            STORAGE.macro = {id: resource_id}
+            with var STORAGE.macro:
+                raw f"$data modify {output} set from {cls.storage()}[{{id: $(id)}}]"
+
+        else:
+            raise TypeError(f"id ({resource_id}) must be a str, DataSource, or ScoreSource")
+
+        return output
+    
+    def on_load(self, resource_id: str):
+        """Called when the custom resource is loaded. Override in subclasses if needed."""
+
+
+class CustomResourceState(CustomBaseModel):
+    """State for each resource in a collection.
+    
+    The state is represented via storage and will be macro'd in order to access and save it.
+    """
+
+    id: str
+    hashed_id: int = -1
+
+    # storage: DataSource
+    _states: ClassVar[dict[str, "CustomResourceState"]] = {}
+
+    @classmethod
+    def register_resource(cls, resource_id: str):
+        """Registers the resource's state in storage"""
+        obj = cls(id=resource_id, hashed_id=id_to_number(resource_id))
+        append function server_load:
+            obj.storage().append(obj.dict())
+        cls._states[resource_id] = obj
+
+        function game:state/reset:
+            obj.storage().remove()
+    
+    @classmethod
+    def get(self, resource_id: str | DataSource | ScoreSource):
+        output = STORAGE.temp.state
+
+        # If our input is a score, we check against the "hashed_id" field
+        if type(resource_id) is ScoreSource:
+            STORAGE.macro = {id: resource_id}
+            with var STORAGE.macro:
+                raw f"$data modify {output} set from {cls.storage()}[{{hashed_id: $(id)}}]"
+
+        # Otherwise, we check against the "id" field (works for strings AND storage)
+        elif type(resource_id) in (str, DataSource):
+            STORAGE.macro = {id: resource_id}
+            with var STORAGE.macro:
+                raw f"$data modify {output} set from {cls.storage()}[{{id: $(id)}}]"
+
+        else:
+            raise TypeError(f"id ({resource_id}) must be a str, DataSource, or ScoreSource")
+
+
+    @classmethod
+    @contextmanager
+    def modify(cls, resource_id: str | DataSource | ScoreSource):
+        output = STORAGE.temp.state
+
+        # If our input is a score, we check against the "hashed_id" field
+        if type(resource_id) is ScoreSource:
+            STORAGE.macro = {id: resource_id}
+            with var STORAGE.macro:
+                raw f"$data modify {output} set from {cls.storage()}[{{hashed_id: $(id)}}]"
+                yield output
+                raw f"$data modify {cls.storage()}[{{hashed_id: $(id)}}] set from {output}"
+
+        # Otherwise, we check against the "id" field (works for strings AND storage)
+        elif type(resource_id) in (str, DataSource):
+            STORAGE.macro = {id: resource_id}
+            with var STORAGE.macro:
+                raw f"$data modify {output} set from {cls.storage()}[{{id: $(id)}}]"
+                yield output
+                raw f"$data modify {cls.storage()}[{{id: $(id)}}] set from {output}"
+
+        else:
+            raise TypeError(f"id ({resource_id}) must be a str, DataSource, or ScoreSource")

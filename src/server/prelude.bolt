@@ -19,7 +19,8 @@ SCORE = {
 }
 
 STORAGE = {
-    temp: Data.storage("shulker:temp")
+    temp: Data.storage("shulker:temp"),
+    rom: Data.storage("rom:main").root,
 }
 STORAGE["macro"] = STORAGE.temp.macro
 SELF = Data.entity("@s")

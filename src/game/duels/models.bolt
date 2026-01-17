@@ -1,0 +1,37 @@
+from lib:custom_resources import CustomResource, CustomResourceState
+
+from ./model_enums import DuelsMapStatus
+
+
+DUELS_STORAGE = Data.storage("game:duels")
+DUELS_ROM = STORAGE.rom.duels
+
+
+class DuelsMap(CustomResource):
+    location: tuple[int, int, int]
+    spawns: list[tuple[int, int, int]]
+    dimension: str = "overworld"
+    max_player_count: int = 2
+
+    @classmethod
+    def storage(self):
+        return DUELS_ROM.maps
+
+    @classmethod
+    def on_load(cls, map_id: str):
+        DuelsMapState.register_resource(map_id)
+
+
+class DuelsMapState(CustomResourceState):
+    current_player_count: int = 0
+    kills_to_win: int = 3
+    kills: tuple[int, int] = (0, 0)  # kills per team
+    status: DuelsMapStatus = DuelsMapStatus.INACTIVE
+
+    @classmethod
+    def storage(self):
+        return DUELS_STORAGE.map_state
+
+
+macro duels_map path=brigadier:string data=mecha:nested_json:
+    DuelsMap.generate(id=path, data=data)
