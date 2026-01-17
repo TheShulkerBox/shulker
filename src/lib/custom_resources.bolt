@@ -163,9 +163,9 @@ class CustomResourceState(CustomBaseModel):
         if type(resource_id) is ScoreSource:
             STORAGE.macro = {id: resource_id}
             with var STORAGE.macro:
-                raw f"$data modify {output} set from {cls.storage()}[{{hashed_id: $(id)}}]"
+                data modify var output set from var state[{hashed_id: $(id)}]
                 yield output
-                raw f"$data modify {cls.storage()}[{{hashed_id: $(id)}}] set from {output}"
+                data modify var state[{hashed_id: $(id)}] set from var output
 
         # Otherwise, we check against the "id" field (works for strings AND storage)
         elif type(resource_id) in (str, DataSource):
