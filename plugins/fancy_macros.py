@@ -1,23 +1,41 @@
 from dataclasses import dataclass, field
-from typing import Any, List, Literal
+from typing import (
+    Any,
+    Callable,
+    Generator,
+    List,
+    Literal,
+    Optional,
+    TypeVar,
+    cast,
+)
 from beet import Context
 from beet.core.utils import required_field
-from bolt import AstInterpolation
+from bolt import (
+    Accumulator,
+    AstFormatString,
+    AstInterpolation,
+    Runtime,
+    visit_generic,
+    visit_single,
+)
 from mecha import (
     NUMBER_PATTERN,
     AlternativeParser,
     AstChildren,
     AstCommand,
+    AstGreedy,
     AstMacroLineVariable,
-    AstNbt,
-    AstNbtCompound,
+    AstMessage,
     AstNbtPath,
     AstNbtPathKey,
-    AstNbtPathSubscript,
+    AstNbtValue,
     AstNode,
+    AstString,
+    AstWord,
     CommandSpec,
     Mecha,
-    NbtParser,
+    MutatingReducer,
     NbtPathParser,
     Parser,
     Visitor,
@@ -28,6 +46,12 @@ from mecha.utils import string_to_number, number_to_string
 from nbtlib import Base, Serializer as NbtSerializer
 from tokenstream import InvalidSyntax, TokenStream, set_location
 
+import re
+
+MACRO_REGEX = re.compile(r"\$\(\s*\w+\s*(\:\s*\w+\s*)?\)")
+
+T = TypeVar("T")
+N = TypeVar("N", bound=AstNode)
 
 
 @dataclass
@@ -39,15 +63,18 @@ class MacroTag(Base):
         self.serializer = "macro"
 
 
-def serialize_macro(self: NbtSerializer, tag: MacroTag):
+def serialize_macro(_self: NbtSerializer, tag: MacroTag):
     if tag.parser == "string":
         return f'"$({tag.name})"'
 
     return f"$({tag.name})"
 
 
+class MacroRepresentation: ...
+
+
 @dataclass(frozen=True, slots=True)
-class AstMacroArgument(AstNode):
+class AstMacroArgument(AstNode, MacroRepresentation):
     name: str = required_field()
     parser: str | None = required_field()
 
@@ -72,7 +99,7 @@ class AstMacroNbtPathArgument(AstMacroArgument): ...
 
 
 @dataclass(frozen=True, slots=True)
-class AstMacroArgument(AstMacroArgument): ...
+class AstMacroExpression(AstMacroArgument): ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -81,40 +108,103 @@ class AstMacroRange(AstNode):
     max: int | float | AstMacroArgument | None = field(default=None)
 
 
-def nbt_contains_macro(root: dict | list):
-    if isinstance(root, dict):
-        for value in root.values():
-            if nbt_contains_macro(value):
-                return True
-
-    elif isinstance(root, list):
-        for value in root:
-            if nbt_contains_macro(value):
-                return True
-
-    elif isinstance(root, MacroTag):
-        return True
-
-    return False
+@dataclass(frozen=True, slots=True)
+class AstMacroStringWrapper[N](AstNode):
+    child: N = required_field()
 
 
-def path_contains_macro(path: AstNbtPath):
-    for component in path.components:
-        if isinstance(component, AstNbtPathSubscript) and component.index:
-            if isinstance(component.index, AstNbtCompound) and nbt_contains_macro(
-                component.index.evaluate()
-            ):
-                return True
-            
-            if isinstance(component.index, AstMacroArgument):
-                return True
+@dataclass(frozen=True, slots=True)
+class AstNbtValueWithMacro(AstNbtValue, MacroRepresentation):
+    @classmethod
+    def from_value(cls, value: Any) -> "AstNbtValueWithMacro":
+        return cls(value=value)
 
-        if isinstance(component, AstNbtCompound) and nbt_contains_macro(
-            component.evaluate()
-        ):
-            return True
 
-    return False
+@dataclass(frozen=True, slots=True)
+class AstStringWithMacro(AstString, MacroRepresentation):
+    @classmethod
+    def from_value(cls, value: Any) -> "AstStringWithMacro":
+        return AstStringWithMacro(value=str(value))
+
+
+@dataclass(frozen=True, slots=True)
+class AstGreedyWithMacro(AstGreedy, MacroRepresentation):
+    @classmethod
+    def from_value(cls, value: Any) -> "AstGreedyWithMacro":
+        return cls(value=AstGreedy.from_value(value).value)
+
+
+@dataclass(frozen=True, slots=True)
+class AstWordWithMacro(AstWord, MacroRepresentation):
+    @classmethod
+    def from_value(cls, value: Any) -> "AstWordWithMacro":
+        return cls(value=AstWord.from_value(value).value)
+
+
+@dataclass(frozen=True, slots=True)
+class AstMessageWithMacro(AstMessage, MacroRepresentation):
+    @classmethod
+    def from_value(cls, value: Any) -> "AstMessageWithMacro":
+        return cls(fragments=AstMessage.from_value(value).fragments)
+
+
+class StringWithMacro(str): ...
+
+
+@dataclass
+class Macro:
+    name: str = required_field()
+    parser: str | None = required_field()
+
+    def __str__(self):
+        return f"$({self.name})"
+
+
+def ast_to_macro(macro: AstMacroArgument):
+    return Macro(macro.name, macro.parser)
+
+
+def make_macro_string():
+    return StringWithMacro
+
+
+@dataclass
+class MacroCodegen(Visitor):
+    @rule(AstMacroExpression)
+    def macro(
+        self, node: AstMacroExpression, acc: Accumulator
+    ) -> Generator[AstNode, Optional[List[str]], Optional[List[str]]]:
+        result = yield from visit_generic(node, acc)
+
+        if result is None:
+            result = acc.make_ref(node)
+
+        result = acc.helper("ast_to_macro", result)
+
+        return [result]
+
+    @rule(AstMacroStringWrapper)
+    def wrapper(
+        self, node: AstMacroStringWrapper, acc: Accumulator
+    ) -> Generator[AstNode, Optional[List[str]], Optional[List[str]]]:
+        child = yield from visit_single(node.child, required=True)
+
+        result = acc.make_variable()
+        acc.statement(f"{result} = {acc.helper("make_macro_string")}({child})")
+
+        return [result]
+
+
+@dataclass
+class MacroMutator(MutatingReducer):
+    @rule(AstFormatString)
+    def format_string(self, node: AstFormatString):
+        if any(map(lambda v: isinstance(v, AstMacroArgument), node.values)):
+            return set_location(
+                AstMacroStringWrapper(child=node), node.location, node.end_location
+            )
+
+        return node
 
 
 @dataclass
@@ -122,7 +212,7 @@ class CommandSerializer(Visitor):
     spec: CommandSpec = required_field()
 
     @rule(AstCommand)
-    def variable(self, node: AstCommand, result: list[str]):
+    def command(self, node: AstCommand, result: list[str]):
         prototype = self.spec.prototypes[node.identifier]
         argument_index = 0
 
@@ -142,13 +232,11 @@ class CommandSerializer(Visitor):
                 result.append(token)
             else:
                 argument = node.arguments[argument_index]
-                print(str(argument) + "\n")
-                if isinstance(argument, AstNbt) and nbt_contains_macro(
-                    argument.evaluate()
-                ):
-                    result[start_index] = "$"
-                if isinstance(argument, AstNbtPath) and path_contains_macro(argument):
-                    result[start_index] = "$"
+              
+                for child in argument.walk():
+                    if isinstance(child, MacroRepresentation):
+                        result[start_index] = "$"
+                        break
 
                 yield argument
                 argument_index += 1
@@ -227,7 +315,7 @@ class CommandSerializer(Visitor):
 
 @dataclass
 class MacroParser:
-    parser: str | tuple[str]
+    parser: str | tuple[str, ...]
     node_type: type[AstMacroArgument]
 
     def __call__(self, stream: TokenStream):
@@ -267,8 +355,12 @@ def macro(
         parser_type = type[0]
 
     if not priority:
-        return AlternativeParser([parsers[parser_type], MacroParser(type, node_type)])
-    return AlternativeParser([MacroParser(type, node_type), parsers[parser_type]])
+        return AlternativeParser(
+            [parsers[cast(str, parser_type)], MacroParser(type, node_type)]
+        )
+    return AlternativeParser(
+        [MacroParser(type, node_type), parsers[cast(str, parser_type)]]
+    )
 
 
 def parse_typed_macro(stream: TokenStream):
@@ -413,34 +505,14 @@ class MacroRangeParser:
         )
 
 
-def modify_nbt(original_nbt: Parser) -> Parser:
-    if isinstance(original_nbt, NbtParser):
-        parse_nbt = AlternativeParser([MacroParser(("nbt", "string"), AstMacroNbtArgument), original_nbt])
-        original_nbt.list_or_array_element_parser = parse_nbt
-        original_nbt.recursive_parser = parse_nbt
-        return parse_nbt
-
-    elif isinstance(original_nbt, AlternativeParser):
-        for alterative in original_nbt.parsers:
-            if isinstance(alterative, NbtParser):
-                return modify_nbt(alterative)
-            else:
-                modified = modify_nbt(alterative)
-                if isinstance(modified, NbtParser):
-                    return modified
-                
-        return original_nbt
-    else:
-        print(f"Warning! 'nbt' parser was not a NbtParser. Instead it was {type(original_nbt)}")
-        return original_nbt
-    
-
 def get_parsers(parsers: dict[str, Parser]):
     parse_nbt: Parser = parsers["nbt"]
 
-    parse_nbt = modify_nbt(parse_nbt)
+    make_nbt_parser = lambda parser: AlternativeParser(
+        [MacroParser(("nbt", "string"), AstMacroNbtArgument), parser]
+    )
 
-    return {
+    new_parsers = {
         "typed_macro": parse_typed_macro,
         "bool": macro(parsers, "bool"),
         "numeric": macro(parsers, "numeric"),
@@ -450,15 +522,44 @@ def get_parsers(parsers: dict[str, Parser]):
         "phrase": macro(parsers, "phrase", priority=True),
         "greedy": macro(parsers, "greedy", priority=True),
         "entity": macro(parsers, "entity", priority=True),
-        # "nbt": parse_nbt,
+        "nbt": make_nbt_parser(parsers["nbt"]),
+        "nbt_compound_entry": make_nbt_parser(parsers["nbt_compound_entry"]),
+        "nbt_list_or_array_element": make_nbt_parser(
+            parsers["nbt_list_or_array_element"]
+        ),
+        "nbt_compound": make_nbt_parser(parsers["nbt_compound"]),
         "nbt_path": AlternativeParser(
             [parsers["nbt_path"], MacroNbtPathParser(nbt_compound_parser=parse_nbt)]
         ),
         "range": AlternativeParser([parsers["range"], MacroRangeParser()]),
     }
 
+    if "bolt:literal" in parsers:
+        new_parsers["bolt:literal"] = macro(
+            parsers, "bolt:literal", node_type=AstMacroExpression
+        )
 
-NbtSerializer.serialize_macro = serialize_macro
+    return new_parsers
+
+
+@dataclass
+class MacroConverter:
+    base_converter: Callable[[Any, AstNode], AstNode]
+    node_type: type
+
+    def __call__(self, obj: Any, node: AstNode) -> AstNode:
+        if isinstance(obj, StringWithMacro):
+            return self.node_type.from_value(obj)
+        return self.base_converter(obj, node)
+
+
+conversions = {
+    "interpolate_phrase": AstStringWithMacro,
+    "interpolate_word": AstWordWithMacro,
+    "interpolate_greedy": AstGreedyWithMacro,
+    "interpolate_nbt": AstNbtValueWithMacro,
+    "interpolate_message": AstMessageWithMacro,
+}
 
 
 def beet_default(ctx: Context):
@@ -466,3 +567,15 @@ def beet_default(ctx: Context):
 
     mc.spec.parsers.update(get_parsers(mc.spec.parsers))
     mc.serialize.extend(CommandSerializer(spec=mc.spec))
+    mc.steps.insert(0, MacroMutator())
+
+    runtime = ctx.inject(Runtime)
+
+    runtime.modules.codegen.extend(MacroCodegen())
+    runtime.helpers["ast_to_macro"] = ast_to_macro
+    runtime.helpers["make_macro_string"] = make_macro_string
+
+    for conversion, node_type in conversions.items():
+        runtime.helpers[conversion] = MacroConverter(
+            runtime.helpers[conversion], node_type
+        )

@@ -4,7 +4,7 @@ require:
   # it needs to go first so that exit phase happens last
   - plugins.upload
 
-  # - plugins.fancy_macros
+  - plugins.fancy_macros
   - bolt_expressions
   - bolt_expressions.contrib.commands
   - bolt

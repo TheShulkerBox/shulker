@@ -157,6 +157,7 @@ class CustomResourceState(CustomBaseModel):
     @contextmanager
     def modify(cls, resource_id: str | DataSource | ScoreSource):
         output = STORAGE.temp.state
+        state = cls.storage()
 
         # If our input is a score, we check against the "hashed_id" field
         if type(resource_id) is ScoreSource:
@@ -170,9 +171,9 @@ class CustomResourceState(CustomBaseModel):
         elif type(resource_id) in (str, DataSource):
             STORAGE.macro = {id: resource_id}
             with var STORAGE.macro:
-                raw f"$data modify {output} set from {cls.storage()}[{{id: $(id)}}]"
+                data modify var output set from var state[{id: $(id)}]
                 yield output
-                raw f"$data modify {cls.storage()}[{{id: $(id)}}] set from {output}"
+                data modify var state[{id: $(id)}] set from var output
 
         else:
             raise TypeError(f"id ({resource_id}) must be a str, DataSource, or ScoreSource")
