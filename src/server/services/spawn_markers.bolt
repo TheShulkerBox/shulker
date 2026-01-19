@@ -9,6 +9,7 @@ MARKER_TAG = "sys.spawn_marker"
 
 append function player_tick:
     execute function ./check_nearby:
+        """Look to see if a player has intersected with a spawn marker"""
         execute
             unless entity @s[team=builder]  # ignore builders
             if entity @e[type=marker, tag=MARKER_TAG, distance=..0.75, limit=1]
@@ -16,11 +17,13 @@ append function player_tick:
 
 
 append function clock("4t"):
-    execute function ./particle:
-        at @e[type=marker, tag=MARKER_TAG] particle portal ~ ~0.5 ~ 0 0 0 0.4 5
+    execute function ./particles:
+        """Display particles at each spawn marker"""
+        execute at @e[type=marker, tag=MARKER_TAG] run particle portal ~ ~0.5 ~ 0 0 0 0.4 5
 
 
 function tools:spawn_marker/create:
+    """Helper tool for server builders to create spawn markers"""
     execute
         unless entity @s[team=builder]
         return run
@@ -35,6 +38,7 @@ function tools:spawn_marker/create:
 
 
 function tools:spawn_marker/delete_nearest:
+    """Helper tool to help server builders delete nearest marker"""
     store result score var SCORE.temp["#killed"] kill @n[type=marker,tag=MARKER_TAG,distance=..5]
     if SCORE.temp["#killed"] == 1:
         tellraw @s {text: "Killed nearest spawn marker", color: theme.success}

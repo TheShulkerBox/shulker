@@ -35,4 +35,3 @@ function success:
     tellraw @s {text: "Successfully joined the arena!", color: theme.success}
     map_state.current_player_count += 1
     duels_map_id["@s"] = join_duel["@s"]
-    

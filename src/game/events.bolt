@@ -4,7 +4,7 @@ Events related to general game functionality, such as joining and leaving games.
 from server:events import on_join
 from server:core import clock
 from player:services import player_tick
-from lobby:core import BOX_COORDS, BOX_SIZE, in_box_tag
+from lobby:core import BOX_COORDS, BOX_SIZE, IN_BOX_TAG
 
 from ./models import GAME_META, Map
 
@@ -63,8 +63,8 @@ append function clock("1s"):
         if GAME_META.dev_mode or (SCORE.temp["$count"] >= GAME_META.current.min_players):
             function on_game_start
             execute function move_players_to_game:
-                as @a[tag=in_box_tag] at @s function on_join_game
-                tag @a remove in_box_tag
+                as @a[tag=IN_BOX_TAG] at @s function on_join_game
+                tag @a remove IN_BOX_TAG
     else:
         function move_players_to_game
 

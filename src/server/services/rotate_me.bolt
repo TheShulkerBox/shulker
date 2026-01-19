@@ -1,0 +1,14 @@
+from server:core import server_tick
+from lobby:core import IN_BOX_TAG
+
+ROTATE_ME_TAG = "rotateme"
+
+append function server_tick:
+    execute function ./rotateme:
+        execute as @e[tag=ROTATE_ME_TAG] at @s run tp @s ~ ~ ~ ~3 ~
+        execute
+            as @a[tag=IN_BOX_TAG]
+            as @e[type=armor_stand, tag=IN_BOX_TAG]
+            at @s
+            run tp @s ~ ~ ~ ~10 ~
+ 

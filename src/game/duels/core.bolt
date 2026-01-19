@@ -7,4 +7,3 @@ duels_map_id = Scoreboard("duels.map_id")
 
 append function server_load:
     team add DUELS_LOBBY_TEAM "Duels Lobby:"
-    

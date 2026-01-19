@@ -8,11 +8,11 @@ Functions:
 - `sys:tick/players` run for every player (ordered last in the tick cycle)
 """
 
-from lib:text import theme, boxed_text
-
 from functools import cache
 
 from bolt_expressions import Scoreboard, Expression
+
+from lib:text import theme, boxed_text
 
 
 #> Function Paths

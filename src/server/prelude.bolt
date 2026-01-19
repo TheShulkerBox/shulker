@@ -5,7 +5,6 @@ Put things that should be available at all times.
 Note: It's really common to have conflicts so be careful what is all defined here!
 """
 
-from contextlib import contextmanager
 from typing import Any
 
 from bolt.contrib.defer import Defer
@@ -24,5 +23,3 @@ STORAGE = {
 }
 STORAGE["macro"] = STORAGE.temp.macro
 SELF = Data.entity("@s")
-
-MAX_INT = 2 ** 31 - 1
