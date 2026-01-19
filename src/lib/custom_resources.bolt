@@ -1,7 +1,7 @@
 from collections.abc import Callable
 from contextlib import contextmanager
 import json
-from pydantic.v1 import BaseModel, validator, Field, PrivateAttr
+from pydantic import BaseModel, field_validator, model_validator, Field
 from typing import ClassVar
 
 from ./helpers import id_to_number
@@ -11,12 +11,10 @@ from server:core import server_load
 
 
 class CustomBaseModel(BaseModel):
-    class Config:
-        underscore_attrs_are_private = True
-        use_enum_values = True
+    model_config = {"use_enum_values": True}
     
-    def dict(self):
-        return json.loads(self.json())
+    def model_component(self):
+        return json.loads(self.model_dump_json())
 
 
 class CustomResource(CustomBaseModel):
@@ -28,11 +26,12 @@ class CustomResource(CustomBaseModel):
     # storage: DataSource
     _resources: ClassVar[dict[str, "CustomResource"]] = {}
 
-    @validator("id")
-    def hash_id(cls, value: str, values: dict[str, Any]):
+    @model_validator(mode='before')
+    def hash_id(cls, values):
         """Numerical representation of id"""
-        values["hashed_id"] = id_to_number(value)
-        return value
+        if isinstance(values, dict) and 'id' in values:
+            values['hashed_id'] = id_to_number(values['id'])
+        return values
 
     @classmethod
     def generate(cls, id: Any, data: Any):
@@ -45,12 +44,12 @@ class CustomResource(CustomBaseModel):
         data["id"] = id
 
         # Parse it into pydantic object and save it
-        resource = cls.parse_obj(data)
+        resource = cls.model_validate(data)
         cls._resources[id] = resource
 
         # Save to read-only storage
         append function load_rom:
-            resource.storage().append(resource.dict())
+            resource.storage().append(resource.model_component())
 
         # Call on_load for custom load stuff
         resource.on_load(id)
@@ -128,7 +127,7 @@ class CustomResourceState(CustomBaseModel):
         """Registers the resource's state in storage"""
         obj = cls(id=resource_id, hashed_id=id_to_number(resource_id))
         append function server_load:
-            obj.storage().append(obj.dict())
+            obj.storage().append(obj.model_component())
         cls._states[resource_id] = obj
 
         function game:state/reset:

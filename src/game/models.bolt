@@ -1,7 +1,7 @@
 from enum import Enum
 from functools import cached_property
 from typing import ClassVar, Iterator
-from pydantic.v1 import BaseModel, validator
+from pydantic import BaseModel, field_validator, model_validator
 import json
 
 from server:core import server_load
@@ -26,7 +26,7 @@ class Team(BaseModel):
     color: str
     spawn: tuple[int, int, int, int, int]  # coords, yaw, pitch
 
-    @validator("color")
+    @field_validator("color")
     def validate_color(cls, color: str):
         if color not in TEAM_COLORS:
             raise ValueError(f"{color!r} needs to be one of: {TEAM_COLORS}")
@@ -42,14 +42,11 @@ class PlayerCount(BaseModel):
     min: int = 4
     max: int = 100
 
-    @validator("max")
-    def max_at_least_min(cls, max_v: int, values: dict[str, int]):
-        min_v = values.get("min")
-
-        if min_v is not None and max_v < min_v:
-            raise ValueError(f"max ({max_v}) must be >= min ({min_v})")
-
-        return max_v
+    @model_validator(mode='after')
+    def max_at_least_min(self):
+        if self.max < self.min:
+            raise ValueError(f"max ({self.max}) must be >= min ({self.min})")
+        return self
 
 
 class Map(CustomResource):
@@ -66,7 +63,7 @@ class Map(CustomResource):
     def storage(self):
         return GAME_ROM.maps
 
-    @validator("tags")
+    @field_validator("tags")
     def add_all_tag(cls, v: list[Tag]):
         v.append("all")
         return v

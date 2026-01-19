@@ -1,4 +1,5 @@
 id: shulkerbox
+minecraft: 1.21.11
 
 require:
   # it needs to go first so that exit phase happens last

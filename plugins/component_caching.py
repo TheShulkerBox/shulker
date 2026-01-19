@@ -8,7 +8,7 @@ MCMETA_URL = "https://raw.githubusercontent.com/misode/mcmeta/refs/heads/summary
 type Json = dict[str, Json] | list[Json] | str | int | float | bool | None
 
 # Define the VERSION constant
-VERSION = "1.21.8"
+VERSION = "1.21.11"
 
 
 def compare_versions(v1: str, v2: str) -> int:
