@@ -124,11 +124,11 @@ def apply_motion_vector(vector: DataSource | list[float], type: str = "rel"):
                         if SCORE.temp["$original_value"] > 0:
                             name = enchantment_name(axis, step_size, type, "pos")
                             with var STORAGE.macro:
-                                raw f'$data modify storage shulker:temp macro.enchantments."{name}" set value $(part)'
+                                data modify var STORAGE.macro.enchantments[name] set value $(part)
                         else:
                             name = enchantment_name(axis, step_size, type, "neg")
                             with var STORAGE.macro:
-                                raw f'$data modify storage shulker:temp macro.enchantments."{name}" set value $(part)'
+                                data modify var STORAGE.macro.enchantments[name] set value $(part)
         
         if STORAGE.macro.enchantments:
             with var STORAGE.macro:

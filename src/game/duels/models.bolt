@@ -35,3 +35,4 @@ class DuelsMapState(CustomResourceState):
 
 macro duels_map path=brigadier:string data=mecha:nested_json:
     DuelsMap.generate(id=path, data=data)
+

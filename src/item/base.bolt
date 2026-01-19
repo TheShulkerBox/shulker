@@ -12,7 +12,7 @@ ItemType.ctx = ctx
 class Item(metaclass=ItemType):
     """Item is the base class for all items in the data pack. This is a special behaving structure that
     barely resembles a class leveraging metaclasses.
-
+    
     The basic structure is to define all components as "class variables" and then use custom methods
     to define special behavior to simplify component construction. This allows you to abstract
     complex behavior as isolated "custom components" or "component transformers" that can be reused

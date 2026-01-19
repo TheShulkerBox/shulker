@@ -30,6 +30,6 @@ dialog menu:quick_action multi_action_template(
 function menu:quick_actions/staff:
     execute unless entity @s[tag=staff]:
         title @s actionbar {text: "You are not permitted to access the staff page", color: theme.failure}
-        raw dialog clear @s
+        dialog clear @s
 
-    execute if entity @s[tag=staff] run raw dialog show @s menu:staff/maplist
+    execute if entity @s[tag=staff] run dialog show @s menu:staff/maplist

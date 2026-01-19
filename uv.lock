@@ -167,6 +167,40 @@ wheels = [
 ]
 
 [[package]]
+name = "bolt-native-macros"
+version = "0.4.0"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version < '3.14'",
+]
+dependencies = [
+    { name = "beet", version = "0.112.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.14'" },
+    { name = "bolt", version = "0.49.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.14'" },
+    { name = "mecha", version = "0.101.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.14'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/01/df/979b70cde8dff9097d9dfc0954a0bbaad685440c6ba04f5a01d191191e75/bolt_native_macros-0.4.0.tar.gz", hash = "sha256:17b21dd60abaaf333cb40d574e34b7d655560a713488f71a862a7c8f81189151", size = 6574, upload-time = "2026-01-17T23:14:03.398Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/50/7a/81a8d36fb2a9ed8ceea8830fdc641ac34ded07bd8eb879dcf470568ec8b2/bolt_native_macros-0.4.0-py3-none-any.whl", hash = "sha256:d427408127189f5f98ed3b22404cd26a3415d66db69f4f8b16d55fc7378f68c6", size = 9487, upload-time = "2026-01-17T23:14:02.066Z" },
+]
+
+[[package]]
+name = "bolt-native-macros"
+version = "0.5.0"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.14'",
+]
+dependencies = [
+    { name = "beet", version = "0.113.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.14'" },
+    { name = "bolt", version = "0.50.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.14'" },
+    { name = "mecha", version = "0.102.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.14'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/27/96/7ef5c0d44d6d3034c04b28a569f22c906bfbaf31d4083c0cb5b50c618f67/bolt_native_macros-0.5.0.tar.gz", hash = "sha256:fac63edf050760cdcab46eef68d30216934481b1a68017d37b9c762e26b79dfb", size = 6708, upload-time = "2026-01-18T02:40:11.203Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/46/f6/7bdd8b9beaee33488dd9f7fe639558088d385ec5fa18616f230e831f0dfb/bolt_native_macros-0.5.0-py3-none-any.whl", hash = "sha256:357db1b0aa848c72175d6be3a8805d9f5c1159f5680967fed9febd063720e066", size = 9651, upload-time = "2026-01-18T02:40:09.758Z" },
+]
+
+[[package]]
 name = "certifi"
 version = "2026.1.4"
 source = { registry = "https://pypi.org/simple" }
@@ -925,6 +959,8 @@ dependencies = [
     { name = "bolt", version = "0.49.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.14'" },
     { name = "bolt", version = "0.50.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.14'" },
     { name = "bolt-expressions" },
+    { name = "bolt-native-macros", version = "0.4.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.14'" },
+    { name = "bolt-native-macros", version = "0.5.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.14'" },
     { name = "click" },
     { name = "httpx" },
     { name = "ipython" },
@@ -951,6 +987,7 @@ requires-dist = [
     { name = "beet-plugins", git = "https://github.com/thewii/beet-plugins" },
     { name = "bolt", specifier = ">=0.49.1" },
     { name = "bolt-expressions", specifier = ">=0.17.0" },
+    { name = "bolt-native-macros", specifier = ">=0.4.0" },
     { name = "click", specifier = ">=8.2.1" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "ipython", specifier = ">=8.28.0" },
