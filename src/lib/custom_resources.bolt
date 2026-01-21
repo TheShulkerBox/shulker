@@ -4,6 +4,7 @@ import json
 from pydantic import BaseModel, field_validator, model_validator, Field
 from typing import ClassVar
 
+from ./db import Database
 from ./helpers import id_to_number
 from ./rom import load_rom
 
@@ -12,6 +13,10 @@ from server:core import server_load
 
 class CustomBaseModel(BaseModel):
     model_config = {"use_enum_values": True}
+
+    def __init_subclass__(cls, **_):
+        """https://gist.github.com/MishaVyb/75a957a6c834a686467379733a7832b2"""
+        super().__init_subclass__()
     
     def model_component(self):
         return json.loads(self.model_dump_json())
@@ -23,8 +28,15 @@ class CustomResource(CustomBaseModel):
     id: str
     hashed_id: int = -1
     
-    # storage: DataSource
+    _storage: ClassVar[DataSource]
     _resources: ClassVar[dict[str, "CustomResource"]] = {}
+
+    @classmethod
+    def __pydantic_init_subclass__(cls, /, storage: DataSource | None = None):
+        super().__pydantic_init_subclass__()
+        
+        if storage is not None:
+            cls._storage = Database(storage)
 
     @model_validator(mode='before')
     def hash_id(cls, values):
@@ -36,7 +48,6 @@ class CustomResource(CustomBaseModel):
     @classmethod
     def generate(cls, id: Any, data: Any):
         """Generates the resource from the macro"""
-
         id = id.value
 
         # Convert the json into actual dict
@@ -47,15 +58,11 @@ class CustomResource(CustomBaseModel):
         resource = cls.model_validate(data)
         cls._resources[id] = resource
 
-        # Save to read-only storage
-        append function load_rom:
-            resource.storage().append(resource.model_component())
-
         # Call on_load for custom load stuff
-        resource.on_load(id)
+        resource.on_load()
     
     @classmethod
-    def get(cls, resource_id: str | DataSource | ScoreSource) -> DataSource:
+    def get(cls, **kwargs) -> DataSource:
         """Returns a storage location for storing custom resource data for a map with the given ID.
 
         ## Example
@@ -65,11 +72,11 @@ class CustomResource(CustomBaseModel):
         - a ScoreSource (an objective + selector/name) (runtime)
         
         ```py
-        map = Map.get("etherlok")
+        map = Map.get(id="etherlok")
         # or
-        map = Map.get(STORAGE.temp.special_map_id)
+        map = Map.get(id=STORAGE.temp.special_map_id)
         # or
-        map = Map.get(SCORE.temp["map_id"])
+        map = Map.get(hashed_id=SCORE.temp["map_id"])
 
         tp @a map.location
         ```
@@ -85,96 +92,80 @@ class CustomResource(CustomBaseModel):
         }
         ```
         """
-        
-        output = STORAGE.temp.resource
-        resource_data = cls.storage()
-
-        # If our input is a score, we check against the "hashed_id" field
-        if type(resource_id) is ScoreSource:
-            STORAGE.macro = {id: resource_id}
-            with var STORAGE.macro:
-                data modify var output set from var resource_data[{hashed_id: $(id)}]
-
-        # Otherwise, we check against the "id" field (works for strings AND storage)
-        elif type(resource_id) in (str, DataSource):
-            STORAGE.macro = {id: resource_id}
-            with var STORAGE.macro:
-                data modify var output set from var resource_data[{id: $(id)}]
-
-        else:
-            raise TypeError(f"id ({resource_id}) must be a str, DataSource, or ScoreSource")
-
-        return output
+        return cls._storage.get(output=STORAGE.temp.resource, **kwargs)
     
-    def on_load(self, resource_id: str):
-        """Called when the custom resource is loaded. Override in subclasses if needed."""
+    def on_load(self):
+        """Called when the custom resource is loaded."""
+        # Save to read-only storage
+        append function load_rom:
+            self._storage.append(self.model_component())
 
 
-class CustomResourceState(CustomBaseModel):
-    """State for each resource in a collection.
+# class CustomResourceState(CustomBaseModel):
+#     """State for each resource in a collection.
     
-    The state is represented via storage and will be macro'd in order to access and save it.
-    """
+#     The state is represented via storage and will be macro'd in order to access and save it.
+#     """
 
-    id: str
-    hashed_id: int = -1
+#     id: str
+#     hashed_id: int = -1
 
-    # storage: DataSource
-    _states: ClassVar[dict[str, "CustomResourceState"]] = {}
+#     # storage: DataSource
+#     _states: ClassVar[dict[str, "CustomResourceState"]] = {}
 
-    @classmethod
-    def register_resource(cls, resource_id: str):
-        """Registers the resource's state in storage"""
-        obj = cls(id=resource_id, hashed_id=id_to_number(resource_id))
-        append function server_load:
-            obj.storage().append(obj.model_component())
-        cls._states[resource_id] = obj
+#     @classmethod
+#     def register_resource(cls, resource_id: str):
+#         """Registers the resource's state in storage"""
+#         obj = cls(id=resource_id, hashed_id=id_to_number(resource_id))
+#         append function server_load:
+#             obj.storage().append(obj.model_component())
+#         cls._states[resource_id] = obj
 
-        function game:state/reset:
-            obj.storage().remove()
+#         function game:state/reset:
+#             obj.storage().remove()
     
-    @classmethod
-    def get(cls, resource_id: str | DataSource | ScoreSource):
-        output = STORAGE.temp.state
-        state = cls.storage()
+#     @classmethod
+#     def get(cls, resource_id: str | DataSource | ScoreSource):
+#         output = STORAGE.temp.state
+#         state = cls.storage()
 
-        # If our input is a score, we check against the "hashed_id" field
-        if type(resource_id) is ScoreSource:
-            STORAGE.macro = {id: resource_id}
-            with var STORAGE.macro:
-                data modify var output set from var state[{hashed_id: $(id)}]
+#         # If our input is a score, we check against the "hashed_id" field
+#         if type(resource_id) is ScoreSource:
+#             STORAGE.macro = {id: resource_id}
+#             with var STORAGE.macro:
+#                 data modify var output set from var state[{hashed_id: $(id)}]
 
-        # Otherwise, we check against the "id" field (works for strings AND storage)
-        elif type(resource_id) in (str, DataSource):
-            STORAGE.macro = {id: resource_id}
-            with var STORAGE.macro:
-                data modify var output set from var state[{id: $(id)}]
+#         # Otherwise, we check against the "id" field (works for strings AND storage)
+#         elif type(resource_id) in (str, DataSource):
+#             STORAGE.macro = {id: resource_id}
+#             with var STORAGE.macro:
+#                 data modify var output set from var state[{id: $(id)}]
 
-        else:
-            raise TypeError(f"id ({resource_id}) must be a str, DataSource, or ScoreSource")
+#         else:
+#             raise TypeError(f"id ({resource_id}) must be a str, DataSource, or ScoreSource")
 
 
-    @classmethod
-    @contextmanager
-    def modify(cls, resource_id: str | DataSource | ScoreSource):
-        output = STORAGE.temp.state
-        state = cls.storage()
+#     @classmethod
+#     @contextmanager
+#     def modify(cls, resource_id: str | DataSource | ScoreSource):
+#         output = STORAGE.temp.state
+#         state = cls.storage()
 
-        # If our input is a score, we check against the "hashed_id" field
-        if type(resource_id) is ScoreSource:
-            STORAGE.macro = {id: resource_id}
-            with var STORAGE.macro:
-                data modify var output set from var state[{hashed_id: $(id)}]
-                yield output
-                data modify var state[{hashed_id: $(id)}] set from var output
+#         # If our input is a score, we check against the "hashed_id" field
+#         if type(resource_id) is ScoreSource:
+#             STORAGE.macro = {id: resource_id}
+#             with var STORAGE.macro:
+#                 data modify var output set from var state[{hashed_id: $(id)}]
+#                 yield output
+#                 data modify var state[{hashed_id: $(id)}] set from var output
 
-        # Otherwise, we check against the "id" field (works for strings AND storage)
-        elif type(resource_id) in (str, DataSource):
-            STORAGE.macro = {id: resource_id}
-            with var STORAGE.macro:
-                data modify var output set from var state[{id: $(id)}]
-                yield output
-                data modify var state[{id: $(id)}] set from var output
+#         # Otherwise, we check against the "id" field (works for strings AND storage)
+#         elif type(resource_id) in (str, DataSource):
+#             STORAGE.macro = {id: resource_id}
+#             with var STORAGE.macro:
+#                 data modify var output set from var state[{id: $(id)}]
+#                 yield output
+#                 data modify var state[{id: $(id)}] set from var output
 
-        else:
-            raise TypeError(f"id ({resource_id}) must be a str, DataSource, or ScoreSource")
+#         else:
+#             raise TypeError(f"id ({resource_id}) must be a str, DataSource, or ScoreSource")

@@ -123,6 +123,20 @@ wheels = [
 ]
 
 [[package]]
+name = "bolt-selectors"
+version = "0.4.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "beet" },
+    { name = "bolt" },
+    { name = "mecha" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a5/f8/9b5c0274fe30f3f7acaa56fa74f2ac581ce2f1fa75e5bcd502d6823ecd91/bolt_selectors-0.4.0.tar.gz", hash = "sha256:9ba5223cc5d84217917215c11a54cd8a2f06aea3068333ee14c4a4a61efe1ccf", size = 6253, upload-time = "2026-01-18T03:21:45.771Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/57/66/082c8e2871ce212edf6432bb4578c2e4df3f969609bc01dcf3854186c7cb/bolt_selectors-0.4.0-py3-none-any.whl", hash = "sha256:52521049f5b3daeea18bf9dcbb6980179b7b0e3b4c0ce74c162ac1a36192583d", size = 7628, upload-time = "2026-01-18T03:21:44.307Z" },
+]
+
+[[package]]
 name = "certifi"
 version = "2026.1.4"
 source = { registry = "https://pypi.org/simple" }
@@ -693,6 +707,7 @@ dependencies = [
     { name = "bolt" },
     { name = "bolt-expressions" },
     { name = "bolt-native-macros" },
+    { name = "bolt-selectors" },
     { name = "click" },
     { name = "httpx" },
     { name = "ipython" },
@@ -721,6 +736,7 @@ requires-dist = [
     { name = "bolt", specifier = ">=0.49.1" },
     { name = "bolt-expressions", specifier = ">=0.17.0" },
     { name = "bolt-native-macros", specifier = ">=0.4.0" },
+    { name = "bolt-selectors", specifier = ">=0.4.0" },
     { name = "click", specifier = ">=8.2.1" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "ipython", specifier = ">=8.28.0" },

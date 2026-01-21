@@ -10,6 +10,8 @@ Create a working duels map with atleast 2 kits.
 
 - [x] Duel map model + state modeling
 - [/] Map state handling
+  - Change to instanced state handling
+  - Deconstruct 
 - [ ] Duel game manager
 - [/] Joining/leaving duels
 - [ ] Start/stop duel games

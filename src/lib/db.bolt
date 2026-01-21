@@ -1,20 +1,83 @@
 """
+Provides an abstraction to treat storage as a database using a dynamic key/value system.
 """
 
+from contextlib import contextmanager
+
+from ./storage_helpers import loop
+
 class Database:
-    name: str
-    db: Data
+    data: DataSource
 
-    def __init__(self, name: str):
-        self.name = name
-        
-        # each database gets their own storage file
-        self.db = Data.storage(f"db.{name}:main")
-
+    def __init__(self, collection: DataSource):
+        self.data = collection
     
-    def get(self, key: str, value: str, destination: DataSource):
-        """Get a value from the database by key and value, storing it in destination"""
+    def new(self, name: str):
+        return Database(Data.storage(f"db.{name}:main"))
+
+    def append(self, value: Any):
+        self.data.append(value)
+    
+    def get(self, **kwargs):
+        """Get a value from the database by key and value, storing it in destination.
         
-        # STORAGE.macro["value"] = value
-        # with var STORAGE.macro:
-        #     data modify var destination set from storage self.name f"data[{$(key): $(value)}]"
+        ```py
+        # init db, can be const
+        DB = Database(STORAGE.rom.maps)
+
+        # get via scoreboard, store via output
+        requested_map = DB.get(hashed_id=JOIN_DUEL["@s"])
+
+        # get via data, store via `output` arg
+        DB.get(id=STORAGE.temp.id, output=STORAGE.temp.map)
+
+        # get via str, 'compile-time'
+        map = DB.get(id="etherlok")
+        ```
+        """
+        output = kwargs.pop("output", None) or STORAGE.temp.database.output
+
+        key, value = kwargs.popitem()
+
+        STORAGE.macro = {"value": value}
+        with var STORAGE.macro:
+            data modify var output set from var self.data[{key: $(value)}]
+
+        return output
+    
+    @contextmanager
+    def modify(self, **kwargs):
+        """Modify a value from the database by key and value, storing it in destination.
+        
+        ```py
+        # init db, can be const
+        DB = Database(STORAGE.rom.maps)
+
+        # get via scoreboard, store via output
+        requested_map = DB.get(hashed_id=JOIN_DUEL["@s"])
+
+        # get via data, store via `output` arg
+        DB.get(id=STORAGE.temp.id, output=STORAGE.temp.map)
+
+        # get via str, 'compile-time'
+        map = DB.get(id="etherlok")
+        ```
+        """
+        output = kwargs.pop("output", None) or STORAGE.temp.database.output
+
+        key, value = kwargs.popitem()
+
+        STORAGE.macro = {"value": value}
+        with var STORAGE.macro:
+            data modify var output set from var self.data[{key: $(value)}]
+            yield output
+            data modify var self.data[{key: $(value)}] set from var output
+    
+    def loop(self, **kwargs):
+        return loop(self.data, temp_storage=STORAGE.temp.db, **kwargs)
+    
+    def __iter__(self):
+        return self.loop()
+    
+    def __loop__(self):
+        return self.loop()

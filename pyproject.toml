@@ -22,6 +22,7 @@ dependencies = [
   "pydantic>=2.12.5",
   "bolt-native-macros>=0.4.0",
   "mecha>=0.102.2",
+  "bolt-selectors>=0.4.0",
 ]
 description = "Add your description here"
 name = "shulker"

@@ -1,0 +1,21 @@
+"""
+This file manages the game instance system.
+
+A game instance represents the lifecycle of any game (pre-game, starting, in-progress, ending). It
+gets created the moment a game is being configured (joining a duels arena, players sitting in the
+box, etc.) Each instance gets attached an id that can be used to identify related data such as
+state or status. This data can sit in either scoreboards, tags, or storage.
+
+The instance metadata will sit in storage which handles the management of itself. Then, games can
+register new data via scoreboards that can be indexed via macro-ing fakeplayers or objectives,
+tags with macro'd names, or storage with macro'd indexing (via `Database`, etc).
+
+While the main box selection of games will be limited to 1 instance at a time, games such as
+duels will allow multiple instancing. This system will be designed to support both cases.
+
+Players will also be assigned to the INSTANCE_ID scoreboard to keep track of what instance they
+are curently in.
+"""
+
+INSTANCE_ID = Scoreboard("game.instance_id")
+LATEST_INSTANCE_ID = INSTANCE_ID["$latest"]

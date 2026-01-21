@@ -1,0 +1,56 @@
+from pydantic import BaseModel, field_validator, model_validator
+
+from lib:const import TEAM_COLORS
+from ../models import Map, Tag
+
+class Team(BaseModel):
+    id: str
+    color: str
+    spawn: tuple[int, int, int, int, int]  # coords, yaw, pitch
+
+    @field_validator("color")
+    def validate_color(cls, color: str):
+        if color not in TEAM_COLORS:
+            raise ValueError(f"{color!r} needs to be one of: {TEAM_COLORS}")
+
+        return color
+
+    @property
+    def name(self) -> str:
+        return self.id.replace("_", " ").title()
+
+
+class PlayerCount(BaseModel):
+    min: int = 4
+    max: int = 100
+
+    @model_validator(mode='after')
+    def max_at_least_min(self):
+        if self.max < self.min:
+            raise ValueError(f"max ({self.max}) must be >= min ({self.min})")
+        return self
+
+
+class CTFMap(Map):
+    gamemode: str = "ctf"
+
+    teams: list[Team]
+    player_count: PlayerCount = PlayerCount()
+
+    # eventually, all maps will be 0 0 0 in their own dimension
+    location: tuple[int, int, int]
+    dimension: str = "overworld"
+
+    @field_validator("tags", mode="after")
+    @classmethod
+    def default_tags(cls, v: list[str]) -> list[str]:
+        default_tags = [Tag.All, Tag.CTF]
+        
+        if Tag.Inactive not in v:
+            default_tags += [Tag.Active]
+        
+        return v + default_tags
+
+
+macro ctf_map path=brigadier:string data=mecha:nested_json:
+    CTFMap.generate(id=path, data=data)

@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 import math
 
-from lib:storage_helpers import loop, debug_storage
+from lib:storage_helpers import loop
 
 STEPS = 3
 STEP_SIZES = [1, 0.1, 0.01]

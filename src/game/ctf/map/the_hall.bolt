@@ -1,12 +1,10 @@
-from game:models import map
+from ../models import ctf_map
 
 
-map the_hall {
-    "gamemode": "capture_the_flag",
+ctf_map the_hall {
     "teams": [
         {"id": "team_1", "color": "dark_gray", "spawn": [1000, 63, 4016, 180, 0]},
         {"id": "team_2", "color": "dark_gray", "spawn": [1000, 63, 3984, 0, 0]}
     ],
     "location": [1000, 63, 4000],
-    "tags": ["deathmatch", "active"],
 }

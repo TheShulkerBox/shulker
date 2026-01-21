@@ -9,6 +9,7 @@ require:
   - bolt_expressions.contrib.commands
   - bolt
   - bolt_native_macros
+  - bolt_selectors
   - mecha.contrib.nesting
   - bolt.contrib.defer
   - plugins.component_caching

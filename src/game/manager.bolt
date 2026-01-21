@@ -20,7 +20,7 @@ function game:map/queue/next:
         function game:map_queue/shuffle
 
     # otherwise, set the current map to the next in the queue and remove it from the queue
-    GAME_META.current.map = Map.get(GAME_META.map_queue[-1])
+    GAME_META.current.map = Map.get(id=GAME_META.map_queue[-1])
     GAME_META.map_queue[-1].remove()
 
 

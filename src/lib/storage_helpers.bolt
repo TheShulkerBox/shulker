@@ -10,6 +10,7 @@ def convert_data_source_into_name(data: DataSource) -> str:
     
     return str(data).replace(" ", "_").replace(".", "_").replace(":", "_")
 
+
 @dataclass
 class loop:
     data: DataSource
@@ -38,7 +39,6 @@ class loop:
                 say big number alert!
         ```
         """
-
         store result score _loop temp if data var self.data[:]
         execute function ~/loop/{self.name}:
             SCORE.temp["_loop"] -= 1
@@ -65,26 +65,5 @@ class loop:
         
         ⚠️ WARNING: This can create infinite loops if the condition never becomes false.
         """
-
         execute function ~/loop/while_{self.name}:
             yield self.WhileCondition(self.data)
-
-
-def storage_path(source: DataSource) -> str:
-    return f"{source._target} {source._path}"
-
-
-def debug_storage(*args):
-    output = []
-    for arg in args:
-        if isinstance(arg, DataSource):
-            output.append({storage: arg._target, nbt: str(arg._path)})
-        elif isinstance(arg, ScoreSource):
-            output.append({score: {name: arg.scoreholder, objective: arg.objective}})
-        else:
-            output.append(arg)
-        output.append(" ")
-    
-    del output[-1]
-    
-    return output
