@@ -2,6 +2,7 @@ from ../models import ctf_map
 
 
 ctf_map the_hall {
+    "name": "The Hall",
     "teams": [
         {"id": "team_1", "color": "dark_gray", "spawn": [1000, 63, 4016, 180, 0]},
         {"id": "team_2", "color": "dark_gray", "spawn": [1000, 63, 3984, 0, 0]}

@@ -1,0 +1,11 @@
+from server:core import SERVER_LOAD
+
+DUELS_LOBBY_TEAM = "duels.lobby"
+DUELS_LOBBY_LOCATION = "3000 39 3000"
+
+BELOW_NAME_DISPLAY = Scoreboard("duels.below_name_display")
+SETTINGS_DISPLAY = Scoreboard("duels.settings_display")
+
+
+append function SERVER_LOAD:
+    team add DUELS_LOBBY_TEAM "Duels Lobby:"

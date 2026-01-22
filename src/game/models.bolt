@@ -27,6 +27,7 @@ class Tag:
 
 
 class Map(CustomResource, storage=STORAGE.rom.game.maps):
+    name: str
     gamemode: str
     tags: list[str] = Field(default_factory=list, validate_default=True)
 
