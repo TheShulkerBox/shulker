@@ -7,7 +7,7 @@ from item:meta import ItemType
 from lib:errors import CustomComponentError
 from lib:helpers import deep_merge_dicts
 from server:services/playerdb import PlayerDB
-from server:core import root_advancement
+from server:core import ROOT_ADVANCEMENT
 
 
 AnimationLiteral = (
@@ -47,7 +47,7 @@ class OnUse(Component):
         
         on_use_path = f"{self.item.path}/on_use"
         advancement on_use_path {
-            "parent": root_advancement,
+            "parent": ROOT_ADVANCEMENT,
             "criteria": {
                 "requirement": {
                     "trigger": "minecraft:consume_item",

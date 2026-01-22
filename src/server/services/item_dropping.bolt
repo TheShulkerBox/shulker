@@ -1,21 +1,21 @@
-from server:core import server_tick
+from ../core import SERVER_TICK
 
-item_processed_tag = "item.processed"
+ITEM_PROCESSED_TAG = "item.processed"
 
-handle_item = ~/handle_item
-
-
-append function server_tick:
-    as @e[type=item, tag=!item_processed_tag] at @s function handle_item
+HANDLE_ITEM = ~/handle_item
 
 
-function handle_item:
+append function SERVER_TICK:
+    as @e[type=item, tag=!ITEM_PROCESSED_TAG] at @s function HANDLE_ITEM
+
+
+function HANDLE_ITEM:
     # Handles items that have been processed by item dropping services.
 
     SELF.PickupDelay = 0
     STORAGE.temp.uuid.remove()
 
-    on origin:
+    execute on origin:
         STORAGE.temp.uuid = SELF.UUID
 
     if STORAGE.temp.uuid:
@@ -23,4 +23,4 @@ function handle_item:
     else:
         kill @s
 
-    tag @s add item_processed_tag
+    tag @s add ITEM_PROCESSED_TAG

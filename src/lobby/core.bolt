@@ -1,8 +1,8 @@
-from server:core import server_tick, server_load, clock
+from server:core import SERVER_TICK, SERVER_LOAD, clock
 from lib:text import boxed_text, small_caps
 # from game:events import on_leave_game
 
-SIDEBAR_TITLE = {"text": small_caps("The Shulker Box"), "color": theme.primary}
+SIDEBAR_TITLE = {"text": small_caps("The Shulker Box"), "color": Theme.Primary}
 
 LOBBY_SPAWN = (0, 65, 0, -90, 0)  # x, y, z, yaw, pitch
 BOX_COORDS = (71, 65, -1)  # x, y, z
@@ -11,13 +11,14 @@ BOX_SIZE = (3, 5, 3)  # dx, dy, dz
 FOOD = Scoreboard("food", criteria="food")
 LOBBY_DISPLAY = Scoreboard("lobby_display", criteria="dummy")
 
+LOBBY_TEAM = "lobby"
 IN_BOX_TAG = "lobby.in_box"
 
 
-append function server_load:
+append function SERVER_LOAD:
     # Lobby team creation
-    team add lobby "Lobby"
-    team modify lobby color gray
+    team add LOBBY_TEAM "Lobby"
+    team modify LOBBY_TEAM color gray
 
     # Setup lobby sidebar
     LOBBY_DISPLAY["*"].reset()
@@ -27,7 +28,7 @@ append function server_load:
     scoreboard objectives setdisplay sidebar.team.gray LOBBY_DISPLAY
 
 
-append function server_tick:
+append function SERVER_TICK:
     # Join lobby team if you have none
     team join lobby @a[team=]
 
@@ -37,11 +38,11 @@ EFFECT_APPLY_SPEED = 2
 append function clock(f"{EFFECT_APPLY_SPEED - 1}s"):
     # Lobby Effects
     execute function lobby:effects/apply:
-        effect give @a[team=lobby,scores={FOOD=..19}] saturation EFFECT_APPLY_SPEED 1 true
-        effect give @a[team=lobby] regeneration EFFECT_APPLY_SPEED 6 true
-        effect give @a[team=lobby] resistance EFFECT_APPLY_SPEED 3 true
-        effect give @a[team=lobby] speed EFFECT_APPLY_SPEED 1 true
-        effect give @a[team=lobby] weakness EFFECT_APPLY_SPEED 0 true
+        effect give @a[team=LOBBY_TEAM,scores={FOOD=..19}] saturation EFFECT_APPLY_SPEED 1 true
+        effect give @a[team=LOBBY_TEAM] regeneration EFFECT_APPLY_SPEED 6 true
+        effect give @a[team=LOBBY_TEAM] resistance EFFECT_APPLY_SPEED 3 true
+        effect give @a[team=LOBBY_TEAM] speed EFFECT_APPLY_SPEED 1 true
+        effect give @a[team=LOBBY_TEAM] weakness EFFECT_APPLY_SPEED 0 true
 
 
 append function clock("2t"):

@@ -10,7 +10,7 @@ from typing import Any
 from bolt.contrib.defer import Defer
 from bolt_expressions import Scoreboard, Data, ScoreSource, DataSource
 
-from lib.text import theme
+from lib.text import Theme
 
 SCORE = {
     temp: Scoreboard("temp", criteria="dummy"),

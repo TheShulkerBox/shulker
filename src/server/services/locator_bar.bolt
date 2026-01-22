@@ -1,4 +1,5 @@
-from server:events import on_join
+from ../events import ON_JOIN
 
-append function on_join:
+
+append function ON_JOIN:
     attribute @s minecraft:waypoint_transmit_range base set 0

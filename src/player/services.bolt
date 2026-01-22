@@ -1,9 +1,10 @@
-from server:events import on_end_tick
+from server:core import ROOT_ADVANCEMENT
+from server:events import ON_END_TICK
 
 
-player_tick = ~/tick
+PLAYER_TICK = ~/tick
 
 
-append function on_end_tick:
-    as @a as @s run function player_tick
-    advancement revoke @a through root_advancement
+append function ON_END_TICK:
+    as @a as @s run function PLAYER_TICK
+    advancement revoke @a through ROOT_ADVANCEMENT

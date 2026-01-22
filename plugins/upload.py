@@ -12,7 +12,7 @@ import pytz
 import rich
 from websockets.asyncio.client import connect
 
-from src.lib.text import theme
+from src.lib.text import Theme
 
 
 dotenv.load_dotenv()
@@ -140,7 +140,7 @@ async def push_to_server(path: str):
         errors = await task
 
     if errors:
-        msg = [{"text": "\n" + error, "color": theme.failure} for error in errors]
+        msg = [{"text": "\n" + error, "color": Theme.Failure} for error in errors]
         await make_request(
             route="command", data={"command": f"tellraw @a[tag=op] {json.dumps(msg)}"}
         )

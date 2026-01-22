@@ -2,7 +2,7 @@ from enum import Enum, auto
 
 from ../models import Map
 
-DUELS_STORAGE = Data.storage("game:duels")
+INSTANCE_STATE = Scoreboard("duels.instance_state")
 
 
 class DuelsMap(Map):

@@ -16,17 +16,17 @@ def multi_action_template(
 ):
     output = {
         "type": "minecraft:multi_action",
-        "title": style(title, color=theme.primary),
+        "title": style(title, color=Theme.Primary),
         "body": {
             type: "minecraft:plain_message",
-            contents: style(body, color=theme.body)
+            contents: style(body, color=Theme.Body)
         },
         "actions": actions,
         "columns": columns,
         "can_close_with_escape": can_close_with_escape,
         "after_action": after_action,
         "exit_action": {
-            label: {text: "Back", color: theme.body}
+            label: {text: "Back", color: Theme.Body}
         },
     }
 

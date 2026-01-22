@@ -1,51 +1,49 @@
 """
 Events related to general game functionality, such as joining and leaving games.
 """
-from server:events import on_join
+from server:events import ON_JOIN
 from server:core import clock
-from player:services import player_tick
+from player:services import PLAYER_TICK
 from lobby:core import BOX_COORDS, BOX_SIZE, IN_BOX_TAG
 
 from ./models import GAME_META, Map
 
-leave_game = Scoreboard("leave_game", criteria="trigger")
+LEAVE_GAME_TRIGGER = Scoreboard("leave_game", criteria="trigger")
 
-on_leave_game = ~/on_leave_game
-on_join_game = ~/on_join_game
+ON_LEAVE_GAME = ~/on_leave_game
+ON_JOIN_GAME = ~/on_join_game
 
-on_start_game = ~/on_start_game
-on_stop_game = ~/on_stop_game
+ON_START_GAME = ~/on_start_game
+ON_STOP_GAME = ~/on_stop_game
 
 
 #>
 #> Event: on_leave_game
 #>
-# call leave_game when player joins server
-append function on_join:
-    function on_leave_game
-
-# handle leave_game trigger
-append function player_tick:
-    if leave_game["@s"] > 0:
-        function on_leave_game
-
-# inital part of event
-function on_leave_game:
+function ON_LEAVE_GAME:
     """Called when a player leaves a game (via `/trigger leave_game` or otherwise)
 
     as/at @s: player
     """
+    LEAVE_GAME_TRIGGER["@s"].reset()
+    LEAVE_GAME_TRIGGER["@s"].enable()
 
-    leave_game["@s"].reset()
-    leave_game["@s"].enable()
+
+# call leave_game when player joins server
+append function ON_JOIN:
+    function ON_LEAVE_GAME
+
+# handle leave_game trigger
+append function PLAYER_TICK:
+    if LEAVE_GAME_TRIGGER["@s"] > 0:
+        function ON_LEAVE_GAME
 
 
 #>
 #> Event: on_join_game
 #> 
-function on_join_game:
+function ON_JOIN_GAME:
     """Called when a player joins a game"""
-
     if not GAME_META.running:
         return fail
     
@@ -55,30 +53,31 @@ function on_join_game:
 #>
 #> Event: on_start_game
 #> 
-move_players_to_game = ~/move_players_to_game
+function ON_START_GAME:
+    """Called when a game starts."""
+    GAME_META.running = true
+
+
+MOVE_PLAYERS_TO_GAME = ~/move_players_to_game
 append function clock("1s"):
-    positioned BOX_COORDS store result score $count temp tag @a[dx=BOX_SIZE[0],dy=BOX_SIZE[1],dz=BOX_SIZE[2]] add in_box_tag
+    execute
+        positioned BOX_COORDS
+        store result score #count temp  # TODO: bolt-expressions bug
+        run tag @a[dx=BOX_SIZE[0], dy=BOX_SIZE[1], dz=BOX_SIZE[2]] add IN_BOX_TAG
     
     if not GAME_META.running:
-        if GAME_META.dev_mode or (SCORE.temp["$count"] >= GAME_META.current.min_players):
-            function on_game_start
-            execute function move_players_to_game:
-                as @a[tag=IN_BOX_TAG] at @s function on_join_game
+        if GAME_META.dev_mode or (SCORE.temp["#count"] >= GAME_META.current.min_players):
+            function ON_START_GAME
+            execute function MOVE_PLAYERS_TO_GAME:
+                execute as @a[tag=IN_BOX_TAG] at @s run function ON_JOIN_GAME
                 tag @a remove IN_BOX_TAG
     else:
-        function move_players_to_game
-
-
-function on_start_game:
-    """Called when a game starts."""
-
-    GAME_META.running = True
+        function MOVE_PLAYERS_TO_GAME
 
 
 #>
 #> Event: on_stop_game
 #> 
-function on_stop_game:
+function ON_STOP_GAME:
     """Called when a game stops."""
-
     GAME_META.running = false

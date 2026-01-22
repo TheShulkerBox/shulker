@@ -10,7 +10,6 @@ from typeguard import check_type as _check_type, TypeCheckError
 
 def title_case_to_snake_case(title_case_str: str):
     """Converts a title case string into snake case"""
-
     snake_case_str = []
     for index, char in enumerate(title_case_str):
         # TitleCase usually starts with an uppercase so we ignore the first character
@@ -24,7 +23,6 @@ def title_case_to_snake_case(title_case_str: str):
 
 def nbt_dump(obj: dict[str, Any]):
     """Helper to dump generic dicts into serialized nbt"""
-
     def serialize(obj: Any):
         match obj:
             case dict():
@@ -73,7 +71,6 @@ def deep_merge_dicts(
     Returns:
         dict: The deeply merged dictionary.
     """
-
     if inplace:
         merged = d1
     else:
@@ -116,7 +113,6 @@ def branch(func: Callable[..., Iterator[Literal[True]]]) -> BranchProtocol:
             yield True
     ```
     """
-
     class BranchWrapper:
         __branch__ = contextmanager(func)
 
@@ -129,7 +125,6 @@ def id_to_number(id: str) -> int:
     Since hash functions return 64-bit integers, we mask it to 31 bits to ensure it's positive
     and fits within the range of a standard scoreboard.
     """
-
     return hash(id) & int("0x7FFFFFFF", 16)
 
 
@@ -162,12 +157,5 @@ _CAMEL_TO_SNAKE_PAT2 = re.compile(r"([a-z0-9])([A-Z])")
 
 def camel_case_to_snake_case(s: str) -> str:
     """Converts a camelCase or PascalCase string to snake_case."""
-
     step1 = _CAMEL_TO_SNAKE_PAT1.sub(r"\1_\2", s)
     return _CAMEL_TO_SNAKE_PAT2.sub(r"\1_\2", step1).lower()
-
-
-def snake_case_to_pascal_case(s: str) -> str:
-    """Converts a snake_case string to PascalCase."""
-
-    return "".join(word.capitalize() for word in s.split("_"))

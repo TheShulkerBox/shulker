@@ -1,5 +1,5 @@
 from lib:shulker_box import SHULKER_BOX_COORDS, SHULKER_BOX, SHULKER_DROP_CONTENTS
-from server:core import server_tick, server_load
+from server:core import SERVER_TICK, SERVER_LOAD
 
 from ./meta import ItemType
 
@@ -63,7 +63,7 @@ class Item(metaclass=ItemType):
 
     @classmethod
     def build(self):
-        # append function server_load:
+        # append function SERVER_LOAD:
         #     execute function f"item:load/{self.name}":
         #         STORAGE.temp.item = {components: self.components}
         #         STORAGE.macro.name = self.name
@@ -80,5 +80,5 @@ class Item(metaclass=ItemType):
 
 
 # Yes, this deletes the above item in storage but that's ok
-append function server_load:
+append function SERVER_LOAD:
     item_storage.item = {}

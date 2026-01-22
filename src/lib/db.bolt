@@ -3,22 +3,15 @@ Provides an abstraction to treat storage as a database using a dynamic key/value
 """
 
 from contextlib import contextmanager
+from dataclasses import dataclass
 
 from ./storage_helpers import loop
 
+@dataclass
 class Database:
     data: DataSource
 
-    def __init__(self, collection: DataSource):
-        self.data = collection
-    
-    def new(self, name: str):
-        return Database(Data.storage(f"db.{name}:main"))
-
-    def append(self, value: Any):
-        self.data.append(value)
-    
-    def get(self, **kwargs):
+    def get(self, **kwargs) -> DataSource:
         """Get a value from the database by key and value, storing it in destination.
         
         ```py
@@ -35,15 +28,20 @@ class Database:
         map = DB.get(id="etherlok")
         ```
         """
-        output = kwargs.pop("output", None) or STORAGE.temp.database.output
-
+        # use dev provided output location otherwise database's output location
+        output: DataSource = kwargs.pop("output", STORAGE.temp.database.output)
+        
+        # set default output to false
+        data modify var output set value false
+        
         key, value = kwargs.popitem()
 
         STORAGE.macro = {"value": value}
         with var STORAGE.macro:
+            # if macro filter fails to find an entry, default output remains
             data modify var output set from var self.data[{key: $(value)}]
 
-        return output
+        return output  # should return a nbt compound OR false
     
     @contextmanager
     def modify(self, **kwargs):
@@ -63,7 +61,10 @@ class Database:
         map = DB.get(id="etherlok")
         ```
         """
-        output = kwargs.pop("output", None) or STORAGE.temp.database.output
+        output: DataSource = kwargs.pop("output", STORAGE.temp.database.output)
+        
+        # set default output to false
+        data modify var output set value false
 
         key, value = kwargs.popitem()
 
@@ -73,6 +74,37 @@ class Database:
             yield output
             data modify var self.data[{key: $(value)}] set from var output
     
+    def pop(self, **kwargs):
+        """remove and return a value from the database by key and value.
+        
+        ```py
+        # init db, can be const
+        DB = Database(STORAGE.rom.maps)
+
+        # pop via scoreboard, store via output
+        requested_map = DB.pop(hashed_id=JOIN_DUEL["@s"])
+
+        # pop via data, store via `output` arg
+        DB.pop(id=STORAGE.temp.id, output=STORAGE.temp.map)
+
+        # pop via str, 'compile-time'
+        map = DB.pop(id="etherlok")
+        ```
+        """
+        output: DataSource = kwargs.pop("output", STORAGE.temp.database.output)
+
+        # set default output to false
+        data modify var output set value false
+
+        key, value = kwargs.popitem()
+
+        STORAGE.macro = {"value": value}
+        with var STORAGE.macro:
+            data modify var output set from var self.data[{key: $(value)}]
+            data remove var self.data[{key: $(value)}]
+
+        return output
+    
     def loop(self, **kwargs):
         return loop(self.data, temp_storage=STORAGE.temp.db, **kwargs)
     
@@ -81,3 +113,15 @@ class Database:
     
     def __loop__(self):
         return self.loop()
+    
+    def append(self, value: Any):
+        self.data.append(value)
+
+    def clear(self):
+        self.data.clear()
+    
+    def __getitem__(self, key: Any):
+        return self.data[key]
+    
+    def __setitem__(self, key: Any, value: Any):
+        self.data[key] = value

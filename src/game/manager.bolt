@@ -1,11 +1,11 @@
 from lib:storage_helpers import loop
-from server:core import server_load
+from server:core import SERVER_LOAD
 
 from ./models import GAME_META, Map
-from ./events import on_start_game
+from ./events import ON_START_GAME
 
 
-append function server_load:
+append function SERVER_LOAD:
     if not GAME_META.map_queue:
         GAME_META.map_queue = []
         function game:map_queue/shuffle

@@ -1,9 +1,10 @@
 from functools import cache
 
-from server:events import on_join, on_playerdb_init 
 from lib:utils import get_player_name
 from lib:storage_helpers import loop
 from lib:helpers import Singleton
+
+from ../events import ON_JOIN, ON_PLAYERDB_INIT 
 
 
 UUID = [
@@ -90,10 +91,10 @@ function playerdb:reset:
     for i in range(4):
         scoreboard players reset * f"uuid{i}"
     
-    scoreboard players reset @a player.on_join
+    scoreboard players reset @a player.ON_JOIN
 
 
-prepend function on_join:
+prepend function ON_JOIN:
     execute function ~/check_uuids:
         STORAGE.temp.player = SELF
 
@@ -124,6 +125,6 @@ prepend function on_join:
 
         # Else, we are a new player
         player = PlayerDB.init_player()
-        function on_playerdb_init
+        function ON_PLAYERDB_INIT
         PlayerDB.add_player(player)
         return 1

@@ -8,7 +8,7 @@ from ./db import Database
 from ./helpers import id_to_number
 from ./rom import load_rom
 
-from server:core import server_load
+from server:core import SERVER_LOAD
 
 
 class CustomBaseModel(BaseModel):
@@ -26,6 +26,7 @@ class CustomResource(CustomBaseModel):
     """Defines a custom resource which can be registered via a bolt macro"""
 
     id: str
+    name: str = ""
     hashed_id: int = -1
     
     _storage: ClassVar[DataSource]
@@ -44,6 +45,13 @@ class CustomResource(CustomBaseModel):
         if isinstance(values, dict) and 'id' in values:
             values['hashed_id'] = id_to_number(values['id'])
         return values
+
+    # @model_validator(mode='before')
+    # def set_name(cls, values):
+    #     """Numerical representation of id"""
+    #     if isinstance(values, dict) and 'id' in values:
+    #         values['name'] = values['id'].
+    #     return values
 
     @classmethod
     def generate(cls, id: Any, data: Any):
@@ -117,7 +125,7 @@ class CustomResource(CustomBaseModel):
 #     def register_resource(cls, resource_id: str):
 #         """Registers the resource's state in storage"""
 #         obj = cls(id=resource_id, hashed_id=id_to_number(resource_id))
-#         append function server_load:
+#         append function SERVER_LOAD:
 #             obj.storage().append(obj.model_component())
 #         cls._states[resource_id] = obj
 

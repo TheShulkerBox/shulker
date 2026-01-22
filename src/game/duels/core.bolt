@@ -1,9 +1,9 @@
-from server:core import server_load
+from server:core import SERVER_LOAD
 
 DUELS_LOBBY_TEAM = "duels.lobby"
 
 # Stores what map id the player is apart of
 DUELS_MAP_ID = Scoreboard("duels.map_id")
 
-append function server_load:
+append function SERVER_LOAD:
     team add DUELS_LOBBY_TEAM "Duels Lobby:"

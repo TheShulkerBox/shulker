@@ -1,1 +1,1 @@
-FLAG_BEARER_PICKUP = {text: "You are carrying the flag! Return to base!", color: theme.secondary}
+FLAG_BEARER_PICKUP = {text: "You are carrying the flag! Return to base!", color: Theme.Secondary}

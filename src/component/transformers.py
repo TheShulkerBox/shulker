@@ -3,7 +3,7 @@ from typing import Any
 from minecraft_text_components import TextComponent
 
 from component.base import Transformer
-from lib.text import theme
+from lib.text import Theme
 from lib.errors import CustomComponentError
 
 
@@ -39,7 +39,7 @@ class Lore(Transformer):
 
         return [
             (
-                {"text": line, "color": theme.secondary, "italic": False}
+                {"text": line, "color": Theme.Secondary, "italic": False}
                 if type(line) is str
                 else line
             )

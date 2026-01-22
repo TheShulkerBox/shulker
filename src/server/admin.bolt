@@ -1,0 +1,3 @@
+STAFF_TAG = "staff"
+OP_TAG = "op"
+BUILDER_TEAM = "builder"

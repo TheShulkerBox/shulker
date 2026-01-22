@@ -37,18 +37,18 @@ SMALL_CAPS_MAP = {
 }
 
 
-class theme:
-    primary = "#e7c8dd"
-    secondary = "light_purple"
-    body = "#ebebeb"
-    success = "#7fb192"
-    failure = "red"
+class Theme:
+    Primary = "#e7c8dd"
+    Secondary = "light_purple"
+    Body = "#ebebeb"
+    Success = "#7fb192"
+    Failure = "red"
 
 
 def boxed_text(
     text: TextComponent,
-    text_color: str = theme.primary,
-    box_color: str = theme.secondary,
+    text_color: str = Theme.Primary,
+    box_color: str = Theme.Secondary,
     variant: str = "[]",
 ):
     mid = len(variant) // 2

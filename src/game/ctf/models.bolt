@@ -1,6 +1,7 @@
 from pydantic import BaseModel, field_validator, model_validator
 
 from lib:const import TEAM_COLORS
+
 from ../models import Map, Tag
 
 class Team(BaseModel):

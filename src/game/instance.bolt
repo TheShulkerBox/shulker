@@ -1,8 +1,8 @@
 """
 This file manages the game instance system.
 
-A game instance represents the lifecycle of any game (pre-game, starting, in-progress, ending). It
-gets created the moment a game is being configured (joining a duels arena, players sitting in the
+A game instance represents the lifecycle of any game (pre-game, starting, in-progress, ending, etc.)
+It gets created the moment a game is being configured (joining a duels arena, players sitting in the
 box, etc.) Each instance gets attached an id that can be used to identify related data such as
 state or status. This data can sit in either scoreboards, tags, or storage.
 
@@ -14,8 +14,45 @@ While the main box selection of games will be limited to 1 instance at a time, g
 duels will allow multiple instancing. This system will be designed to support both cases.
 
 Players will also be assigned to the INSTANCE_ID scoreboard to keep track of what instance they
-are curently in.
+are currently in.
 """
 
+from lib:db import Database
+from server:core import SERVER_LOAD
+
+from ./models import Map, GAME_META
+
+
+INSTANCE_META = Database(GAME_META.active_instances)
 INSTANCE_ID = Scoreboard("game.instance_id")
-LATEST_INSTANCE_ID = INSTANCE_ID["$latest"]
+
+
+# append 
+
+
+def new_instance(map: Map) -> int:
+    """Attempts to add a new instance.
+    
+    First checks if a map is currently being instanced.
+    Adds the map if not, otherwise return an -1.
+    """
+    # We store the result of whether we find an instance or not in a temp scoreboard.
+    # This makes it easy to return it at runtime.
+    if INSTANCE_META.get(map_id=map.id) == false:
+        SCORE.temp["#output"] = -1
+    else:
+        INSTANCE_ID["#latest"] += 1
+        INSTANCE_META.append(
+            {
+                id: INSTANCE_ID["#latest"],
+                gamemode: map.gamemode,
+                map_id: map.id,
+            }
+        )
+        SCORE.temp["#output"] = INSTANCE_ID["#latest"]
+    return SCORE.temp["#output"]
+
+
+def remove_instance(instance_id: int | ScoreSource | DataSource) -> DataSource:
+    """Attempts to remove a new instance."""
+    return INSTANCE_META.pop(id=instance_id)

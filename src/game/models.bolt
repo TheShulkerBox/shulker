@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 
-from server:core import server_load
+from server:core import SERVER_LOAD
 from lib:custom_resources import CustomResource
 
 
@@ -20,7 +20,7 @@ class Tag:
     Competitive = "competitive"
     CTF = "ctf"
     FTM = "ftm"
-    DM = "dm"
+    TDM = "tdm"
     Duels = "duels"
     Active = "active"
     Inactive = "inactive"

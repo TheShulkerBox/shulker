@@ -12,17 +12,17 @@ from functools import cache
 
 from bolt_expressions import Scoreboard, Expression
 
-from lib:text import theme, boxed_text
+from lib:text import Theme, boxed_text
 
 
 #> Function Paths
-server_load = ~/load
-server_tick = ~/tick
+SERVER_LOAD = ~/load
+SERVER_TICK = ~/tick
 
 #> Adv Paths
-root_advancement = ~/root
+ROOT_ADVANCEMENT = ~/root
 
-
+#> Globals Scoreboards
 SERVER_GLOBALS = Scoreboard("server.globals", criteria="dummy")
 
 
@@ -38,11 +38,11 @@ def clock(speed: str):
     """
 
     if (speed == "1t") or (speed == "1"):
-        path = server_tick
+        path = SERVER_TICK
     else:
-        path = f"{server_tick}/{speed}"
+        path = f"{SERVER_TICK}/{speed}"
     
-    append function server_load:
+    append function SERVER_LOAD:
         schedule function path speed replace
 
     function path:
@@ -51,9 +51,9 @@ def clock(speed: str):
     return path
 
 
-prepend function_tag minecraft:load { "values": [server_load] }
+prepend function_tag minecraft:load { "values": [SERVER_LOAD] }
 
-function server_load:
+function SERVER_LOAD:
     forceload add 0 0
     tellraw @a[tag=staff] boxed_text(
         {
@@ -63,8 +63,8 @@ function server_load:
                 value: {text: "By rx97, Tallone55, and friends", color: "gray"},
             },
         }, 
-        text_color=theme.primary, 
-        box_color=theme.secondary,
+        text_color=Theme.Primary, 
+        box_color=Theme.Secondary,
     )
     Expression.init()
 
@@ -73,6 +73,6 @@ function server_load:
 clock("1t")  # default clock at 1t, cached
 
 
-advancement root_advancement {
+advancement ROOT_ADVANCEMENT {
     "criteria": { "impossible": { "trigger": "minecraft:impossible" } }
 }

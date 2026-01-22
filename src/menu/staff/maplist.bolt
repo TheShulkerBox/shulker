@@ -56,8 +56,8 @@ maps = {
 buttons = []
 for name, coords in maps.items():
     buttons.append({
-        label: {text: name, color: theme.body},
-        tooltip: {text: coords, color: theme.secondary},
+        label: {text: name, color: Theme.Body},
+        tooltip: {text: coords, color: Theme.Secondary},
         action: {
             type: "run_command",
             command: f"tp @s {coords}"

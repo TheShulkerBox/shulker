@@ -1,5 +1,5 @@
 import component:on_use as _
-from component:on_hold import on_using_timer
+from component:on_hold import ON_USING_TIMER
 from item:base import Item
 from lib:motion import apply_motion_vector
 
@@ -40,7 +40,7 @@ function ~/on_use_poison:
 
 
 # function ~/potato/tick:
-#     STORAGE.macro = {damage: max(0, 100 - (2 * on_using_timer["@s"]))}
+#     STORAGE.macro = {damage: max(0, 100 - (2 * ON_USING_TIMER["@s"]))}
 #     unless items entity @s weapon.mainhand Potato.conditional_string():
 #         with var STORAGE.macro:
 #             $item modify entity @s weapon.offhand {function: "set_components", components: {damage: $(damage)}}
