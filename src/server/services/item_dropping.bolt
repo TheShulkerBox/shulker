@@ -1,7 +1,6 @@
 from ../core import SERVER_TICK
 
 ITEM_PROCESSED_TAG = "item.processed"
-
 HANDLE_ITEM = ~/handle_item
 
 

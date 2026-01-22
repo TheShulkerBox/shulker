@@ -22,12 +22,13 @@ from server:core import SERVER_LOAD
 
 from ./models import Map, GAME_META
 
-
 INSTANCE_META = Database(GAME_META.active_instances)
 INSTANCE_ID = Scoreboard("game.instance_id")
 
 
-# append 
+append function SERVER_LOAD:
+    if INSTANCE_ID["#latest"] >= 0:
+        INSTANCE_ID["#latest"] = 0
 
 
 def new_instance(map: Map) -> int:

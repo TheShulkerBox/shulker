@@ -6,7 +6,6 @@ from lib:helpers import Singleton
 
 from ../events import ON_JOIN, ON_PLAYERDB_INIT 
 
-
 UUID = [
     Scoreboard("uuid0", criteria="dummy"),
     Scoreboard("uuid1", criteria="dummy"),

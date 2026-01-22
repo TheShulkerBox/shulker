@@ -9,29 +9,27 @@ from ./core import DUELS_MAP_ID
 JOIN_DUEL_TRIGGER = Scoreboard("join_duel", criteria="trigger")
 
 
-# success = ~/success
+# Check player count in selected duels map (selected by trigger command when requesting to join)
+# Reference duels occupancy data structure (dictionary?) for appropriate map
+append function server_tick:
+    execute function ./detect_join_duel:
+        # TODO: only enable if in LOBBY
+        JOIN_DUEL["@a"].enable()  
 
-# # Check player count in selected duels map (selected by trigger command when requesting to join)
-# # Reference duels occupancy data structure (dictionary?) for appropriate map
-# append function server_tick:
-#     execute function ./detect_join_duel:
-#         # TODO: only enable if in LOBBY
-#         JOIN_DUEL["@a"].enable()  
+        execute as @a[scores={JOIN_DUEL=1..}] run function ~/attempt:
+            requested_map = DuelsMap.get(JOIN_DUEL["@s"])
+            # STORAGE.macro = {id: }
+            # execute as @a[scores={DUELS_MAP_ID=1..}] if var DUELS_MAP_ID["@s"] = requested_map.id
 
-#         execute as @a[scores={JOIN_DUEL=1..}] run function ~/attempt:
-#             requested_map = DuelsMap.get(JOIN_DUEL["@s"])
-#             # STORAGE.macro = {id: }
-#             # execute as @a[scores={DUELS_MAP_ID=1..}] if var DUELS_MAP_ID["@s"] = requested_map.id
+            # Compare whether duels lobby is full or not
+            if map_state.current_player_count < requested_map.max_player_count:
+                function ~/../success:
+                    # TODO Add players to teams, teleport to appropriate spawn rooms
+                    tellraw @s {text: "Successfully joined the arena!", color: theme.success}
+                    map_state.current_player_count += 1
+                    DUELS_MAP_ID["@s"] = JOIN_DUEL["@s"]
 
-#             # Compare whether duels lobby is full or not
-#             if map_state.current_player_count < requested_map.max_player_count:
-#                 function ~/../success:
-#                     # TODO Add players to teams, teleport to appropriate spawn rooms
-#                     tellraw @s {text: "Successfully joined the arena!", color: theme.success}
-#                     map_state.current_player_count += 1
-#                     DUELS_MAP_ID["@s"] = JOIN_DUEL["@s"]
+            else:
+                tellraw @s {text: "That arena is full!", color: theme.failure}
 
-#             else:
-#                 tellraw @s {text: "That arena is full!", color: theme.failure}
-
-#             JOIN_DUEL["@s"].reset()
+            JOIN_DUEL["@s"].reset()

@@ -7,7 +7,6 @@ from player:services import PLAYER_TICK
 from ../core import clock
 from ../admin import BUILDER_TEAM
 
-
 MARKER_TAG = "sys.spawn_marker"
 
 

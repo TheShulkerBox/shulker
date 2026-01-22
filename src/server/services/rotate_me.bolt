@@ -3,6 +3,7 @@ from lobby:core import IN_BOX_TAG
 
 ROTATE_ME_TAG = "rotateme"
 
+
 append function SERVER_TICK:
     execute function ./rotateme:
         execute as @e[tag=ROTATE_ME_TAG] at @s run tp @s ~ ~ ~ ~3 ~

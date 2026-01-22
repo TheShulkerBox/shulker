@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 from ./storage_helpers import loop
 
+
 @dataclass
 class Database:
     data: DataSource
