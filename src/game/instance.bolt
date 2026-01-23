@@ -21,6 +21,7 @@ from lib:db import Database
 from server:core import SERVER_LOAD
 
 from ./models import Map, GAME_META
+from ./events import ON_LEAVE_GAME
 
 INSTANCE_META = Database(GAME_META.active_instances)
 INSTANCE_ID = Scoreboard("game.instance_id")
@@ -29,6 +30,10 @@ INSTANCE_ID = Scoreboard("game.instance_id")
 append function SERVER_LOAD:
     if INSTANCE_ID["#latest"] >= 0:
         INSTANCE_ID["#latest"] = 0
+
+
+append function ON_LEAVE_GAME:
+    INSTANCE_ID["@s"].reset()
 
 
 def new_instance(map: Map) -> int:

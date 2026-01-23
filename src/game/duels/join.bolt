@@ -2,10 +2,10 @@
 # When you attempt 
 
 from server:core import SERVER_TICK, SERVER_LOAD
+from lobby:core import LOBBY_TEAM
 
 from ../instance import INSTANCE_META, INSTANCE_ID, new_instance
 from ./models import DuelsMap
-from ./core import DUELS_MAP_ID
 from ./lobby import DUELS_LOBBY_LOCATION, BELOW_NAME_DISPLAY
 
 JOIN_DUEL_TRIGGER = Scoreboard("join_duel", criteria="trigger")
@@ -15,13 +15,29 @@ JOIN_DUEL_TRIGGER = Scoreboard("join_duel", criteria="trigger")
 # Reference duels occupancy data structure (dictionary?) for appropriate map
 append function SERVER_TICK:
     execute function ./detect_join:
-        # TODO: only enable if in LOBBY
-        JOIN_DUEL_TRIGGER["@a"].enable()  
+        JOIN_DUEL_TRIGGER[f"@a[team={LOBBY_TEAM}]"].enable()  
 
         # detect if a player has used the trigger
         execute as @a[scores={JOIN_DUEL_TRIGGER=1..}] run function ~/attempt:
-            requested_map = DuelsMap.get(hashed_id=JOIN_DUEL_TRIGGER["@s"])
+            # cache value in temp and reset trigger (just incase we early return)
+            SCORE.temp["#join_duel_id"] = JOIN_DUEL_TRIGGER["@s"]
+            JOIN_DUEL_TRIGGER["@s"].reset()
             
+            # if already in duel, do nothing
+            execute
+                if score var JOIN_DUEL_TRIGGER["@s"] = var INSTANCE_ID["@s"]
+                return run tellraw @s {text: "You can't join a duel arena that you are already in!", color: Theme.Failure}
+
+            # grab the map from the duel trigger number 
+            requested_map = DuelsMap.get(hashed_id=SCORE.temp["#join_duel_id"])
+
+            # if there is no map, someone manually typed `/trigger join_duel`
+            if requested_map == false:
+                return run tellraw @s [
+                    {text: "Cannot join duel arena with id ", color: Theme.Failure},
+                    SCORE.temp["#join_duel_id"]  # auto converts to text component
+                ]
+
             # if there is not an instance running on the map, auto join
             # otherwise, check the player count to see if you can join
             instanced_map = INSTANCE_META.get(map_id=requested_map.id)
@@ -29,6 +45,7 @@ append function SERVER_TICK:
                 # create a new instance, assign it to @s, join arena
                 new_instance_id = new_instance(requested_map)
                 INSTANCE_ID["@s"] = new_instance_id
+                SCORE.temp["#instance_player_count"] = 1
                 function ./join_instance with var requested_map
             else:
                 # count the players in the instance
@@ -46,11 +63,21 @@ append function SERVER_TICK:
                 else:
                     tellraw @s {text: "That arena is full!", color: Theme.Failure}
 
-            JOIN_DUEL_TRIGGER["@s"].reset()
-
 
 function ./join_instance:
-    tp @s 3000 39 3000  # TODO: use a var?
+    """Actions that run when a player joins an instance.
+    
+    @s: player
+    macro arguments from `DuelsMap` ($(name), $(id), etc.)
+    """
+    execute positioned DUELS_LOBBY_LOCATION run tp @s ~ ~ ~
     scoreboard players display name @s BELOW_NAME_DISPLAY {text: '$(name)', color: Theme.Secondary}
     title @s actionbar {text: "Joined arena!", color: Theme.Success, bold: true}
     execute at @s run playsound minecraft:block.note_block.bit master @s ~ ~ ~ 1 1 1
+    tellraw @a [
+        {text: "", click_event: {action: "run_command", command: "/trigger join_duel set value $(id)"}},
+        {selector: "@s"},
+        {text: " has joined the ", color: Theme.Body},
+        {text: "$(name)", color: Theme.Secondary},
+        {text: " dueling arena.\nClick here to duel!", color: Theme.Body},
+    ]

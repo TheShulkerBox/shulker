@@ -1,4 +1,11 @@
-from server:core import SERVER_LOAD
+from lib:storage_helpers import loop
+from server:core import SERVER_LOAD, SERVER_TICK
+from server:admin import error_debug
+
+from ../events import ON_LEAVE_GAME
+from ../instance import INSTANCE_META, INSTANCE_ID, remove_instance
+from ./models import DuelsMap
+from ./logic import START_GAME
 
 DUELS_LOBBY_TEAM = "duels.lobby"
 DUELS_LOBBY_LOCATION = "3000 39 3000"
@@ -6,6 +13,45 @@ DUELS_LOBBY_LOCATION = "3000 39 3000"
 BELOW_NAME_DISPLAY = Scoreboard("duels.below_name_display")
 SETTINGS_DISPLAY = Scoreboard("duels.settings_display")
 
+SAME_INSTANCE_TAG = "duels.in_same_instance"
+
 
 append function SERVER_LOAD:
     team add DUELS_LOBBY_TEAM "Duels Lobby:"
+
+
+append function SERVER_TICK:
+    duels_instances = INSTANCE_META.get(gamemode="duels")
+
+    # loop through each duels instance
+    for instance in loop(duels_instances):
+        SCORE.temp["#current_instance_id"] = instance.id
+
+        # temporarily tag everyone in the same instance (during the loop)
+        execute
+            as @a[scores={INSTANCE_ID=1..}]
+            if score var INSTANCE_ID["@s"] = var SCORE.temp["#current_instance_id"]
+            run tag @s add SAME_INSTANCE_TAG
+
+        # if we find no one, kill the instance and skip the rest of this loop
+        execute unless entity @a[tag=SAME_INSTANCE_TAG] run return:
+            remove_instance(SCORE.temp["#current_instance_id"])
+        
+        # get the cooresponding map
+        instance_map = DuelsMap.get(id=instance.map_id)
+        if instance_map == false:
+            # if this fails, tell an admin
+            error_debug("Map not found from instance: ", instance)
+
+        # count the players in the instance
+        execute store result score var SCORE.temp["#instance_player_count"] if entity @a[tag=SAME_INSTANCE_TAG]
+        if SCORE.temp["#instance_player_count"] >= instance_map.max_player_count:
+            instance_map.instance_id = instance.id  # we copy this over so that it's useable in the macro
+            function START_GAME with var instance_map
+        
+        # clean up :)
+        tag @a remove SAME_INSTANCE_TAG
+
+
+append function ON_LEAVE_GAME:
+    """Ensure we clean up the duel scores and tags of a player leaving a game"""

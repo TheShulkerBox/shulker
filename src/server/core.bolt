@@ -15,11 +15,11 @@ from bolt_expressions import Scoreboard, Expression
 from lib:text import Theme, boxed_text
 
 #> Function Paths
-SERVER_LOAD = ~/load
-SERVER_TICK = ~/tick
+SERVER_LOAD = ./load
+SERVER_TICK = ./tick
 
 #> Adv Paths
-ROOT_ADVANCEMENT = ~/root
+ROOT_ADVANCEMENT = ./root
 
 #> Globals Scoreboards
 SERVER_GLOBALS = Scoreboard("server.globals", criteria="dummy")

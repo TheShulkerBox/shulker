@@ -1,2 +1,0 @@
-# Stores what map id the player is apart of
-DUELS_MAP_ID = Scoreboard("duels.map_id")

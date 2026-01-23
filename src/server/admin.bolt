@@ -1,3 +1,7 @@
 STAFF_TAG = "staff"
 OP_TAG = "op"
 BUILDER_TEAM = "builder"
+
+def error_debug(*args):
+    """These are error messages that *shouldn't* happen. We keep track of them *just incase*"""
+    tellraw @a[tag=STAFF_TAG] [{text: "[Error] ", color: Theme.Failure}, *args]

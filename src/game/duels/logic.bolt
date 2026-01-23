@@ -1,0 +1,45 @@
+from server:core import SERVER_LOAD, SERVER_TICK
+
+# from ./lobby import SAME_INSTANCE_TAG, BELOW_NAME_DISPLAY
+
+START_GAME = ./start_game
+
+KILLS = Scoreboard("duels.kills", criteria="playerKillCount")
+TEAM_1 = "duels.team_1"
+TEAM_2 = "duels.team_2"
+PREGAME_MARKER = "duels.pregame_marker"
+
+
+append function SERVER_LOAD:
+    team add TEAM_1 "Duel Team A"
+    team add TEAM_2 "Duel Team B"
+    
+    for team in [TEAM_1, TEAM_2]:
+        team modify team friendlyFire false
+        team modify team prefix "🗡 "
+
+
+function START_GAME:
+    """Starts a dueling match (tping lobby players to the arena)
+    
+    macro arguments from `DuelsMap` ($(name), $(id), etc.) + $(instance_id)
+    """
+    # make players join separate teams
+    team join TEAM_1 @r[tag=SAME_INSTANCE_TAG]
+    team join TEAM_2 @r[tag=SAME_INSTANCE_TAG, team=!TEAM_1]
+
+    # teleport to spawns
+    tp @a[tag=SAME_INSTANCE_TAG,team=TEAM_1] $(spawn_1)
+    tp @a[tag=SAME_INSTANCE_TAG,team=TEAM_2] $(spawn_2)
+
+    execute as @a[tag=SAME_INSTANCE_TAG] at @s:
+        # look at opponent
+        tp @s ~ ~ ~ facing entity @p[tag=SAME_INSTANCE_TAG, distance=3..]
+
+        # lock in place via spectator spam + marker
+        gamemode spectator
+        summon marker ~ ~ ~ {Tags: [PREGAME_MARKER]}
+        spectate @n[type=marker, tag=PREGAME_MARKER] @s
+
+        # set below name
+        scoreboard players display name @s BELOW_NAME_DISPLAY ""
