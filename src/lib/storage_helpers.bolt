@@ -45,7 +45,7 @@ class loop:
             STORAGE.macro["index"] = SCORE.temp["_loop"] * -1
             with var STORAGE.macro:
                 # data modify var self.temp_storage.item set from var self.temp_storage.data[$(index)]
-                raw f"data modify {self.temp_storage.item} set from {self.temp_storage.data}[$(index)]"
+                raw f"$data modify {self.temp_storage.item} set from {self.temp_storage.data}[$(index)]"
 
             if self.with_index:
                 yield (SCORE.temp["_loop"], self.temp_storage.item)

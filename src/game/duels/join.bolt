@@ -72,13 +72,13 @@ function ./join_instance:
     macro arguments from `DuelsMap` ($(name), $(id), etc.)
     """
     execute positioned DUELS_LOBBY_LOCATION run tp @s ~ ~ ~
-    scoreboard players display name @s BELOW_NAME_DISPLAY {text: '$(name)', color: Theme.Secondary}
+    scoreboard players display name @s BELOW_NAME_DISPLAY {text: $(name: string), color: Theme.Secondary}
     title @s actionbar {text: "Joined arena!", color: Theme.Success, bold: true}
     execute at @s run playsound minecraft:block.note_block.bit master @s ~ ~ ~ 1 1 1
     tellraw @a [
-        {text: "", click_event: {action: "run_command", command: "/trigger join_duel set value $(id)"}},
+        {text: "", click_event: {action: "run_command", command: f"/trigger join_duel set value {$(id)}"}},
         {selector: "@s"},
         {text: " has joined the ", color: Theme.Body},
-        {text: "$(name)", color: Theme.Secondary},
+        {text: $(name: string), color: Theme.Secondary},
         {text: " dueling arena.\nClick here to duel!", color: Theme.Body},
     ]

@@ -1,25 +1,20 @@
 from ../core import SERVER_TICK
 
 ITEM_PROCESSED_TAG = "item.processed"
-HANDLE_ITEM = ~/handle_item
 
 
 append function SERVER_TICK:
-    as @e[type=item, tag=!ITEM_PROCESSED_TAG] at @s function HANDLE_ITEM
+    execute as @e[type=item, tag=!ITEM_PROCESSED_TAG] at @s run function ./handle_item:
+        """Handles items that have been processed by item dropping services."""
+        SELF.PickupDelay = 0
+        STORAGE.temp.uuid.remove()
 
+        execute on origin:
+            STORAGE.temp.uuid = SELF.UUID
 
-function HANDLE_ITEM:
-    # Handles items that have been processed by item dropping services.
+        if STORAGE.temp.uuid:
+            SELF.Owner = STORAGE.temp.uuid
+        else:
+            kill @s
 
-    SELF.PickupDelay = 0
-    STORAGE.temp.uuid.remove()
-
-    execute on origin:
-        STORAGE.temp.uuid = SELF.UUID
-
-    if STORAGE.temp.uuid:
-        SELF.Owner = STORAGE.temp.uuid
-    else:
-        kill @s
-
-    tag @s add ITEM_PROCESSED_TAG
+        tag @s add ITEM_PROCESSED_TAG

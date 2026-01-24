@@ -1,0 +1,70 @@
+#> Displays flying damage text
+# When you hit a player, the amount of damage you deal flies out of the entity
+# with random motion.
+from server:services/item_dropping import ITEM_PROCESSED_TAG
+
+
+DAMAGE_TAKEN = Scoreboard("player.damage_taken", criteria="minecraft.custom:minecraft.damage_resisted")
+TEXT_TAG = "player.damage_text"
+ITEM_TAG = "player.damage_text_item"
+
+#> # of ticks item/text is alive
+TICKS_ALIVE = 25
+
+advancement ./on_hurt {
+    "criteria": {
+        "on_hurt": { "trigger": "minecraft:entity_hurt_player" }
+    },
+    "rewards": { "function": (./on_hurt) },
+}
+
+
+function ./on_hurt:
+    advancement revoke @s only ./on_hurt
+    
+    STORAGE.macro = {damage_taken: DAMAGE_TAKEN["@s"] / 2}
+    execute store result var STORAGE.macro.x double 0.0000000001 run random value -1000000000..1000000000
+    execute store result var STORAGE.macro.z double 0.0000000001 run random value -1000000000..1000000000
+    execute positioned ~ ~1.6 ~ summon text_display function ~/init_marker with var STORAGE.macro:
+        new_item_tag = "player.damage_text_item_new"
+        summon item ~ ~ ~ {
+            Tags: [ITEM_TAG, ITEM_PROCESSED_TAG, new_item_tag],
+            PickupDelay: 32767,
+            Age: (6000 - TICKS_ALIVE),
+            Motion:[$(x), 0.1568, $(z)],
+            Item: {
+                id: "minecraft:barrier",
+                components: { item_model: "minecraft:air" },
+            },
+        }
+        ride @s mount @n[type=item, tag=new_item_tag]
+        tag @e[type=item, distance=..5] remove new_item_tag
+
+        # sets up text display (macro in damage_taken)
+        data merge entity @s {
+            text: {text: f"-{$(damage_taken)}", color: "#960b0b"},
+            transformation: {
+                left_rotation: [0f, 0f, 0f, 1f],
+                right_rotation: [0f, 0f, 0f, 1f],
+                translation: [0f, -0.125f, 0f],
+                scale: [1f, 1f, 1f],
+            },
+            background: 0,
+            billboard: "center",
+            teleport_duration: 0,
+            shadow: true,
+            Tags: [TEXT_TAG],
+            view_range: 0.5,
+        }
+    
+    schedule function ~/animate_damage_text 1t replace
+    DAMAGE_TAKEN["@s"].reset()
+    
+    function ~/animate_damage_text:
+        execute as @e[type=text_display, tag=TEXT_TAG]:
+            # loop this function if any of our text displays exist
+            schedule function ~/../animate_damage_text 1t replace
+            # reduce opacity for "effect"
+            SELF.text_opacity -= 5
+            execute on vehicle run return 1  # only don't kill entities that aren't riding anything
+            kill @s
