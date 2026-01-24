@@ -45,7 +45,7 @@ class PlayerDB(metaclass=Singleton):
         
         execute function playerdb:get_self:
             with var self._copy_uuid(STORAGE.macro):
-                $data modify storage playerdb:temp player set from storage playerdb:main players[{uuid0: $(uuid0), uuid1: $(uuid1), uuid2: $(uuid2), uuid3: $(uuid3)}]
+                data modify var self.temp.player set from var self.db.players[{uuid0: $(uuid0), uuid1: $(uuid1), uuid2: $(uuid2), uuid3: $(uuid3)}]
 
         return self.temp.player
     
@@ -59,7 +59,7 @@ class PlayerDB(metaclass=Singleton):
             for i in range(4):
                 STORAGE.macro[f"uuid{i}"] = player[f"uuid{i}"]
             with var STORAGE.macro:
-                $data modify storage playerdb:main players[{uuid0: $(uuid0), uuid1: $(uuid1), uuid2: $(uuid2), uuid3: $(uuid3)}].data set from storage playerdb:temp player.data
+                data modify var self.db.players[{uuid0: $(uuid0), uuid1: $(uuid1), uuid2: $(uuid2), uuid3: $(uuid3)}].data set from var self.temp.player.data
     
     @cache
     def exists_self(self) -> str:
@@ -67,7 +67,7 @@ class PlayerDB(metaclass=Singleton):
         
         function playerdb:exists_self:
             return run with var self._copy_uuid(STORAGE.macro):
-                $return run execute if data storage playerdb:main players[{uuid0: $(uuid0), uuid1: $(uuid1), uuid2: $(uuid2), uuid3: $(uuid3)}]
+                return run execute if data var self.db.players[{uuid0: $(uuid0), uuid1: $(uuid1), uuid2: $(uuid2), uuid3: $(uuid3)}]
         
         return playerdb:exists_self
     

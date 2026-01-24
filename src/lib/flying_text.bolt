@@ -1,0 +1,102 @@
+#> Displays flying text
+# Utility to summon a customizable falling text.
+# Use cases:
+# - Damage numbers when hit
+# - Feedback for some actions (like batting an arrow)
+#
+# Inspired from @itsduck__ from mcc
+
+from contextlib import contextmanager
+from dataclasses import dataclass
+
+from server:services/item_dropping import ITEM_PROCESSED_TAG
+
+TEXT_TAG = "flying_text.text_display"
+ITEM_TAG = "flying_text.item_vehicle"
+
+# used for more decimals in motion
+PRECISION = int(1e6)
+
+
+@dataclass
+class FlyingText:
+    """Creates a flying text object that flies out of a location.
+    
+    ## Customization
+    - Use `execute positioned/at` to determine location
+    - Set `STORAGE.macro` to customize macro arguments
+    - `append function <output>` to add more logic on summoning
+
+    ## Usage
+    ```py
+    damage_text = FlyingText(strength=(0.2, 0.4, 0.2))
+
+    ...
+    function ./on_hurt:
+        with damage_text.summon({damage_taken: DAMAGE_TAKEN["@s"]}) as entity_data:
+            entity_data.text = {text: $(damage_taken: string), color: "#af2929"}
+            entity_data.scale = ((1.0 + DAMAGE_TAKEN["@s"] / 10), (1.0 + DAMAGE_TAKEN["@s"] / 10), (1.0 + DAMAGE_TAKEN["@s"] / 10))
+        DAMAGE_TAKEN["@s"].reset()
+    ```
+    """
+
+    ticks_alive: int = 25
+    strength: tuple[FloatLike, FloatLike, FloatLike] = (0.1, 0.2, 0.1)
+    scale: tuple[FloatLike, FloatLike, FloatLike] = (1.0, 1.0, 1.0)
+    text_tag: str = "flying_text.text_display"
+    item_tag: str = "flying_text.item_vehicle"
+
+    @contextmanager
+    def summon(self, macro_args: CompoundLike | None = None):
+        """Summons a new `FlyingText`.
+        
+        Returns a function path that you can append additional logic to.
+        """
+        STORAGE.macro = macro_args or {}
+        execute store result var STORAGE.macro.x double (1/PRECISION) run random value (-PRECISION, PRECISION)
+        execute store result var STORAGE.macro.z double (1/PRECISION) run random value (-PRECISION, PRECISION)
+        STORAGE.macro.x *= self.strength[0]
+        STORAGE.macro.z *= self.strength[2]
+        execute summon text_display function ~/flying_text/init with var STORAGE.macro:
+            temp_tag = "flying_text.temp"
+            summon item ~ ~ ~ {
+                Tags: [self.item_tag, ITEM_PROCESSED_TAG, temp_tag],
+                PickupDelay: 32767,
+                Age: (6000 - self.ticks_alive),
+                Motion:[$(x), self.strength[1], $(z)],
+                Item: {
+                    id: "minecraft:barrier",
+                    components: { item_model: "minecraft:air" },
+                },
+            }
+            ride @s mount @n[type=item, tag=temp_tag]
+            tag @e[type=item, distance=..5] remove temp_tag
+
+            # sets up text display (macro in damage_taken)
+            data merge entity @s {
+                text: "Weeee!",
+                transformation: {
+                    left_rotation: [0f, 0f, 0f, 1f],
+                    right_rotation: [0f, 0f, 0f, 1f],
+                    translation: [0f, -0.125f, 0f],
+                    scale: self.scale,
+                },
+                background: 0,
+                billboard: "center",
+                teleport_duration: 0,
+                shadow: true,
+                Tags: [TEXT_TAG],
+                view_range: 0.5,
+            }
+            yield SELF
+        
+        schedule function ~/flying_text/animate 1t replace
+
+        function ~/flying_text/animate:
+            execute as @e[type=text_display, tag=TEXT_TAG]:
+                # loop this function if any of our text displays exist
+                schedule function ~/ 1t replace
+                # reduce opacity for "effect"
+                SELF.text_opacity -= 5
+                execute on vehicle run return 1  # only don't kill entities that aren't riding anything
+                kill @s

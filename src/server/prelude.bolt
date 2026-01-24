@@ -11,6 +11,7 @@ from bolt.contrib.defer import Defer
 from bolt_expressions import Scoreboard, Data, ScoreSource, DataSource
 
 from lib.text import Theme
+from lib.types import IntLike, TextComponentLike, FloatLike, CompoundLike
 
 SCORE = {
     temp: Scoreboard("temp", criteria="dummy"),
