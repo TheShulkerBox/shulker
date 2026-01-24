@@ -1,6 +1,8 @@
 #> Displays flying damage text
 # When you hit a player, the amount of damage you deal flies out of the entity
 # with random motion.
+#
+# Inspired from @itsduck__ from mcc
 from server:services/item_dropping import ITEM_PROCESSED_TAG
 
 
