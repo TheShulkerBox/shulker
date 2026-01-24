@@ -33,9 +33,11 @@ class FlyingText:
 
     ...
     function ./on_hurt:
-        with damage_text.summon({damage_taken: DAMAGE_TAKEN["@s"]}) as entity_data:
-            entity_data.text = {text: $(damage_taken: string), color: "#af2929"}
-            entity_data.scale = ((1.0 + DAMAGE_TAKEN["@s"] / 10), (1.0 + DAMAGE_TAKEN["@s"] / 10), (1.0 + DAMAGE_TAKEN["@s"] / 10))
+        with damage_text.summon({damage_taken: SCORE.temp["#hearts_damaged"]}) as self:
+            data modify var self.text set value {text: $(damage_taken: string), color: "#af2929"}
+            self.transformation.scale[0] += min(1.5, SCORE.temp["#hearts_damaged"] / 25)
+            self.transformation.scale[1] += min(1.5, SCORE.temp["#hearts_damaged"] / 25)
+            self.transformation.scale[2] += min(1.5, SCORE.temp["#hearts_damaged"] / 25)
         DAMAGE_TAKEN["@s"].reset()
     ```
     """
