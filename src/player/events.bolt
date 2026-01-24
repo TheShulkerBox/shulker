@@ -1,5 +1,5 @@
-ON_DEATH = ~/on_death
-ON_KILL = ~/on_kill
+ON_DEATH = ./on_death
+ON_KILL = ./on_kill
 
 
 advancement ON_KILL {

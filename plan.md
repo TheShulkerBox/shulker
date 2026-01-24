@@ -13,13 +13,13 @@ Create a working duels map with atleast 2 kits.
 - [x] Joining duels
 - [/] Start/stop duel games
   - [x] Start
-  - [ ] Pre-game
-  - [ ] End
-- [ ] Player death/respawn handling
-- [ ] Kill tracking and stats
+  - [x] Pre-game
+  - [/] End
+- [/] Player death/respawn handling
+- [/] Kill handling
 - [x] Basic lobby
-- [ ] Spectator
-- [ ] Closing instance
+- [-] Spectator
+- [x] Closing instance
 
 
 

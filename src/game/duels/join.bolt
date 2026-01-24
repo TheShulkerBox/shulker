@@ -6,7 +6,8 @@ from lobby:core import LOBBY_TEAM
 
 from ../instance import INSTANCE_META, INSTANCE_ID, new_instance
 from ./models import DuelsMap
-from ./lobby import DUELS_LOBBY_LOCATION, BELOW_NAME_DISPLAY
+from ./lobby import DUELS_LOBBY_LOCATION
+from ./instance import BELOW_NAME_DISPLAY
 
 JOIN_DUEL_TRIGGER = Scoreboard("join_duel", criteria="trigger")
 

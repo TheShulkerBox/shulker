@@ -1,3 +1,6 @@
+from bolt_expressions import Objective
+from functools import cache
+
 loot_table lib:player_head {
     "type": "minecraft:entity",
     "pools": [
@@ -36,3 +39,38 @@ def get_player_name():
         kill @s
     
     return STORAGE.temp.player_name
+
+
+def matching(obj: Objective, score: ScoreSource):
+    """Creates a predicate to compare a score from a 'obj' against an 'score'."""
+    SCORE.temp["#against"] = score
+
+    path = f"matching:{obj.name}"
+    predicate path {
+        "condition": "minecraft:value_check",
+        "value": {
+            "type": "minecraft:score",
+            "target": "this",
+            "score": obj.name
+        },
+        "range": {
+            "min": {
+                "type": "minecraft:score",
+                "target": {
+                    "type": "minecraft:fixed",
+                    "name": SCORE.temp["#against"].scoreholder
+                },
+                "score": SCORE.temp["#against"].objective
+            },
+            "max": {
+                "type": "minecraft:score",
+                "target": {
+                    "type": "minecraft:fixed",
+                    "name": SCORE.temp["#against"].scoreholder
+                },
+                "score": SCORE.temp["#against"].objective
+            }
+        }
+    }
+
+    return path

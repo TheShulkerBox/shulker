@@ -17,6 +17,8 @@ Players will also be assigned to the INSTANCE_ID scoreboard to keep track of wha
 are currently in.
 """
 
+from contextlib import contextmanager
+
 from lib:db import Database
 from server:core import SERVER_LOAD
 
@@ -26,6 +28,7 @@ from ./events import ON_LEAVE_GAME
 INSTANCE_META = Database(GAME_META.active_instances)
 INSTANCE_ID = Scoreboard("game.instance_id")
 
+SAME_INSTANCE_TAG = "game.in_same_instance"
 
 append function SERVER_LOAD:
     if INSTANCE_ID["#latest"] >= 0:
@@ -56,9 +59,36 @@ def new_instance(map: Map) -> int:
             }
         )
         SCORE.temp["#output"] = INSTANCE_ID["#latest"]
+    
     return SCORE.temp["#output"]
 
 
 def remove_instance(instance_id: int | ScoreSource | DataSource) -> DataSource:
     """Attempts to remove a new instance."""
     return INSTANCE_META.pop(id=instance_id)
+
+
+@contextmanager
+def select_instance_players(instance_id: int | ScoreSource | DataSource):
+    """Selects players in the same instance and adds a tag (auto-removes).
+    
+    ```bolt
+    # assume instance_id is a scoreboard or storage value of an instance.
+    with select_instance_players(instance_id) as instance_tag:
+        say @a[tag=instance_tag]
+    ```
+    ->
+    ```mcfunction
+    scoreboard players
+    ```
+    """
+    # 
+    SCORE.temp["#instance_id"] = instance_id
+    execute
+        as @a[scores={INSTANCE_ID=1..}]
+        if score var INSTANCE_ID["@s"] = var SCORE.temp["#instance_id"]
+        run tag @s add SAME_INSTANCE_TAG
+    
+    yield SAME_INSTANCE_TAG
+
+    tag @a remove SAME_INSTANCE_TAG
