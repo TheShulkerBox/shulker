@@ -6,9 +6,8 @@
 from server:services/item_dropping import ITEM_PROCESSED_TAG
 from lib:flying_text import FlyingText
 
-
 DAMAGE_TAKEN = Scoreboard("player.damage_taken", criteria="minecraft.custom:minecraft.damage_resisted")
-damage_text = FlyingText(strength=(0.2, 0.4, 0.2))
+damage_text = FlyingText(strength=(0.2, 0.5, 0.2))
 
 
 advancement ./on_hurt {
@@ -22,13 +21,19 @@ advancement ./on_hurt {
 function ./on_hurt:
     advancement revoke @s only ./on_hurt
     
-    tellraw @s DAMAGE_TAKEN["@s"]
+    # convert to hearts
     SCORE.temp["#hearts_damaged"] = DAMAGE_TAKEN["@s"] / 2
-    execute positioned ~ ~1.6 ~:
+
+    # make the text fly from further up
+    execute positioned ~ ~1.8 ~:
         with damage_text.summon({damage_taken: SCORE.temp["#hearts_damaged"]}) as self:
+            # directly macro the damage taken into the string
             data modify var self.text set value {text: $(damage_taken: string), color: "#af2929"}
+
+            # scale the text display based on the number of hearts damaged. We cap it at max 1.5x scale
             self.transformation.scale[0] += min(1.5, SCORE.temp["#hearts_damaged"] / 25)
             self.transformation.scale[1] += min(1.5, SCORE.temp["#hearts_damaged"] / 25)
             self.transformation.scale[2] += min(1.5, SCORE.temp["#hearts_damaged"] / 25)
     
+    # reset to avoid accumulation
     DAMAGE_TAKEN["@s"].reset()
