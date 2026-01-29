@@ -19,10 +19,12 @@ Create a working duels map with atleast 2 kits.
 - [x] Kill handling
   - [x] Tracking kills
   - [x] End game detection
-  - [ ] Ties
+  - [/] Ties
 - [x] Basic lobby
 - [/] Spectator
 - [x] Closing instance
+- [ ] Post game timer
+- [ ] Forfeits
 
 
 ## Objective 2
