@@ -33,6 +33,7 @@ function ON_LEAVE_GAME:
 append function ON_JOIN:
     function ON_LEAVE_GAME
 
+
 # handle leave_game trigger
 append function PLAYER_TICK:
     if LEAVE_GAME_TRIGGER["@s"] > 0:

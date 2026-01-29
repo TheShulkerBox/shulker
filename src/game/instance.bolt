@@ -26,12 +26,13 @@ from ./models import Map, GAME_META
 from ./events import ON_LEAVE_GAME
 
 INSTANCE_META = Database(GAME_META.active_instances)
-INSTANCE_ID = Scoreboard("game.instance_id")
+INSTANCE_ID = Scoreboard("game.instance_id", criteria="dummy")
 
 SAME_INSTANCE_TAG = "game.in_same_instance"
 
+
 append function SERVER_LOAD:
-    if INSTANCE_ID["#latest"] >= 0:
+    if not INSTANCE_ID["#latest"] >= 0:
         INSTANCE_ID["#latest"] = 0
 
 
@@ -39,7 +40,7 @@ append function ON_LEAVE_GAME:
     INSTANCE_ID["@s"].reset()
 
 
-def new_instance(map: Map) -> int:
+def new_instance(map: Map) -> ScoreSource:
     """Attempts to add a new instance.
     
     First checks if a map is currently being instanced.
@@ -47,7 +48,7 @@ def new_instance(map: Map) -> int:
     """
     # We store the result of whether we find an instance or not in a temp scoreboard.
     # This makes it easy to return it at runtime.
-    if INSTANCE_META.get(map_id=map.id) == false:
+    if INSTANCE_META.get(map_id=map.id) != false:
         SCORE.temp["#output"] = -1
     else:
         INSTANCE_ID["#latest"] += 1
@@ -63,13 +64,26 @@ def new_instance(map: Map) -> int:
     return SCORE.temp["#output"]
 
 
+def new_instance_unsafe(map: Map) -> ScoreSource:
+    """Adds a new instance without checking for existing instances."""
+    INSTANCE_ID["#latest"] += 1
+    INSTANCE_META.append(
+        {
+            id: INSTANCE_ID["#latest"],
+            gamemode: map.gamemode,
+            map_id: map.id,
+        }
+    )
+    return INSTANCE_ID["#latest"]
+
+
 def remove_instance(instance_id: int | ScoreSource | DataSource) -> DataSource:
     """Attempts to remove a new instance."""
     return INSTANCE_META.pop(id=instance_id)
 
 
 @contextmanager
-def select_instance_players(instance_id: int | ScoreSource | DataSource):
+def select_instance_players(instance_id: int | ScoreSource | DataSource) -> str:
     """Selects players in the same instance and adds a tag (auto-removes).
     
     ```bolt
@@ -79,10 +93,17 @@ def select_instance_players(instance_id: int | ScoreSource | DataSource):
     ```
     ->
     ```mcfunction
-    scoreboard players
+    scoreboard players operation #instance_id temp = @s game.instance_id
+    execute
+        as @a[scores={game.instance_id=1..}]
+        if score @s game.instance_id = #instance_id temp
+        run tag @s add game.in_same_instance
+    
+    say @a[tag=game.in_same_instance]
+
+    tag @a remove game.in_same_instance
     ```
     """
-    # 
     SCORE.temp["#instance_id"] = instance_id
     execute
         as @a[scores={INSTANCE_ID=1..}]

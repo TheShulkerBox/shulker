@@ -1,14 +1,12 @@
 from ../models import Map
 
-INSTANCE_STATE = Scoreboard("duels.instance_state")
-
 
 class DuelsMap(Map):
     gamemode: str = "duels"
 
-    location: tuple[int, int, int]
-    spawn_1: tuple[int, int, int]
-    spawn_2: tuple[int, int, int]
+    location: str
+    spawn_1: str
+    spawn_2: str
     dimension: str = "overworld"
     max_player_count: int = 2
 

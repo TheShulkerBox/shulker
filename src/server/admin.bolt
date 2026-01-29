@@ -1,6 +1,14 @@
+from server:core import SERVER_LOAD
+
 STAFF_TAG = "staff"
 OP_TAG = "op"
 BUILDER_TEAM = "builder"
+
+
+append function SERVER_LOAD:
+    team add BUILDER_TEAM "Builder"
+    team modify BUILDER_TEAM color black
+
 
 def error_debug(*args):
     """These are error messages that *shouldn't* happen. We keep track of them *just incase*"""

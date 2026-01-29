@@ -1,0 +1,10 @@
+from game:events import ON_LEAVE_GAME
+
+from ./core import LOBBY_TEAM, LOBBY_SPAWN
+
+append function ON_LEAVE_GAME:
+    tp @s 0 65 0 -90 0
+    spawnpoint @s 0 65 0
+
+    team join LOBBY_TEAM @s
+    gamemode adventure @s

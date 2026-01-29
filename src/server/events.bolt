@@ -25,17 +25,17 @@ LAST_PLAYER_COUNT = SERVER_GLOBALS["last_player_count"]
 
 append function SERVER_TICK:
     # First join based on time played scoreboard
-    as @a[scores={TIME_PLAYED=..1}] at @s function ON_FIRST_JOIN
+    execute as @a[scores={TIME_PLAYED=..1}] at @s run function ON_FIRST_JOIN
 
     # Detect player joining on two conditions:
     # 
     # 1. If `on_join` score increments, that means they left the game
     # 2. If `on_join` score doesn't exist, that means we've reloaded (occurs on server crash too!)
-    as @a unless score var ON_JOIN_SCORE["@s"] = var ON_JOIN_SCORE["@s"]:
+    execute as @a unless score var ON_JOIN_SCORE["@s"] = var ON_JOIN_SCORE["@s"]:
         ON_JOIN_SCORE["@s"] += 1
     
     # On new joins..
-    as @a[scores={ON_JOIN_SCORE=1..}] at @s function on_join
+    execute as @a[scores={ON_JOIN_SCORE=1..}] at @s run function ON_JOIN
 
 
 append function SERVER_LOAD:

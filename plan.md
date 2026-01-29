@@ -11,17 +11,17 @@ Create a working duels map with atleast 2 kits.
 - [x] Duel map model + state modeling
 - [x] Map state handling
 - [x] Joining duels
-- [/] Start/stop duel games
+- [x] Start/stop duel games
   - [x] Start
   - [x] Pre-game
-  - [/] End
-- [/] Player death/respawn handling
-- [/] Kill handling
+  - [x] End
+- [x] Player death/respawn handling
+- [x] Kill handling
   - [x] Tracking kills
   - [x] End game detection
   - [ ] Ties
 - [x] Basic lobby
-- [-] Spectator
+- [/] Spectator
 - [x] Closing instance
 
 

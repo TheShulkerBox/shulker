@@ -1,1 +1,1 @@
-TEAM_SCORE = Scoreboard("game.team")
+TEAM_SCORE = Scoreboard("game.team", criteria="dummy")

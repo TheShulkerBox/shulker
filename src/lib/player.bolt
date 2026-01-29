@@ -1,0 +1,12 @@
+#> Adds the self tag and automatically removes it
+
+from contextlib import contextmanager
+
+SELF_TAG = "player.self"
+
+
+@contextmanager
+def tag_self() -> str:
+    tag @s add SELF_TAG
+    yield SELF_TAG
+    tag @s remove SELF_TAG

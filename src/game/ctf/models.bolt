@@ -7,7 +7,7 @@ from ../models import Map, Tag
 class Team(BaseModel):
     id: str
     color: str
-    spawn: tuple[int, int, int, int, int]  # coords, yaw, pitch
+    spawn: str  # coords, yaw, pitch
 
     @field_validator("color")
     def validate_color(cls, color: str):
@@ -21,25 +21,15 @@ class Team(BaseModel):
         return self.id.replace("_", " ").title()
 
 
-class PlayerCount(BaseModel):
-    min: int = 4
-    max: int = 100
-
-    @model_validator(mode='after')
-    def max_at_least_min(self):
-        if self.max < self.min:
-            raise ValueError(f"max ({self.max}) must be >= min ({self.min})")
-        return self
-
-
 class CTFMap(Map):
     gamemode: str = "ctf"
 
     teams: list[Team]
-    player_count: PlayerCount = PlayerCount()
+    min_player_count: int = 4
+    max_player_count: int = 100
 
     # eventually, all maps will be 0 0 0 in their own dimension
-    location: tuple[int, int, int]
+    location: str
     dimension: str = "overworld"
 
     @field_validator("tags", mode="after")
@@ -51,6 +41,15 @@ class CTFMap(Map):
             default_tags += [Tag.Active]
         
         return v + default_tags
+    
+    @model_validator(mode='after')
+    def max_at_least_min(self):
+        if self.max_player_count < self.min_player_count:
+            raise ValueError(
+                f"max_player_count ({self.max_player_count}) must be >= min_player_count ({self.min_player_count})"
+            )
+        
+        return self
 
 
 macro ctf_map path=brigadier:string data=mecha:nested_json:

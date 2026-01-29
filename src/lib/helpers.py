@@ -4,6 +4,7 @@ from contextlib import contextmanager
 import json
 import re
 from typing import Any, Literal, Protocol, Union, get_args, get_origin, overload
+import zlib
 
 from typeguard import check_type as _check_type, TypeCheckError
 
@@ -125,7 +126,7 @@ def id_to_number(id: str) -> int:
     Since hash functions return 64-bit integers, we mask it to 31 bits to ensure it's positive
     and fits within the range of a standard scoreboard.
     """
-    return hash(id) & int("0x7FFFFFFF", 16)
+    return zlib.crc32(id.encode()) & int("0x7FFFFFFF", 16)
 
 
 def check_type(value: Any, expected_type: type) -> bool:

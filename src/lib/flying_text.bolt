@@ -44,7 +44,7 @@ class FlyingText:
 
     ticks_alive: int = 25
     strength: tuple[FloatLike, FloatLike, FloatLike] = (0.1, 0.2, 0.1)
-    scale: tuple[FloatLike, FloatLike, FloatLike] = (1.0, 1.0, 1.0)
+    scale: tuple[FloatLike, FloatLike, FloatLike] = (1.25, 1.25, 1.25)
     text_tag: str = "flying_text.text_display"
     item_tag: str = "flying_text.item_vehicle"
 
@@ -99,6 +99,6 @@ class FlyingText:
                 # loop this function if any of our text displays exist
                 schedule function ~/ 1t replace
                 # reduce opacity for "effect"
-                SELF.text_opacity -= 5
+                SELF.text_opacity -= 10
                 execute on vehicle run return 1  # only don't kill entities that aren't riding anything
                 kill @s

@@ -2,7 +2,7 @@ from ./models import duels_map
 
 duels_map elven_cave {
     "name": "Elven Cave",
-    "location": [3000, 60, 4000],
-    "spawn_1": [2998, 58, 4002],
-    "spawn_2": [3032, 58, 4009],
+    "location": "3000 60 4000",
+    "spawn_1": "2998 58 4002",
+    "spawn_2": "3032 58 4009",
 }

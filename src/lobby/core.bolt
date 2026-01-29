@@ -1,6 +1,5 @@
 from server:core import SERVER_TICK, SERVER_LOAD, clock
 from lib:text import boxed_text, small_caps
-# from game:events import on_leave_game
 
 SIDEBAR_TITLE = {"text": small_caps("The Shulker Box"), "color": Theme.Primary}
 
@@ -49,9 +48,3 @@ append function clock("2t"):
     execute function ./wall:
         particle enchant -35.0 65 0 0 1 6 0 40
         particle crit -35.0 65 0 0 1 6 0 10
-
-# append function on_leave_game:
-#     tp @s LOBBY_SPAWN
-
-#     team join lobby @s
-#     gamemode adventure @s

@@ -34,23 +34,23 @@ class loop:
         """Iterate through all elements in a list and yield the element in temp storage
 
         ```bolt
-        for item in loop(some_list):
-            if item.value > 1000:
+        for element in loop(some_list):
+            if element.value > 1000:
                 say big number alert!
         ```
         """
         store result score _loop temp if data var self.data[:]
         execute function ~/loop/{self.name}:
             SCORE.temp["_loop"] -= 1
-            STORAGE.macro["index"] = SCORE.temp["_loop"] * -1
+            STORAGE.macro = {index: SCORE.temp["_loop"]}
             with var STORAGE.macro:
-                # data modify var self.temp_storage.item set from var self.temp_storage.data[$(index)]
-                raw f"$data modify {self.temp_storage.item} set from {self.temp_storage.data}[$(index)]"
+                # data modify var self.temp_storage.element set from var self.data[$(index)]
+                raw f"$data modify {self.temp_storage.element} set from {self.data}[-$(index)]"
 
             if self.with_index:
-                yield (SCORE.temp["_loop"], self.temp_storage.item)
+                yield (SCORE.temp["_loop"], self.temp_storage.element)
             else:
-                yield self.temp_storage.item
+                yield self.temp_storage.element
             
             if SCORE.temp["_loop"] > 0:
                 function ~/

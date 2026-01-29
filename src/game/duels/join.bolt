@@ -4,10 +4,10 @@
 from server:core import SERVER_TICK, SERVER_LOAD
 from lobby:core import LOBBY_TEAM
 
-from ../instance import INSTANCE_META, INSTANCE_ID, new_instance
+from ../instance import INSTANCE_META, INSTANCE_ID, new_instance_unsafe
 from ./models import DuelsMap
 from ./lobby import DUELS_LOBBY_LOCATION
-from ./instance import BELOW_NAME_DISPLAY
+from ./instance import BELOW_NAME_DISPLAY, select_instance_players
 
 JOIN_DUEL_TRIGGER = Scoreboard("join_duel", criteria="trigger")
 
@@ -24,11 +24,6 @@ append function SERVER_TICK:
             SCORE.temp["#join_duel_id"] = JOIN_DUEL_TRIGGER["@s"]
             JOIN_DUEL_TRIGGER["@s"].reset()
             
-            # if already in duel, do nothing
-            execute
-                if score var JOIN_DUEL_TRIGGER["@s"] = var INSTANCE_ID["@s"]
-                return run tellraw @s {text: "You can't join a duel arena that you are already in!", color: Theme.Failure}
-
             # grab the map from the duel trigger number 
             requested_map = DuelsMap.get(hashed_id=SCORE.temp["#join_duel_id"])
 
@@ -40,43 +35,43 @@ append function SERVER_TICK:
                 ]
 
             # if there is not an instance running on the map, auto join
-            # otherwise, check the player count to see if you can join
-            instanced_map = INSTANCE_META.get(map_id=requested_map.id)
-            if instanced_map == false:
-                # create a new instance, assign it to @s, join arena
-                new_instance_id = new_instance(requested_map)
-                INSTANCE_ID["@s"] = new_instance_id
-                SCORE.temp["#instance_player_count"] = 1
+            # otherwise, continue
+            instance = INSTANCE_META.get(map_id=requested_map.id)
+            if instance == false:
+                return run function ~/create_instance:
+                    # create a new instance, assign it to @s, join arena
+                    INSTANCE_ID["@s"] = new_instance_unsafe(requested_map)
+                    SCORE.temp["#instance_player_count"] = 1
+                    function ./join_instance with var requested_map
+            
+            # if already in duel, do nothing
+            if instance.id == INSTANCE_ID["@s"]:
+                return run tellraw @s {text: "You can't join a duel arena that you are already in!", color: Theme.Failure}
+
+            # count the players in the instance
+            with select_instance_players(instance.id) as instance_tag:
+                execute store result score var SCORE.temp["#instance_player_count"] if entity @a[tag=instance_tag]
+
+            # compare whether duels lobby is full or not
+            if SCORE.temp["#instance_player_count"] < requested_map.max_player_count:
+                INSTANCE_ID["@s"] = instance.id
                 function ./join_instance with var requested_map
             else:
-                # count the players in the instance
-                SCORE.temp["#instance_player_count"] = 0
-                SCORE.temp["#instance_id"] = instanced_map.id
-                execute
-                    as @a[scores={INSTANCE_ID=1..}]
-                    if score var INSTANCE_ID["@s"] = var SCORE.temp["#instance_id"]:
-                        SCORE.temp["#instance_player_count"] += 1
-
-                # compare whether duels lobby is full or not
-                if SCORE.temp["#instance_player_count"] < requested_map.max_player_count:
-                    INSTANCE_ID["@s"] = instanced_map.id
-                    function ./join_instance with var requested_map
-                else:
-                    tellraw @s {text: "That arena is full!", color: Theme.Failure}
+                tellraw @s {text: "That arena is full!", color: Theme.Failure}
 
 
 function ./join_instance:
     """Actions that run when a player joins an instance.
     
-    @s: player
+    as @s: player
     macro arguments from `DuelsMap` ($(name), $(id), etc.)
     """
     execute positioned DUELS_LOBBY_LOCATION run tp @s ~ ~ ~
     scoreboard players display name @s BELOW_NAME_DISPLAY {text: $(name: string), color: Theme.Secondary}
     title @s actionbar {text: "Joined arena!", color: Theme.Success, bold: true}
-    execute at @s run playsound minecraft:block.note_block.bit master @s ~ ~ ~ 1 1 1
+    execute positioned DUELS_LOBBY_LOCATION run playsound minecraft:block.note_block.bit master @s ~ ~ ~ 2 1 1
     tellraw @a [
-        {text: "", click_event: {action: "run_command", command: f"/trigger join_duel set value {$(id)}"}},
+        {text: "", click_event: {action: "run_command", command: f"/trigger join_duel set {$(hashed_id)}"}},
         {selector: "@s"},
         {text: " has joined the ", color: Theme.Body},
         {text: $(name: string), color: Theme.Secondary},
