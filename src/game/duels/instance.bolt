@@ -71,9 +71,8 @@ append function SERVER_TICK:
                     tp @a[tag=instance_tag, team=TEAM_1] $(spawn_1)
                     tp @a[tag=instance_tag, team=TEAM_2] $(spawn_2)
 
-                    execute as @a[tag=instance_tag] at @s function ~/per_player:
+                    execute as @a[tag=instance_tag] at @s function ~/per_player with var instance_map:
                         # setup spawnpoint
-                        tellraw @a [{selector: "@s"}, " is looking at ", {selector: f"@p[tag={instance_tag}, predicate=!{TEAM_MATCHER()}]"}]
                         spawnpoint @s ~ ~ ~ ~ ~
                         gamemode spectator @s
                         
@@ -81,7 +80,8 @@ append function SERVER_TICK:
                         summon item_display ~ ~1 ~ {Tags: [PREGAME_MARKER]}
                         rotate @n[type=item_display, tag=PREGAME_MARKER] facing entity @p[tag=instance_tag, predicate=!TEAM_MATCHER()]
                         ride @s mount @n[type=item_display, tag=PREGAME_MARKER]
-                        rotate @s facing entity @p[tag=instance_tag, predicate=!TEAM_MATCHER()]
+                        $rotate @s[scores={game.team=1}] facing $(spawn_2)
+                        $rotate @s[scores={game.team=2}] facing $(spawn_1)
 
                         # set below name
                         scoreboard players display name @s BELOW_NAME_DISPLAY ""
