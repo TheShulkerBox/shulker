@@ -41,7 +41,7 @@ meta:
 
   mecha:
     formatting:
-      json_ensure_ascii: false
+      snbt_ensure_ascii: false
 
   bolt:
     entrypoint: "*"

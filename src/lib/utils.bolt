@@ -1,5 +1,7 @@
-from bolt_expressions import Objective
+from dataclasses import dataclass
 from functools import cache
+
+from bolt_expressions import Objective
 
 loot_table lib:player_head {
     "type": "minecraft:entity",
@@ -41,36 +43,43 @@ def get_player_name():
     return STORAGE.temp.player_name
 
 
-def matching(obj: Objective, score: ScoreSource):
+@dataclass
+class matching:
     """Creates a predicate to compare a score from a 'obj' against an 'score'."""
-    SCORE.temp["#against"] = score
 
-    path = f"matching:{obj.name}"
-    predicate path {
-        "condition": "minecraft:value_check",
-        "value": {
-            "type": "minecraft:score",
-            "target": "this",
-            "score": obj.name
-        },
-        "range": {
-            "min": {
+    obj: Objective
+    score: ScoreSource
+
+    def __call__(self) -> str:
+        """Creates a predicate to compare a score from a 'obj' against an 'score'."""
+        SCORE.temp["#against"] = self.score
+
+        path = "matching:" + self.obj.name.replace('.', '_')
+        predicate path {
+            "condition": "minecraft:value_check",
+            "value": {
                 "type": "minecraft:score",
-                "target": {
-                    "type": "minecraft:fixed",
-                    "name": SCORE.temp["#against"].scoreholder
-                },
-                "score": SCORE.temp["#against"].objective
+                "target": "this",
+                "score": self.obj.name
             },
-            "max": {
-                "type": "minecraft:score",
-                "target": {
-                    "type": "minecraft:fixed",
-                    "name": SCORE.temp["#against"].scoreholder
+            "range": {
+                "min": {
+                    "type": "minecraft:score",
+                    "target": {
+                        "type": "minecraft:fixed",
+                        "name": SCORE.temp["#against"].scoreholder
+                    },
+                    "score": SCORE.temp["#against"].objective
                 },
-                "score": SCORE.temp["#against"].objective
+                "max": {
+                    "type": "minecraft:score",
+                    "target": {
+                        "type": "minecraft:fixed",
+                        "name": SCORE.temp["#against"].scoreholder
+                    },
+                    "score": SCORE.temp["#against"].objective
+                }
             }
         }
-    }
 
-    return path
+        return path
