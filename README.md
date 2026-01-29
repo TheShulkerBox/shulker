@@ -26,3 +26,8 @@ Then,
 ```bash
 uv run beet upload
 ```
+
+--
+
+## Socials
+- [Discord](https://discord.theshulkerbox.com)
