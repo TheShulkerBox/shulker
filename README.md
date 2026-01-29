@@ -24,5 +24,5 @@ First, you'll need to grab a bloom api key and your server id and set it to the 
 
 Then,
 ```bash
-uv run beet -p beet-upload.yaml
+uv run beet upload
 ```
