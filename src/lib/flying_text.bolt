@@ -54,10 +54,10 @@ class FlyingText:
         Returns a function path that you can append additional logic to.
         """
         STORAGE.macro = macro_args or {}
-        execute store result var STORAGE.macro.x double (1/PRECISION) run random value (-PRECISION, PRECISION)
-        execute store result var STORAGE.macro.z double (1/PRECISION) run random value (-PRECISION, PRECISION)
-        STORAGE.macro.x *= self.motion[0]
-        STORAGE.macro.z *= self.motion[2]
+        execute store result var STORAGE.macro.x double 1 run random value (-PRECISION, PRECISION)
+        execute store result var STORAGE.macro.z double 1 run random value (-PRECISION, PRECISION)
+        STORAGE.macro.x = (STORAGE.macro.x * self.motion[0]) / PRECISION
+        STORAGE.macro.z = (STORAGE.macro.z * self.motion[2]) / PRECISION
         execute summon text_display function ~/flying_text/init with var STORAGE.macro:
             temp_tag = "flying_text.temp"
             summon item ~ ~ ~ {
@@ -76,12 +76,7 @@ class FlyingText:
             # sets up text display (macro in damage_taken)
             data merge entity @s {
                 text: "Weeee!",
-                transformation: {
-                    left_rotation: [0f, 0f, 0f, 1f],
-                    right_rotation: [0f, 0f, 0f, 1f],
-                    translation: [0f, -0.125f, 0f],
-                    scale: self.scale,
-                },
+                transformation: { translation: [0f, -0.125f, 0f], scale: self.scale },
                 background: 0,
                 billboard: "center",
                 teleport_duration: 0,
@@ -98,6 +93,6 @@ class FlyingText:
                 # loop this function if any of our text displays exist
                 schedule function ~/ 1t replace
                 # reduce opacity for "effect"
-                SELF.text_opacity -= 10
+                SELF.text_opacity -= 15
                 execute on vehicle run return 1  # only don't kill entities that aren't riding anything
                 kill @s
