@@ -18,15 +18,21 @@ from src.lib.text import Theme
 dotenv.load_dotenv()
 
 
-SERVER_ID = os.environ["BLOOM_SERVER_ID"]
+SERVER_ID = os.environ.get("BLOOM_SERVER_ID")
+BLOOM_API_KEY = os.environ.get("BLOOM_API_KEY")
 PACK = "shulkerbox_data_pack.zip"
 TARGET = f"/TheShulkerBox/datapacks/{PACK}"
 URL = f"https://mc.bloom.host/api/client/servers/{SERVER_ID}/"
-HEADERS = {
-    "Accept": "application/json",
-    "Authorization": "Bearer " + os.environ["BLOOM_API_KEY"],
-}
 ERROR_PATTERN = re.compile(r"\[\d\d:\d\d:\d\d\] \[Server thread/ERROR\]: (.+)")
+
+
+def create_headers() -> dict[str, str]:
+    if not BLOOM_API_KEY:
+        raise ValueError("BLOOM_API_KEY environment variable not set")
+    return {
+        "Accept": "application/json",
+        "Authorization": "Bearer " + BLOOM_API_KEY,
+    }
 
 
 def get_git_user() -> str:
@@ -75,7 +81,7 @@ async def make_request(
     data: dict[str, str] | str | bytes | None = None,
 ):
     url = URL + route
-    headers = HEADERS | {"Content-Type": "application/json"}
+    headers = create_headers() | {"Content-Type": "application/json"}
 
     async with httpx.AsyncClient() as client:
         if data is None:
@@ -83,7 +89,7 @@ async def make_request(
         elif isinstance(data, dict):
             resp = await client.post(url, content=json.dumps(data), headers=headers)
         else:
-            resp = await client.post(url, content=data, headers=HEADERS)
+            resp = await client.post(url, content=data, headers=create_headers())
         resp.raise_for_status()
         print(
             "Success",
@@ -94,7 +100,7 @@ async def make_request(
         return resp
 
 
-async def watch_for_errors(url: str, token: str):
+async def watch_for_errors(url: str, token: str) -> list[str]:
     errors = []
     try:
         async with connect(

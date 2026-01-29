@@ -7,7 +7,7 @@ from server:services/item_dropping import ITEM_PROCESSED_TAG
 from lib:flying_text import FlyingText
 
 DAMAGE_TAKEN = Scoreboard("player.damage_taken", criteria="minecraft.custom:minecraft.damage_taken")
-damage_text = FlyingText(strength=(0.2, 0.35, 0.2))
+damage_text = FlyingText(motion=(0.2, 0.35, 0.2))
 
 
 advancement ./on_hurt {

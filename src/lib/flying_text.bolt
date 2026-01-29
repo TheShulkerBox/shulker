@@ -29,7 +29,7 @@ class FlyingText:
 
     ## Usage
     ```py
-    damage_text = FlyingText(strength=(0.2, 0.4, 0.2))
+    damage_text = FlyingText(motion=(0.2, 0.4, 0.2))
 
     ...
     function ./on_hurt:
@@ -41,9 +41,8 @@ class FlyingText:
         DAMAGE_TAKEN["@s"].reset()
     ```
     """
-
     ticks_alive: int = 25
-    strength: tuple[FloatLike, FloatLike, FloatLike] = (0.1, 0.2, 0.1)
+    motion: tuple[FloatLike, FloatLike, FloatLike] = (0.1, 0.2, 0.1)
     scale: tuple[FloatLike, FloatLike, FloatLike] = (1.25, 1.25, 1.25)
     text_tag: str = "flying_text.text_display"
     item_tag: str = "flying_text.item_vehicle"
@@ -57,15 +56,15 @@ class FlyingText:
         STORAGE.macro = macro_args or {}
         execute store result var STORAGE.macro.x double (1/PRECISION) run random value (-PRECISION, PRECISION)
         execute store result var STORAGE.macro.z double (1/PRECISION) run random value (-PRECISION, PRECISION)
-        STORAGE.macro.x *= self.strength[0]
-        STORAGE.macro.z *= self.strength[2]
+        STORAGE.macro.x *= self.motion[0]
+        STORAGE.macro.z *= self.motion[2]
         execute summon text_display function ~/flying_text/init with var STORAGE.macro:
             temp_tag = "flying_text.temp"
             summon item ~ ~ ~ {
                 Tags: [self.item_tag, ITEM_PROCESSED_TAG, temp_tag],
                 PickupDelay: 32767,
                 Age: (6000 - self.ticks_alive),
-                Motion:[$(x), self.strength[1], $(z)],
+                Motion:[$(x), self.motion[1], $(z)],
                 Item: {
                     id: "minecraft:barrier",
                     components: { item_model: "minecraft:air" },
