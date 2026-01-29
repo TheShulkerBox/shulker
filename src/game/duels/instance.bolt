@@ -10,11 +10,11 @@ from ../events import ON_LEAVE_GAME
 from ../instance import INSTANCE_META, INSTANCE_ID, remove_instance, select_instance_players
 from ./models import DuelsMap
 
-# We reuse the same timer for 3 timers with an offset
+# We reuse the same timer for 2 timers with an offset
 # This has an added benefit of ensuring that only 1 exact timer will be running at the same time.
 GAME_TIMER = Scoreboard("duels.game_timer", criteria="dummy")
-OFFSET = 100000
-PREGAME_COUNTDOWN = 80
+DURING_DEATH_TIMER = Scoreboard("duels.during_death_timer", criteria="dummy")
+PREGAME_COUNTDOWN = 81
 # POSTGAME_COUNTDOWN = 80
 DEATH_COUNTDOWN = 90
 
@@ -22,6 +22,7 @@ BELOW_NAME_DISPLAY = Scoreboard("duels.below_name_display", criteria="dummy")
 KILLS = Scoreboard("duels.team_kills", criteria="dummy")
 DEATHS = Scoreboard("duels.team_deaths", criteria="dummy")
 HEALTH = Scoreboard("duels.health", criteria="health")
+START_GAME_TRIGGER = Scoreboard("start_match", criteria="trigger")
 
 TEAM_1 = "duels.team_1"
 TEAM_2 = "duels.team_2"
@@ -35,79 +36,85 @@ append function SERVER_LOAD:
     for team in [TEAM_1, TEAM_2]:
         team modify team friendlyFire false
         team modify team prefix "🗡 "
+        team modify team seeFriendlyInvisibles false
 
 
 append function SERVER_TICK:
     execute function ./tick_instance:
-        """We loop through each live duels instance so we can process each one individually."""
-        # loop through each duels instance
-        for instance in INSTANCE_META.loop(name=~/loop):
-            if instance.gamemode != "duels":
-                return fail
+        START_GAME_TRIGGER["@a"].enable()
+        execute as @a[scores={START_GAME_TRIGGER=1..}] run function ~/attempt_start_game:
+            START_GAME_TRIGGER["@s"].reset()
+            if INSTANCE_ID["@s"] < 0:
+                return run tellraw @s {text: "You are not dueling right now!", color: Theme.Failure}
 
-            # temporarily tag everyone in the same instance (during the loop)
-            with select_instance_players(instance.id) as instance_tag:
-                # if we find no one, kill the instance and skip the rest of this loop
-                execute unless entity @a[tag=instance_tag] run return:
-                    remove_instance(instance.id)
-                
-                # get the cooresponding map
-                instance_map = DuelsMap.get(id=instance.map_id)
+            instance = INSTANCE_META.get(id=INSTANCE_ID["@s"])
+            instance_map = DuelsMap.get(id=instance.map_id)
+            with select_instance_players(INSTANCE_ID["@s"]) as instance_tag:
                 if instance_map == false:
                     # if this fails, tell an admin
                     error_debug("Map not found from instance: ", instance)
+                
+                execute store result score var SCORE.temp["#player_count"] if entity @a[tag=instance_tag]
+                if SCORE.temp["#player_count"] < 2:
+                    tellraw @s {text: "You need at least 2 players to start the duel!", color: Theme.Failure}
 
-                # count the players in the instance
-                execute store result score var SCORE.temp["#instance_player_count"] if entity @a[tag=instance_tag]
-                if SCORE.temp["#instance_player_count"] >= instance_map.max_player_count:
-                    execute function ./start_game with var instance_map:
-                        # make players join separate teams
-                        team join TEAM_1 @r[tag=instance_tag]
-                        team join TEAM_2 @r[tag=instance_tag, team=!TEAM_1]
+                execute function ./start_game with var instance_map:
+                    # make players join separate teams
+                    team join TEAM_1 @r[tag=instance_tag]
+                    team join TEAM_2 @r[tag=instance_tag, team=!TEAM_1]
 
-                        # teleport to spawns
-                        tp @a[tag=instance_tag, team=TEAM_1] $(spawn_1)
-                        tp @a[tag=instance_tag, team=TEAM_2] $(spawn_2)
+                    # teleport to spawns
+                    tp @a[tag=instance_tag, team=TEAM_1] $(spawn_1)
+                    tp @a[tag=instance_tag, team=TEAM_2] $(spawn_2)
 
-                        execute as @a[tag=instance_tag] at @s:
-                            # look at opponent
-                            tp @s ~ ~ ~ facing entity @p[tag=instance_tag, distance=3..]
+                    execute as @a[tag=instance_tag] at @s:
+                        # look at opponent
+                        tp @s ~ ~ ~ facing entity @p[tag=instance_tag, distance=3..]
 
-                            # lock in place via spectator spam + marker
-                            gamemode spectator
-                            summon marker ~ ~ ~ {Tags: [PREGAME_MARKER]}
-                            spectate @n[type=marker, tag=PREGAME_MARKER] @s
+                        # lock in place via spectator spam + marker
+                        gamemode spectator
+                        with tag_self() as self_tag:
+                            execute summon armor_stand:
+                                SELF.merge({
+                                    Invisible: true,
+                                    Marker: true,
+                                    NoGravity: true,
+                                    Tags: [PREGAME_MARKER],
+                                })
+                                spectate @s @p[tag=self_tag]
 
-                            # set below name
-                            scoreboard players display name @s BELOW_NAME_DISPLAY ""
+                        # set below name
+                        scoreboard players display name @s BELOW_NAME_DISPLAY ""
 
-                        GAME_TIMER[f"@a[tag={instance_tag}]"] = 80
-                        KILLS[f"@a[tag={instance_tag}]"] = 0
-                        DEATHS[f"@a[tag={instance_tag}]"] = 0
-                        schedule function ./pregame 1t replace
+                    GAME_TIMER[f"@a[tag={instance_tag}]"] = 80
+                    KILLS[f"@a[tag={instance_tag}]"] = 0
+                    DEATHS[f"@a[tag={instance_tag}]"] = 0
+                    schedule function ./pregame 1t replace
         
         # copy team (TODO: change?)
         TEAM_SCORE[f"@a[team={TEAM_1}]"] = 1
         TEAM_SCORE[f"@a[team={TEAM_2}]"] = 2
 
 
-def display_score_subtitle(self_tag: str, instance_tag: str):
+def display_score_subtitle(instance_tag: str):
     """Utility in displaying the score (x-y)."""
     execute as @a[tag=instance_tag]:
+        pred = matching(TEAM_SCORE, TEAM_SCORE["@s"])
         title @s subtitle [
             KILLS["@s"],
-            "-",
-            KILLS[f"@p[tag={instance_tag}, tag=!{self_tag}]"]  # look for nearest player that's not u
+            " - ",
+            # TODO handle spectators in same instance_tag
+            KILLS[f"@a[tag={instance_tag}, predicate=!{pred}]"]
         ]
 
 
 function ./pregame:
     execute as @a[scores={GAME_TIMER=(1, PREGAME_COUNTDOWN)}] at @s function ~/per_player:
         schedule function ./pregame 1t replace
-        tellraw @s GAME_TIMER["@s"]
+        GAME_TIMER["@s"] -= 1
 
         # lock player in place
-        spectate @n[type=marker, tag=PREGAME_MARKER] @s
+        spectate @n[type=armor_stand, tag=PREGAME_MARKER] @s
 
         # generate the xp ping sounds + title
         for i in range(3, 0, -1):
@@ -121,52 +128,51 @@ function ./pregame:
             title @s[scores={GAME_TIMER=0}] title ""
             title @s[scores={GAME_TIMER=0}] subtitle {text: "Fight!"}
             gamemode adventure @s
-            kill @n[type=marker, tag=PREGAME_MARKER]
+            kill @n[type=armor_stand, tag=PREGAME_MARKER]
             spawnpoint @s ~ ~ ~
 
 
 append function ON_DEATH:
     with select_instance_players(INSTANCE_ID["@s"]) as instance_tag:
-        with tag_self() as self_tag:
-            pred = matching(TEAM_SCORE, TEAM_SCORE["@s"])  # helps filter @a for score that matches TEAM_SCORE["@s"]
+        pred = matching(TEAM_SCORE, TEAM_SCORE["@s"])  # helps filter @a for score that matches TEAM_SCORE["@s"]
 
-            # game is considered tied if everyone has no health!
-            unless entity @a[tag=instance_tag, scores={HEALTH=1..}] return:
-                title @a[tag=instance_tag] title {text: "Tie Round", color: "gray"}
-                display_score_subtitle(self_tag, instance_tag)
-                GAME_TIMER["@s"] = DEATH_COUNTDOWN
-                schedule function ./during_death 1t replace
-
-            # increment team score
-            scoreboard players add var KILLS[f"@a[tag=instance_tag, predicate=!{pred}]"] 1
-
-            # Display the `x-y` (my kills - opponent kills)
-            title @a[tag=instance_tag] title ""
-            display_score_subtitle(self_tag, instance_tag)
-            
-            # check if we exceeded 3 kills (short-circuit here if so)
-            execute if score var KILLS[f"@a[tag=instance_tag, predicate={pred}, limit=1]"] matches 3.. return:
-                STORAGE.macro = {
-                    winning_team: TEAM_SCORE[f"@a[tag=instance_tag, predicate={pred}, limit=1]"],
-                    losing_team: TEAM_SCORE["@s"],
-                }
-                execute function ./end_game with var STORAGE.macro:
-                    # GAME_TIMER[f"@a[tag={instance_tag}]"] = POSTGAME_COUNTDOWN
-                    title @a[tag=instance_tag, scores={TEAM_SCORE=$(winning_team)}] title "Match Won"
-                    title @a[tag=instance_tag, scores={TEAM_SCORE=$(losing_team)}] title "Match Lost"
-                    display_score_subtitle(self_tag, instance_tag)
-                    execute as @a[tag=instance_tag] run trigger leave_game
-            
-            # during death timer
+        # game is considered tied if everyone has no health!
+        unless entity @a[tag=instance_tag, scores={HEALTH=1..}] return:
+            title @a[tag=instance_tag] title {text: "Tie Round", color: "gray"}
+            display_score_subtitle(instance_tag)
             GAME_TIMER["@s"] = DEATH_COUNTDOWN
-            tellraw @a[tag=instance_tag] ["opponent healths: ", HEALTH[f"@a[tag=instance_tag, tag=!{self_tag}]"]]
             schedule function ./during_death 1t replace
+
+        # increment team score
+        scoreboard players add var KILLS[f"@a[tag={instance_tag}, predicate=!{pred}]"] 1
+
+        # Display the `x-y` (my kills - opponent kills)
+        title @a[tag=instance_tag] title ""
+        display_score_subtitle(instance_tag)
+        
+        # check if we exceeded 3 kills (short-circuit here if so)
+        execute if score var KILLS[f"@a[tag={instance_tag}, predicate={pred}, limit=1]"] matches 3.. return:
+            STORAGE.macro = {
+                winning_team: TEAM_SCORE[f"@a[tag={instance_tag}, predicate={pred}, limit=1]"],
+                losing_team: TEAM_SCORE["@s"],
+            }
+            execute function ./end_game with var STORAGE.macro:
+                # GAME_TIMER[f"@a[tag={instance_tag}]"] = POSTGAME_COUNTDOWN
+                title @a[tag=instance_tag, scores={TEAM_SCORE=$(winning_team)}] title "Match Won"
+                title @a[tag=instance_tag, scores={TEAM_SCORE=$(losing_team)}] title "Match Lost"
+                display_score_subtitle(instance_tag)
+                execute as @a[tag=instance_tag] run trigger leave_game
+        
+        # during death timer
+        DURING_DEATH_TIMER["@s"] = DEATH_COUNTDOWN
+        tellraw @a[tag=instance_tag] ["opponent healths: ", HEALTH[f"@a[tag={instance_tag}, tag=!{self_tag}]"]]
+        schedule function ./during_death 1t replace
 
     
 function ./during_death:
-    execute as @a[scores={GAME_TIMER=(OFFSET, PREGAME_COUNTDOWN + OFFSET)}] at @s function ~/per_player:
+    execute as @a[scores={DURING_DEATH_TIMER=(1, DEATH_COUNTDOWN)}] at @s function ~/per_player:
         schedule function ./during_death 1t replace
-        GAME_TIMER["@s"] -= 1
+        DURING_DEATH_TIMER["@s"] -= 1
         
         with select_instance_players(INSTANCE_ID["@s"]) as instance_tag:
             # ensure that spectator doesn't go too far
@@ -178,7 +184,7 @@ function ./during_death:
                     particle minecraft:crit ~ ~ ~ 0 0 0 0.2 5 force
         
             # respawn
-            if GAME_TIMER["@s"] == OFFSET:
+            if DURING_DEATH_TIMER["@s"] == 1:
                 execute function ./respawn:
                     kill @a[tag=instance_tag]
 
@@ -189,3 +195,4 @@ append function ON_LEAVE_GAME:
     BELOW_NAME_DISPLAY["@s"].reset()
     KILLS["@s"].reset()
     DEATHS["@s"].reset()
+    TEAM_SCORE["@s"].reset()

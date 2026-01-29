@@ -39,6 +39,10 @@ meta:
   deploy: false
   generate_namespace: "server"
 
+  mecha:
+    formatting:
+      json_ensure_ascii: false
+
   bolt:
     entrypoint: "*"
     prelude: ["server:prelude"]

@@ -20,7 +20,7 @@ are currently in.
 from contextlib import contextmanager
 
 from lib:db import Database
-from server:core import SERVER_LOAD
+from server:core import SERVER_LOAD, SERVER_TICK
 
 from ./models import Map, GAME_META
 from ./events import ON_LEAVE_GAME
@@ -113,3 +113,13 @@ def select_instance_players(instance_id: int | ScoreSource | DataSource) -> str:
     yield SAME_INSTANCE_TAG
 
     tag @a remove SAME_INSTANCE_TAG
+
+
+
+append function SERVER_TICK:
+    execute function ./instance_tick:
+        for instance in INSTANCE_META.loop(name=~/loop):
+            with select_instance_players(instance.id) as instance_tag:
+                # if we find no one, kill the instance and skip the rest of this loop
+                execute unless entity @a[tag=instance_tag] run return:
+                    remove_instance(instance.id)
