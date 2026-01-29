@@ -22,8 +22,13 @@ SERVER_ID = os.environ.get("BLOOM_SERVER_ID")
 BLOOM_API_KEY = os.environ.get("BLOOM_API_KEY")
 PACK = "shulkerbox_data_pack.zip"
 TARGET = f"/TheShulkerBox/datapacks/{PACK}"
-URL = f"https://mc.bloom.host/api/client/servers/{SERVER_ID}/"
 ERROR_PATTERN = re.compile(r"\[\d\d:\d\d:\d\d\] \[Server thread/ERROR\]: (.+)")
+
+
+def create_url() -> str:
+    if not SERVER_ID:
+        raise ValueError("BLOOM_SERVER_ID environment variable not set")
+    return f"https://mc.bloom.host/api/client/servers/{SERVER_ID}/"
 
 
 def create_headers() -> dict[str, str]:
@@ -80,7 +85,7 @@ async def make_request(
     route: str,
     data: dict[str, str] | str | bytes | None = None,
 ):
-    url = URL + route
+    url = create_url() + route
     headers = create_headers() | {"Content-Type": "application/json"}
 
     async with httpx.AsyncClient() as client:
