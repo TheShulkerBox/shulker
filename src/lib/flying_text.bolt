@@ -41,7 +41,7 @@ class FlyingText:
         DAMAGE_TAKEN["@s"].reset()
     ```
     """
-    ticks_alive: int = 25
+    ticks_alive: int = 15
     motion: tuple[FloatLike, FloatLike, FloatLike] = (0.1, 0.2, 0.1)
     scale: tuple[FloatLike, FloatLike, FloatLike] = (1.25, 1.25, 1.25)
     text_tag: str = "flying_text.text_display"
@@ -54,11 +54,15 @@ class FlyingText:
         Returns a function path that you can append additional logic to.
         """
         STORAGE.macro = macro_args or {}
+        
+        # we generate a very large random number so we can apply our strength before dividing down
         execute store result var STORAGE.macro.x double 1 run random value (-PRECISION, PRECISION)
         execute store result var STORAGE.macro.z double 1 run random value (-PRECISION, PRECISION)
         STORAGE.macro.x = (STORAGE.macro.x * self.motion[0]) / PRECISION
         STORAGE.macro.z = (STORAGE.macro.z * self.motion[2]) / PRECISION
+
         execute summon text_display function ~/flying_text/init with var STORAGE.macro:
+            # we can't `execute summon items` for now.
             temp_tag = "flying_text.temp"
             summon item ~ ~ ~ {
                 Tags: [self.item_tag, ITEM_PROCESSED_TAG, temp_tag],
@@ -92,7 +96,13 @@ class FlyingText:
             execute as @e[type=text_display, tag=TEXT_TAG]:
                 # loop this function if any of our text displays exist
                 schedule function ~/ 1t replace
+                
                 # reduce opacity for "effect"
-                SELF.text_opacity -= 15
+                SELF.text_opacity -= 10
+                
+                # this should toggle no gravity
+                execute on vehicle store result entity @s NoGravity byte 1 run time query gametime
                 execute on vehicle run return 1  # only don't kill entities that aren't riding anything
+                
+                # if the vehicle doesn't exist, DIEEE
                 kill @s

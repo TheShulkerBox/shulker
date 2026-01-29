@@ -63,13 +63,13 @@ function ON_JOIN:
         title @s title {text: small_caps("Welcome back"), color: Theme.Primary}
         title @s subtitle {text: small_caps("The Shulker Box"), color: Theme.Secondary, bold: true}
 
-        as @a[tag=STAFF_TAG] at @s playsound minecraft:entity.experience_orb.pickup master @s ~ ~ ~ 2 1.5
+        execute as @a[tag=STAFF_TAG] at @s playsound minecraft:entity.experience_orb.pickup master @s ~ ~ ~ 2 1.5
         playsound block.end_portal_frame.fill master @s 0 65 0 2 0.5 1
 
 
 append function SERVER_TICK:
     # detect player count
-    store result score var PLAYER_COUNT if entity @a
+    execute store result score var PLAYER_COUNT if entity @a
     if PLAYER_COUNT < LAST_PLAYER_COUNT:
         as @a[tag=STAFF_TAG] at @s playsound minecraft:block.note_block.bass master @s ~ ~ ~ 0.5 0.42
 

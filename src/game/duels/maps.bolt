@@ -6,3 +6,10 @@ duels_map elven_cave {
     "spawn_1": "2998 58 4002",
     "spawn_2": "3032 58 4009",
 }
+
+duels_map the_hall {
+    "name": "The Hall",
+    "location": "980 62 3971",
+    "spawn_1": "1000 64 4025",
+    "spawn_2": "1000 64 3975",
+}

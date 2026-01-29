@@ -5,5 +5,5 @@ PLAYER_TICK = ~/tick
 
 
 append function ON_END_TICK:
-    as @a as @s run function PLAYER_TICK
+    execute as @a as @s run function PLAYER_TICK
     advancement revoke @a through ROOT_ADVANCEMENT

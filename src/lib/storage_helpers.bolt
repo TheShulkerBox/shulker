@@ -27,9 +27,6 @@ class loop:
             if self.condition:
                 return False
 
-    def __post_init__(self):
-        self.name = self.name or convert_data_source_into_name(self.data)
-
     def __iter__(self) -> Iterator[DataSource | tuple[int, DataSource]]:
         """Iterate through all elements in a list and yield the element in temp storage
 
@@ -40,12 +37,14 @@ class loop:
         ```
         """
         store result score _loop temp if data var self.data[:]
-        execute function ~/loop/{self.name}:
+        
+        execute function (self.name or ~/loop/{convert_data_source_into_name(self.data)}):
             SCORE.temp["_loop"] -= 1
             STORAGE.macro = {index: SCORE.temp["_loop"]}
             with var STORAGE.macro:
-                # data modify var self.temp_storage.element set from var self.data[$(index)]
                 raw f"$data modify {self.temp_storage.element} set from {self.data}[-$(index)]"
+            
+            # TODO: if item is not loopable, element contains thingy from previous iteration
 
             if self.with_index:
                 yield (SCORE.temp["_loop"], self.temp_storage.element)

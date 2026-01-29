@@ -7,7 +7,7 @@ from server:services/item_dropping import ITEM_PROCESSED_TAG
 from lib:flying_text import FlyingText
 
 DAMAGE_TAKEN = Scoreboard("player.damage_taken", criteria="minecraft.custom:minecraft.damage_taken")
-damage_text = FlyingText(motion=(0.15, 0.25, 0.15))
+damage_text = FlyingText(motion=(0.1, 0.05, 0.1))
 
 
 advancement ./on_hurt {
@@ -23,13 +23,15 @@ function ./on_hurt:
     SCORE.temp["#hearts_damaged"] = DAMAGE_TAKEN["@s"] / 10
 
     # make the text fly from further up
-    execute positioned ~ ~1.8 ~:
+    execute positioned ~ ~1 ~:
         with damage_text.summon({damage_taken: SCORE.temp["#hearts_damaged"]}) as self:
             # directly macro the damage taken into the string
-            data modify var self.text set value {text: $(damage_taken: string), color: "#af2929"}
+            data modify var self.text set value {text: $(damage_taken: string), color: "#cd7575"}
 
-            if SCORE.temp["#hearts_damaged"] >= 3:
+            if SCORE.temp["#hearts_damaged"] >= 1:
                 self.text.bold = true
+            else:
+                self.color = "#d7b5b5"
 
             # scale the text display based on the number of hearts damaged. We cap it at max 2x scale
             self.transformation.scale[0] += min(2, SCORE.temp["#hearts_damaged"] / 10)

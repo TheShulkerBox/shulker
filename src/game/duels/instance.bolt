@@ -38,12 +38,13 @@ append function SERVER_LOAD:
 
 
 append function SERVER_TICK:
-    """We loop through each live duels instance so we can process each one individually."""
     execute function ./tick_instance:
-        duels_instances = INSTANCE_META.get(gamemode="duels")
-
+        """We loop through each live duels instance so we can process each one individually."""
         # loop through each duels instance
-        for instance in loop(duels_instances):
+        for instance in INSTANCE_META.loop(name=~/loop):
+            if instance.gamemode != "duels":
+                return fail
+
             # temporarily tag everyone in the same instance (during the loop)
             with select_instance_players(instance.id) as instance_tag:
                 # if we find no one, kill the instance and skip the rest of this loop
@@ -103,7 +104,7 @@ def display_score_subtitle(self_tag: str, instance_tag: str):
 function ./pregame:
     execute as @a[scores={GAME_TIMER=(1, PREGAME_COUNTDOWN)}] at @s function ~/per_player:
         schedule function ./pregame 1t replace
-        GAME_TIMER["@s"] -= 1
+        tellraw @s GAME_TIMER["@s"]
 
         # lock player in place
         spectate @n[type=marker, tag=PREGAME_MARKER] @s
