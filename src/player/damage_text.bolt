@@ -26,17 +26,17 @@ function ./on_hurt:
     execute positioned ~ ~1 ~:
         with damage_text.summon({damage_taken: SCORE.temp["#hearts_damaged"]}) as self:
             # directly macro the damage taken into the string
-            data modify var self.text set value {text: $(damage_taken: string), color: "#cd7575"}
+            data modify var self.text set value {text: $(damage_taken: string), color: "#ca4f4f"}
 
             if SCORE.temp["#hearts_damaged"] >= 1:
                 self.text.bold = true
             else:
-                self.color = "#d7b5b5"
+                self.color = "#ca4f4f"
 
             # scale the text display based on the number of hearts damaged. We cap it at max 2x scale
-            self.transformation.scale[0] += min(2, SCORE.temp["#hearts_damaged"] / 10)
-            self.transformation.scale[1] += min(2, SCORE.temp["#hearts_damaged"] / 10)
-            self.transformation.scale[2] += min(2, SCORE.temp["#hearts_damaged"] / 10)
+            self.transformation.scale[0] += min(2, SCORE.temp["#hearts_damaged"] / 8)
+            self.transformation.scale[1] += min(2, SCORE.temp["#hearts_damaged"] / 8)
+            self.transformation.scale[2] += min(2, SCORE.temp["#hearts_damaged"] / 8)
     
     # reset to avoid accumulation
     DAMAGE_TAKEN["@s"].reset()
