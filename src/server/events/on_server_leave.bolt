@@ -1,0 +1,38 @@
+from collections.abc import Callable
+
+from lib:db import Database
+from lib:utils import get_player_name
+
+from ../core import SERVER_LOAD, SERVER_TICK
+from ../events import ON_JOIN
+
+
+online_players = Database(Data.storage("shulker:server").online_players)
+ON_SERVER_LEAVE = ./on_server_leave/on_leave
+
+
+append function SERVER_LOAD:
+    """re-add everyone to the list on reload"""
+    execute function ./on_server_leave/load:
+        online_players.data = []
+        execute as @a run function ./on_server_leave/on_join  # could be a problem if someone leaves on /reload
+
+
+append function ON_JOIN:
+    execute function ./on_server_leave/on_join:
+        """Adds player to online players database on join."""
+        player_name = get_player_name()
+        online_players.append({name: player_name})
+        
+
+append function SERVER_TICK:
+    """Checks for players who have left the server."""
+    # loop through online players
+    for player in online_players.loop(name=./on_server_leave/loop):
+        with var player:
+            # if player is not online, remove from database and call leave event
+            execute unless entity $(name) run function ON_SERVER_LEAVE with var player:
+                raw f"$data remove {online_players.data}[{{name: '$(name)'}}]"  # TODO fix when native-macros fixed
+
+# make the player_loop var global
+PLAYER_WHO_LEFT = player

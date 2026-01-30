@@ -7,11 +7,11 @@ require:
 
   - bolt_expressions
   - bolt_expressions.contrib.commands
+  - bolt.contrib.defer
   - bolt
   - bolt_native_macros
   - bolt_selectors
   - mecha.contrib.nesting
-  - bolt.contrib.defer
   - plugins.component_caching
 
   # needs to go last

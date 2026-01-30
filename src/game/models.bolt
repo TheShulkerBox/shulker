@@ -13,6 +13,13 @@ from lib:custom_resources import CustomResource
 GAME_META = Data.storage("game:meta")
 
 
+class Gamemode:
+    Duels = "duels"
+    FTM = "ftm"
+    TDM = "tdm"
+    CTF = "ctf"
+
+
 class Tag:
     """Organizational tags for maps. Used for map queuing and map pools."""
 

@@ -1,8 +1,8 @@
-from ../models import Map
+from ../models import Map, Gamemode
 
 
 class DuelsMap(Map):
-    gamemode: str = "duels"
+    gamemode: str = Gamemode.Duels
 
     location: str
     spawn_1: str

@@ -1,17 +1,18 @@
 from lib:storage_helpers import loop
 from server:core import SERVER_LOAD, SERVER_TICK
+from server:events import ON_JOIN
+from server:events/on_server_leave import ON_SERVER_LEAVE, PLAYER_WHO_LEFT
 from server:admin import error_debug
-from player:events import ON_DEATH
+from player:events import ON_DEATH, DEATH_SCORE
 from lib:utils import matching
 from lib:player import tag_self
 
 from ../player import TEAM_SCORE
 from ../events import ON_LEAVE_GAME
 from ../instance import INSTANCE_META, INSTANCE_ID, remove_instance, select_instance_players
+from ../models import Gamemode
 from ./models import DuelsMap
 
-# We reuse the same timer for 2 timers with an offset
-# This has an added benefit of ensuring that only 1 exact timer will be running at the same time.
 GAME_TIMER = Scoreboard("duels.game_timer", criteria="dummy")
 DURING_DEATH_TIMER = Scoreboard("duels.during_death_timer", criteria="dummy")
 PREGAME_COUNTDOWN = 80
@@ -30,30 +31,40 @@ PREGAME_MARKER = "duels.pregame_marker"
 TEAM_MATCHER = matching(TEAM_SCORE, TEAM_SCORE["@s"])
 
 
+def leave_duels():
+    """Call when duels is done for a player."""
+    INSTANCE_ID['@s'].reset()
+    trigger leave_game
+
+
 append function SERVER_LOAD:
-    team add TEAM_1 "Duels Team 1"
-    team add TEAM_2 "Duels Team 2"
-    
-    for team in [TEAM_1, TEAM_2]:
-        team modify team friendlyFire false
-        team modify team prefix "🗡 "
-        team modify team seeFriendlyInvisibles false
+    execute function ./load:
+        team add TEAM_1 "Duels Team 1"
+        team add TEAM_2 "Duels Team 2"
+        
+        for team in [TEAM_1, TEAM_2]:
+            team modify team friendlyFire false
+            team modify team prefix "🗡 "
+            team modify team seeFriendlyInvisibles false
 
 
 append function SERVER_TICK:
     execute function ./tick_instance:
+        # TODO: swap start game trigger w/ kit selection
         START_GAME_TRIGGER["@a"].enable()
         execute as @a[scores={START_GAME_TRIGGER=1..}] run function ~/attempt_start_game:
             START_GAME_TRIGGER["@s"].reset()
-            if INSTANCE_ID["@s"] < 0:
+
+            if not (INSTANCE_ID["@s"] >= 1):
                 return run tellraw @s {text: "You are not dueling right now!", color: Theme.Failure}
 
             instance = INSTANCE_META.get(id=INSTANCE_ID["@s"])
             instance_map = DuelsMap.get(id=instance.map_id)
             if instance_map == false:
-                tellraw @s {text: "You are not in a valid duel instance!", color: Theme.Failure}
+                return run tellraw @s {text: "You are not in a valid duel instance!", color: Theme.Failure}
             
             with select_instance_players(INSTANCE_ID["@s"]) as instance_tag:
+                # condition: start only if we have at least 2 players
                 execute store result score var SCORE.temp["#player_count"] if entity @a[tag=instance_tag]
                 execute if score var SCORE.temp["#player_count"] matches ..1 return:
                     tellraw @s {text: "You need at least 2 players to start the duel!", color: Theme.Failure}
@@ -78,7 +89,6 @@ append function SERVER_TICK:
                         
                         # rotate and ride pregame marker
                         summon item_display ~ ~1 ~ {Tags: [PREGAME_MARKER]}
-                        rotate @n[type=item_display, tag=PREGAME_MARKER] facing entity @p[tag=instance_tag, predicate=!TEAM_MATCHER()]
                         ride @s mount @n[type=item_display, tag=PREGAME_MARKER]
                         $rotate @s[scores={game.team=1}] facing $(spawn_2)
                         $rotate @s[scores={game.team=2}] facing $(spawn_1)
@@ -97,7 +107,6 @@ def display_score_subtitle(instance_tag: str):
         title @s subtitle [
             KILLS["@s"],
             " - ",
-            # TODO handle spectators in same instance_tag
             KILLS[f"@a[tag={instance_tag}, predicate=!{TEAM_MATCHER()}, limit=1]"]
         ]
 
@@ -132,15 +141,21 @@ function ./pregame:
             kill @n[type=item_display, tag=PREGAME_MARKER]
 
 
-append function ON_DEATH:
+prepend function ON_DEATH:
     execute unless score var DURING_DEATH_TIMER["@s"] matches 1.. run function ./on_death:
         with select_instance_players(INSTANCE_ID["@s"]) as instance_tag:
-            # game is considered tied if everyone has no health!
-            unless entity @a[tag=instance_tag, scores={HEALTH=1..}] return:
-                title @a[tag=instance_tag] title {text: "Tie Round", color: "gray"}
-                display_score_subtitle(instance_tag)
-                GAME_TIMER["@s"] = DEATH_COUNTDOWN
-                schedule function ./during_death 1t replace
+            # game is considered tied if everybody is dead!
+            execute store result score var SCORE.temp["#player_count"] if entity @a[tag=instance_tag]
+            execute store result score var SCORE.temp["#dead_count"] if entity @a[tag=instance_tag, scores={DEATH_SCORE=1..}]
+            tellraw @a ["player count: ", SCORE.temp["#player_count"], ", dead count: ", SCORE.temp["#dead_count"]]
+            if SCORE.temp["#player_count"] == SCORE.temp["#dead_count"]:
+                return run function ./tie_match:
+                    tellraw @a {text: "The duel has ended in a tie!", color: Theme.Body}
+                    title @a[tag=instance_tag] title {text: "Tie Round", color: "gray"}
+                    display_score_subtitle(instance_tag)
+                    DURING_DEATH_TIMER[f"@a[tag={instance_tag}]"] = DEATH_COUNTDOWN
+                    gamemode spectator @a[tag=instance_tag]
+                    schedule function ./during_death 1t replace
 
             # increment team score
             scoreboard players add var KILLS[f"@a[tag={instance_tag}, predicate=!{TEAM_MATCHER()}]"] 1
@@ -151,7 +166,8 @@ append function ON_DEATH:
                 title @a[tag=instance_tag, predicate=TEAM_MATCHER()] title "Match Won"
                 title @a[tag=instance_tag, predicate=!TEAM_MATCHER()] title "Match Lost"
                 display_score_subtitle(instance_tag)
-                execute as @a[tag=instance_tag] run trigger leave_game
+                execute as @a[tag=instance_tag]:
+                    leave_duels()
             
             # Display the `x-y` (my kills - opponent kills)
             title @a[tag=instance_tag] title ""
@@ -185,15 +201,54 @@ function ./during_death:
             # respawn
             if DURING_DEATH_TIMER["@s"] == 0:
                 execute function ./respawn:
-                    gamemode adventure @s
+                    gamemode adventure @a[tag=instance_tag]
                     DURING_DEATH_TIMER[f"@a[tag={instance_tag}]"].reset()
                     kill @a[tag=instance_tag]
+                    DEATH_SCORE[f"@a[tag={instance_tag}]"].reset()
 
 
-append function ON_LEAVE_GAME:
+#> Handle forfeits
+# both /trigger leave_game AND server leave
+
+def handle_opponent_of_forfeiter(tellraw_message: str):
+    tellraw @s {text: tellraw_message, color: Theme.Body}
+    title @s title "Match Won Uncontested"
+    leave_duels()
+
+
+prepend function ON_LEAVE_GAME:
     """Ensure we clean up the duel scores and tags of a player leaving a game"""
+    if INSTANCE_ID["@s"] > 0:
+        instance = INSTANCE_META.get(id=INSTANCE_ID["@s"])
+        if instance.gamemode == Gamemode.Duels:
+            execute function ./forfeit_match:
+                tellraw @s {text: "You have forfeited the duel!", color: Theme.Failure}
+                title @s title "Match Forfeited"
+                with select_instance_players(INSTANCE_ID["@s"]) as instance_tag:
+                    display_score_subtitle(instance_tag)
+                    execute as @a[tag=instance_tag, predicate=!TEAM_MATCHER()]:
+                        handle_opponent_of_forfeiter("Your opponent has forfeited the duel by leaving the match!")
+
     GAME_TIMER["@s"].reset()
     BELOW_NAME_DISPLAY["@s"].reset()
     KILLS["@s"].reset()
     TEAM_SCORE["@s"].reset()
     DURING_DEATH_TIMER["@s"].reset()
+
+
+# TODO ON_SERVER_LEAVE queue to display message to people who leave
+append function ON_SERVER_LEAVE:
+    raw f"$scoreboard players operation {SCORE.temp['#instance_id']} = $(name) {INSTANCE_ID}"
+    raw f"$scoreboard players operation {SCORE.temp['#team_score']} = $(name) {TEAM_SCORE}"
+    raw f"$scoreboard players operation {SCORE.temp['#kills']} = $(name) {KILLS}"
+    raw f"$scoreboard players reset $(name) {INSTANCE_ID}"
+    
+    if SCORE.temp['#instance_id'] >= 1:
+        instance = INSTANCE_META.get(id=SCORE.temp['#instance_id'])
+        if instance.gamemode == Gamemode.Duels:
+            execute function ./forfeit_match/on_leave_game:
+                with select_instance_players(SCORE.temp['#instance_id']) as instance_tag:
+                    team_matcher = matching(TEAM_SCORE, SCORE.temp['#team_score'])
+                    execute as @a[tag=instance_tag, predicate=!team_matcher()]:
+                        title @s subtitle [KILLS["@s"], " - ", SCORE.temp['#kills']]
+                        handle_opponent_of_forfeiter("Your opponent has forfeited the duel by leaving the server!")

@@ -1,5 +1,10 @@
+from player:events import ON_DEATH
 from ../events import ON_JOIN
 
 
 append function ON_JOIN:
+    attribute @s minecraft:waypoint_transmit_range base set 0
+ 
+
+append function ON_DEATH:
     attribute @s minecraft:waypoint_transmit_range base set 0

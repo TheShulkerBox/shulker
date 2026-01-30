@@ -37,7 +37,7 @@ def get_player_name():
 
     loot spawn 0 0 0 loot lib:player_head
     positioned 0 0 0 as @n[type=item] if items entity @s contents player_head[custom_data~{head:1b}]:
-        STORAGE.temp.player_name = SELF.components."minecraft:profile".name
+        STORAGE.temp.player_name = SELF.Item.components."minecraft:profile".name
         kill @s
     
     return STORAGE.temp.player_name

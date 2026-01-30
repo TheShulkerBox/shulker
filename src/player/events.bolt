@@ -1,3 +1,5 @@
+DEATH_SCORE = Scoreboard("player.death_count", criteria="deathCount")
+
 ON_DEATH = ./on_death
 ON_KILL = ./on_kill
 
@@ -34,3 +36,4 @@ advancement ON_DEATH {
 
 function ON_DEATH:
     advancement revoke @s only ON_DEATH
+    DEATH_SCORE["@s"].reset()
