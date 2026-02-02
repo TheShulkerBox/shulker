@@ -40,3 +40,4 @@ function ./on_hurt:
     
     # reset to avoid accumulation
     DAMAGE_TAKEN["@s"].reset()
+

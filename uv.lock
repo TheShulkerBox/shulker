@@ -35,7 +35,7 @@ wheels = [
 [[package]]
 name = "beet"
 version = "0.113.0"
-source = { registry = "https://pypi.org/simple" }
+source = { git = "https://github.com/MineRobber9000/beet?branch=proper-encode#979c10b1a89f7fa4943ab4ef2172ffdfcbaa9bcb" }
 dependencies = [
     { name = "click" },
     { name = "click-help-colors" },
@@ -46,10 +46,6 @@ dependencies = [
     { name = "pydantic" },
     { name = "pyyaml" },
     { name = "toml" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/75/71/a2a93320ab7ec4cd1cf787600e18b6f49c149c4d14c088e209e4ef93727f/beet-0.113.0.tar.gz", hash = "sha256:81c93ca56d44d94819f5cc5c158e9fa8c09ffa140d8a67fc83e45a191bbd8fb2", size = 95028, upload-time = "2026-01-14T20:39:08.742Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/17/cf/92965352432c05bcce43cf49c7461f58ecdb10e9aa39cb8c3636adf4b810/beet-0.113.0-py3-none-any.whl", hash = "sha256:a10757ece106b79918cecc031045a7ad9b98a618a6e3ebcc3e0f91d6f145625f", size = 124656, upload-time = "2026-01-14T20:39:07.648Z" },
 ]
 
 [[package]]
@@ -731,7 +727,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "beet", specifier = ">=0.108.5" },
+    { name = "beet", git = "https://github.com/MineRobber9000/beet?branch=proper-encode" },
     { name = "beet-plugins", git = "https://github.com/thewii/beet-plugins" },
     { name = "bolt", specifier = ">=0.49.1" },
     { name = "bolt-expressions", specifier = ">=0.17.0" },

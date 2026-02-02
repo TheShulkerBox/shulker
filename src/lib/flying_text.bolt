@@ -9,6 +9,7 @@
 from contextlib import contextmanager
 from dataclasses import dataclass
 
+from server:core import clock
 from server:services/item_dropping import ITEM_PROCESSED_TAG
 
 TEXT_TAG = "flying_text.text_display"
@@ -73,6 +74,7 @@ class FlyingText:
                     id: "minecraft:barrier",
                     components: { item_model: "minecraft:air" },
                 },
+                NoGravity: true,
             }
             ride @s mount @n[type=item, tag=temp_tag]
             tag @e[type=item, distance=..5] remove temp_tag
@@ -101,8 +103,16 @@ class FlyingText:
                 SELF.text_opacity -= 10
                 
                 # this should toggle no gravity
-                execute on vehicle store result entity @s NoGravity byte 1 run time query gametime
-                execute on vehicle run return 1  # only don't kill entities that aren't riding anything
-                
-                # if the vehicle doesn't exist, DIEEE
+                # execute on vehicle store result entity @s NoGravity byte 1 if data entity @s {NoGravity:0b}
+
+                # clean up in sched loop too
+                execute on vehicle run return 1
                 kill @s
+
+
+append function clock('4t'):
+    execute function ./cleanup:
+        execute as @e[type=text_display, tag=TEXT_TAG]:
+            # only don't kill entities that aren't riding anything
+            execute on vehicle run return 1
+            kill @s

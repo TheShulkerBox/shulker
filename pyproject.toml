@@ -41,6 +41,9 @@ requires = ["uv_build>=0.9.26,<0.10.0"]
 module-name = "plugins"
 module-root = ""
 
+[tool.uv.sources]
+beet = { git = "https://github.com/MineRobber9000/beet", branch = "proper-encode" }
+
 [dependency-groups]
 dev = [
   "ruff>=0.12.12",
