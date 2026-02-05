@@ -13,7 +13,7 @@ def beet_default(ctx: Context):
         for (path, file), _ in paths.items():
             if isinstance(file, TagFile):
                 continue
-                
+
             if path not in vanilla.data[file_type]:
                 raise OverridingMinecraftFile(
                     f"Likely misspelled var name: {path[10:]} from file"

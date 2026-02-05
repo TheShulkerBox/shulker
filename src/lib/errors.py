@@ -38,6 +38,15 @@ class UnexpectedValidationError(ValidationError):
         super().__init__(name, value, "null", [])
 
 
+class ComponentTypeError(ValidationError):
+    """Error when an entire component value is the wrong type"""
+
+    def __init__(self, name: str, value: Any, expected_type: type, actual_type: type):
+        self.actual_type = actual_type
+        msg = f"Expected {expected_type.__name__} but got {actual_type.__name__}"
+        super().__init__(name, value, expected_type, [], msg=msg)
+
+
 class ComponentError(ItemError):
     """A component error"""
 
@@ -45,6 +54,8 @@ class ComponentError(ItemError):
     component: Any
     suberrors: list[ValidationError | Exception]
     msg: str
+    hint: str | None
+    source_info: dict[str, Any] | None
 
     def __init__(
         self,
@@ -52,11 +63,15 @@ class ComponentError(ItemError):
         component: Any,
         suberrors: list[ValidationError] = [],
         msg: str = "",
+        hint: str | None = None,
+        source_info: dict[str, Any] | None = None,
     ):
         self.name = name
         self.component = component
         self.suberrors = suberrors
         self.msg = msg
+        self.hint = hint
+        self.source_info = source_info
         super().__init__(msg)
 
     def __str__(self):
@@ -68,8 +83,11 @@ class ComponentError(ItemError):
 class NonExistentComponentError(ComponentError):
     """When an component does not exist"""
 
-    def __init__(self, name: str):
+    suggestions: list[str]
+
+    def __init__(self, name: str, suggestions: list[str] | None = None):
         super().__init__(name, None, [])
+        self.suggestions = suggestions or []
 
 
 class CustomComponentError(ComponentError):

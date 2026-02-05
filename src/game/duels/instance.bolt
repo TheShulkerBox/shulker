@@ -160,7 +160,7 @@ prepend function ON_DEATH:
             # increment team score
             scoreboard players add var KILLS[f"@a[tag={instance_tag}, predicate=!{TEAM_MATCHER()}]"] 1
 
-            # check if we exceeded 3 kills (short-circuit here if so)
+            # check if we exceeded 3 kills (short-circuit here if so) TODO: hardcoded
             execute as @a[tag=instance_tag, scores={KILLS=3..}, limit=1] return run function ./end_game:
                 # GAME_TIMER[f"@a[tag={instance_tag}]"] = POSTGAME_COUNTDOWN
                 title @a[tag=instance_tag, predicate=TEAM_MATCHER()] title "Match Won"
@@ -238,16 +238,23 @@ prepend function ON_LEAVE_GAME:
 
 # TODO ON_SERVER_LEAVE queue to display message to people who leave
 append function ON_SERVER_LEAVE:
+    # Copy data from person who left into some temp vars before we reset them
     raw f"$scoreboard players operation {SCORE.temp['#instance_id']} = $(name) {INSTANCE_ID}"
     raw f"$scoreboard players operation {SCORE.temp['#team_score']} = $(name) {TEAM_SCORE}"
     raw f"$scoreboard players operation {SCORE.temp['#kills']} = $(name) {KILLS}"
     raw f"$scoreboard players reset $(name) {INSTANCE_ID}"
     
+    # if player is in an active instance
     if SCORE.temp['#instance_id'] >= 1:
         instance = INSTANCE_META.get(id=SCORE.temp['#instance_id'])
+
+        # if they are playing duels, forfeit match
         if instance.gamemode == Gamemode.Duels:
             execute function ./forfeit_match/on_leave_game:
+                # select other duels players
                 with select_instance_players(SCORE.temp['#instance_id']) as instance_tag:
+                    # match them based on team and say your opponent has forfeited
+                    # TODO: what to do if someone on your team forfeits
                     team_matcher = matching(TEAM_SCORE, SCORE.temp['#team_score'])
                     execute as @a[tag=instance_tag, predicate=!team_matcher()]:
                         title @s subtitle [KILLS["@s"], " - ", SCORE.temp['#kills']]

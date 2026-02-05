@@ -24,6 +24,7 @@ def title_case_to_snake_case(title_case_str: str):
 
 def nbt_dump(obj: dict[str, Any]):
     """Helper to dump generic dicts into serialized nbt"""
+
     def serialize(obj: Any):
         match obj:
             case dict():
@@ -114,6 +115,7 @@ def branch(func: Callable[..., Iterator[Literal[True]]]) -> BranchProtocol:
             yield True
     ```
     """
+
     class BranchWrapper:
         __branch__ = contextmanager(func)
 

@@ -131,7 +131,7 @@ class McdocValidator:
                         errors.append(e)
                 if errors:
                     raise ValidationError(
-                        path[1],
+                        path[-1] if path else "unknown",
                         data,
                         "union",
                         errors,
