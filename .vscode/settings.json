@@ -1,5 +1,6 @@
 {
     "files.associations": {
         "*.bolt": "mcfunction"
-    }
+    },
+    "python.terminal.activateEnvironment": true
 }

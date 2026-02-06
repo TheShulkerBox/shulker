@@ -103,7 +103,7 @@ class FlyingText:
                 SELF.text_opacity -= 10
                 
                 # this should toggle no gravity
-                # execute on vehicle store result entity @s NoGravity byte 1 if data entity @s {NoGravity:0b}
+                execute on vehicle store result entity @s NoGravity byte 1 if data entity @s {NoGravity:0b}
 
                 # clean up in sched loop too
                 execute on vehicle run return 1
