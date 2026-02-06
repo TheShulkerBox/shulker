@@ -1,6 +1,6 @@
-from ../models import ctf_map
-
-
+#from ../models import ctf_map
+#
+#
 # ctf_map sadsadf {
 #     "name": "sdfsdf Hall",
 #     "teams": [
