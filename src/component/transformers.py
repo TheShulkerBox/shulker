@@ -2,7 +2,7 @@ from typing import Any
 
 from minecraft_text_components import TextComponent
 
-from component.base import Transformer
+from component.type import Transformer
 from lib.text import Theme
 from lib.errors import CustomComponentError
 
@@ -12,7 +12,7 @@ class DyedColor(Transformer):
 
     color: str | Any
 
-    def render(self) -> int | None:
+    def build(self) -> int | None:
         if type(color := self.color) is str:
             color = color.removeprefix("#")
 
@@ -31,7 +31,7 @@ class DyedColor(Transformer):
 class Lore(Transformer):
     lore: str | list[str] | list[dict[str, Any]]
 
-    def render(self) -> list[TextComponent]:
+    def build(self) -> list[TextComponent]:
         """Allows you to write lore using regular strings and auto applies formatting"""
 
         if type(lore := self.lore) is str:

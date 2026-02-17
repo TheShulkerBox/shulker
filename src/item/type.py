@@ -16,7 +16,7 @@ from bolt import Runtime
 import difflib
 import pprint
 
-from component.base import Component, Transformer
+from component.type import Component, Transformer
 from lib.helpers import (
     camel_case_to_snake_case,
     nbt_dump,
@@ -109,6 +109,8 @@ class ItemType(type):
         namespace["_component_cache"] = {}
         namespace["_has_errored"] = False
         namespace["_components"] = {}
+        namespace["_custom_components"] = {}
+        namespace["_custom_transformers"] = {}
         namespace["_component_sources"] = {}
 
         cls.registered_items[name] = new_cls = super().__new__(
@@ -204,19 +206,30 @@ class ItemType(type):
 
     @classmethod
     def validate_component(
-        cls, component_name: str, component: dict[str, Any]
+        cls, component_name: str, component: Any, base_type: type = None
     ) -> ComponentError | None:
-        """Validate a component against its mcdoc schema.
+        """Validate a component against its mcdoc schema or base_type.
 
         Args:
             component_name: Name of the component (e.g., "minecraft:item_name")
-            component: Component value to validate
+            component: Component value to validate  
+            base_type: Optional base type to validate against instead of schema
 
         Returns:
             ComponentError if validation fails, None if valid
         """
         # custom_data has no schema
         if "custom_data" in component_name:
+            return
+
+        # If base_type is provided, use it for validation instead of schema
+        if base_type is not None:
+            if not check_type(component, base_type):
+                return ComponentError(
+                    component_name, 
+                    component, 
+                    [ComponentTypeError("component", component, base_type, type(component))]
+                )
             return
 
         mcdoc_validator = cls.ctx.inject(McdocValidator)
@@ -248,14 +261,14 @@ class ItemType(type):
 
     def handle_custom_components(
         self, custom_components: list[Component], resolved_components: dict[str, Any]
-    ) -> tuple[list[Component], list[CustomComponentError]]:
+    ) -> tuple[list[Component], list[CustomComponentError], dict[str, Component]]:
         """Process custom components and transform them into vanilla components.
 
-        Custom components are high-level abstractions that render into one or more
+        Custom components are high-level abstractions that build into one or more
         vanilla Minecraft components. This method:
         1. Validates component field types
         2. Instantiates the component dataclass
-        3. Calls render() to get vanilla component output
+        3. Calls build() to get vanilla component output
         4. Merges output into resolved_components
         5. Tracks component in custom_data for runtime access
 
@@ -266,8 +279,9 @@ class ItemType(type):
         Returns:
             Tuple of (constructed_components, errors)
         """
-        errors = []
-        constructed_components = []
+        constructed_components: list[Component] = []
+        errors: list[CustomComponentError] = []
+        output_component_mapping: dict[str, Component] = {}
 
         for component in custom_components:
             name: str = component.name()
@@ -299,14 +313,14 @@ class ItemType(type):
                     if field_errors:
                         raise ComponentError(name, data, field_errors)
 
-                    # Attempt to instantiate and render the component
+                    # Attempt to instantiate and builder the component
                     try:
                         constructed_component = component(
                             item=self,
                             resolved_components=dict(resolved_components),
                             **reconstructed_data,
                         )
-                        output = constructed_component.render()
+                        output = constructed_component.build()
                         constructed_components.append(constructed_component)
                     except Exception as err:
                         source_info = self._component_sources.get(name)
@@ -314,7 +328,7 @@ class ItemType(type):
                             name,
                             data,
                             [err],
-                            hint=f"Error while rendering custom component '{name}' in item '{self.name}'",
+                            hint=f"Error while building custom component '{name}' in item '{self.name}'",
                             source_info=source_info,
                         ) from err
 
@@ -329,13 +343,19 @@ class ItemType(type):
                     resolved_components["custom_data"] = deep_merge_dicts(
                         resolved_components.get("custom_data", {}), metadata
                     )
-                    # Merge rendered vanilla components
+                    
+                    # Track which output components came from this custom component
+                    if hasattr(constructed_component.__class__, '_base_type') and constructed_component.__class__._base_type is not None:
+                        for output_component_name in output.keys():
+                            output_component_mapping[output_component_name] = constructed_component
+                    
+                    # Merge built vanilla components
                     deep_merge_dicts(resolved_components, output, inplace=True)
 
             except ComponentError as err:
                 errors.append(err)
 
-        return constructed_components, errors
+        return constructed_components, errors, output_component_mapping
 
     def handle_custom_transformers(
         self,
@@ -385,7 +405,7 @@ class ItemType(type):
                 if field_errors:
                     raise ComponentError(name, data, field_errors)
 
-                # Attempt to instantiate and render the transformer
+                # Attempt to instantiate and build the transformer
                 try:
                     constructed_transformer = transformer(
                         item=self,
@@ -394,7 +414,7 @@ class ItemType(type):
                     )
                     # Only update component if transformer returns a value
                     if (
-                        transformed_value := constructed_transformer.render()
+                        transformed_value := constructed_transformer.build()
                     ) is not None:
                         resolved_components[name] = transformed_value
                     constructed_transformers.append(constructed_transformer)
@@ -404,7 +424,7 @@ class ItemType(type):
                         name,
                         data,
                         [err],
-                        hint=f"Error while rendering custom transformer '{name}' in item '{self.name}'",
+                        hint=f"Error while building custom transformer '{name}' in item '{self.name}'",
                         source_info=source_info,
                     ) from err
 
@@ -459,7 +479,7 @@ class ItemType(type):
         )
 
         # Phase 3: Apply custom components and transformers
-        custom_components, component_errors = self.handle_custom_components(
+        custom_components, component_errors, custom_component_mapping = self.handle_custom_components(
             Component.registered, output_components
         )
         custom_transformers, transformer_errors = self.handle_custom_transformers(
@@ -476,7 +496,7 @@ class ItemType(type):
         # Phase 5: Allow components/transformers to post-process
         for component_or_transformer in chain(custom_components, custom_transformers):
             if component_or_transformer.name() in original_components:
-                component_or_transformer.post_render(output_components)
+                component_or_transformer.post_build(output_components)
 
         # Phase 6: Validate and collect errors
         if not self._has_errored:
@@ -485,10 +505,14 @@ class ItemType(type):
                 transformer_errors,
                 output_components,
                 original_components,
+                custom_component_mapping,
             )
 
         # Phase 7: Cache and return
         self._components = output_components
+        self._custom_components = {component.name: component for component in custom_components}
+        self._custom_transformers = {transformer.name: transformer for transformer in custom_transformers}
+        
         return output_components
 
     def format_error_summary(self, errors: list[ComponentError]) -> str:
@@ -548,11 +572,12 @@ class ItemType(type):
         transformer_errors: list[CustomTransformerError],
         output_components: dict[str, Any],
         original_components: dict[str, Any],
+        custom_component_mapping: dict[str, Component],
     ) -> bool:
         """Validate components and display comprehensive error messages.
 
         This method:
-        1. Validates all output components against mcdoc schemas
+        1. Validates all output components against mcdoc schemas or base_type
         2. Collects all errors (custom component, transformer, and validation)
         3. Formats and displays errors with rich context (source, hints, suggestions)
 
@@ -561,11 +586,19 @@ class ItemType(type):
             transformer_errors: Errors from transformer processing
             output_components: Final resolved components to validate
             original_components: Original component definitions (for debugging)
+            custom_components: Custom components used (for base_type validation)
+            custom_transformers: Custom transformers used (for base_type validation)
 
         Returns:
             True if any errors were found, False otherwise
         """
         errors: list[ComponentError] = component_errors + transformer_errors
+
+        # Create a mapping of output component names to their base_types from custom components
+        component_base_types = {}
+        for component_name, component in custom_component_mapping.items():
+            if hasattr(component.__class__, '_base_type') and component.__class__._base_type is not None:
+                component_base_types[component_name] = component.__class__._base_type
 
         def handle_suberrors(tree: Tree, suberrors: list[ValidationError | Exception]):
             """Recursively render validation errors in a tree structure."""
@@ -617,12 +650,15 @@ class ItemType(type):
                         tree.add(f"[x]{pretty_type(type(err))}[/x]: {err.args[0]}")
 
         for name, component in output_components.items():
-            if error := self.validate_component(name, component):
+            # Only use base_type validation for components that explicitly set it
+            base_type = None  # Default to None for safety
+            if name in component_base_types:
+                base_type = component_base_types[name]
+            if error := self.validate_component(name, component, base_type):
                 errors.append(error)
 
         if errors:
             messages: list[RenderableType] = [
-                Text("⚠️  Item errors", style="header"),
                 Text(f"❌ {self.format_error_summary(errors)}", style="red"),
                 "",
             ]
@@ -677,9 +713,9 @@ class ItemType(type):
                     title=title,
                     subtitle=subtitle,
                     highlight=True,
+                    expand=False,
                 ),
                 highlight=True,
-                expand=False,
             )
 
             return True
@@ -704,6 +740,16 @@ class ItemType(type):
     def path(self) -> str:
         """Get the namespaced path for this item."""
         return f"item:{self.name}"
+
+    @property
+    def custom_components(self) -> dict[str, Component]:
+        """Return the custom components on an item"""
+        return self._custom_components.copy()
+
+    @property
+    def custom_transformers(self) -> dict[str, Transformer]:
+        """Return the custom transformers on an item"""
+        return self._custom_transformers.copy()
 
     def item_string(self) -> str:
         """Generate a Minecraft give command string for this item.

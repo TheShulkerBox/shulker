@@ -1,5 +1,5 @@
 from component:on_use import AnimationLiteral
-from component:base import Component
+from component:type import Component
 from server:events import ON_PLAYER_RESET, ON_END_TICK
 from server:core import ROOT_ADVANCEMENT
 from player:services import PLAYER_TICK
@@ -15,7 +15,7 @@ class on_hold(Component):
     animation: AnimationLiteral = "bow"
     sound: str = ""
 
-    def render(self):
+    def build(self):
         on_using_path = f"{self.item.path}/on_using"
         advancement on_using_path {
             "parent": ROOT_ADVANCEMENT,

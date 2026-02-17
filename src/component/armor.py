@@ -1,6 +1,6 @@
 from typing import Any, Iterable
 
-from component.base import Component
+from component.type import Component
 from lib.errors import CustomComponentError
 from lib.const import ARMOR_SLOTS
 
@@ -21,7 +21,7 @@ class Armor(Component):
                 "operation": "add_value",
             }
 
-    def render(self) -> dict[str, Any]:
+    def build(self) -> dict[str, Any]:
         modifiers = []
 
         if self.value is not None:

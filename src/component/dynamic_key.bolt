@@ -1,0 +1,6 @@
+from component:type import Component
+
+dynamic_key = Scoreboard("item.dynamic_key", criteria="dummy")
+
+class DynamicKey(Component, base_type=bool):
+    def prepare

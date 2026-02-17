@@ -7,7 +7,7 @@ class Dart(Item):
     id = "arrow"
     item_model = "stone"
     item_name = "taco sauce 2 deluxe"
-    on_use = {callback: ~/on_use, replace: true, cooldown: 1}
+    on_use = {callback: ~/on_use, replace: true, cooldown: 0.2}
 
 
 function ~/on_use:

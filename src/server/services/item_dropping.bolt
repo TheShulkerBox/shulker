@@ -7,8 +7,8 @@ append function SERVER_TICK:
     execute as @e[type=item, tag=!ITEM_PROCESSED_TAG] at @s run function ./handle_item:
         """Handles items that have been processed by item dropping services."""
         SELF.PickupDelay = 0
-        STORAGE.temp.uuid.remove()
 
+        STORAGE.temp.uuid = {}
         execute on origin:
             STORAGE.temp.uuid = SELF.UUID
 

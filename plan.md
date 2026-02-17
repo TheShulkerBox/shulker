@@ -24,7 +24,7 @@ Create a working duels map with atleast 2 kits.
 - [/] Spectator
 - [x] Closing instance
 - [ ] Post game timer
-- [ ] Forfeits
+- [x] Forfeits
 
 
 ## Objective 2

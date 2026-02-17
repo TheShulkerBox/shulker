@@ -1,9 +1,11 @@
+from itertools import chain
+
 from lib:shulker_box import SHULKER_BOX_COORDS, SHULKER_BOX, SHULKER_DROP_CONTENTS
 from server:core import SERVER_TICK, SERVER_LOAD
+# from component:dynamic_key import DynamicKey
 
-from ./meta import ItemType
+from ./type import ItemType
 
-dynamic_key = Scoreboard("item.dynamic_key", criteria="dummy")
 item_storage = Data.storage("item:meta")
 
 ItemType.ctx = ctx
@@ -62,20 +64,27 @@ class Item(metaclass=ItemType):
     tool = {"can_destroy_blocks_in_creative": False, "rules": []}
 
     @classmethod
-    def build(self):
-        # append function SERVER_LOAD:
-        #     execute function f"item:load/{self.name}":
-        #         STORAGE.temp.item = {components: self.components}
-        #         STORAGE.macro.name = self.name
-        #         with var STORAGE.macro:
-        #             $data modify storage item:meta item.$(name) set from storage shulker:temp item
+    def prepare(self):
+        """Prepare the item for runtime data injection by inserting it in a Shulker Box.
         
+        Assumes:
+        - Caller prepares the Shulker Box (resets and manages)
+        - Caller gives or sends the item to a player or location
+        - The Shulker Box will not be full
+        
+        The item prepared will be in the last slot (accessible via -1)
+        """
+        SHULKER_BOX.Items.append({id: self.id, components: self.components})
+        
+        # render the components
+        for component_or_transformer in chain(self.custom_components.values(), self.custom_transformers.values()):
+            component_or_transformer.render(SHULKER_BOX.Items[-1])
+
+    @classmethod
+    def build(self):
         function f"item:give/{self.name}":
-            SHULKER_BOX.Items = [{id: self.id, components: self.components}]
-            dynamic_key[self.name] += 1
-            SHULKER_BOX.Items[0].components."minecraft:custom_data".dynamic_key = dynamic_key[self.name]
-            if SHULKER_BOX.Items[0].components."minecraft:use_remainder":  # stupid hack
-                SHULKER_BOX.Items[0].components."minecraft:use_remainder".components."minecraft:custom_data".dynamic_key = dynamic_key[self.name]
+            SHULKER_BOX.Items = []
+            self.prepare()
             loot give @s mine SHULKER_BOX_COORDS SHULKER_DROP_CONTENTS
 
 

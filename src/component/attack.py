@@ -1,6 +1,6 @@
 from typing import Any
 
-from component.base import Component
+from component.type import Component
 from lib.errors import CustomComponentError
 
 
@@ -20,7 +20,7 @@ class Attack(Component):
             "operation": "add_value",
         }
 
-    def render(self) -> dict[str, Any]:
+    def build(self) -> dict[str, Any]:
         modifiers = []
 
         if self.damage is not None:

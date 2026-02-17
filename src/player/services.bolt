@@ -1,5 +1,5 @@
 from server:core import ROOT_ADVANCEMENT
-from server:events import ON_END_TICK\
+from server:events import ON_END_TICK
 
 PLAYER_TICK = ~/tick
 

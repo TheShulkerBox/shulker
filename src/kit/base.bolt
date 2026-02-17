@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from typing import ClassVar, NamedTuple
 
 from item:base import Item
-from item:meta import ItemType
+from item:type import ItemType
 from lib:helpers import id_to_number
 from lib:const import ARMOR_SLOTS
 

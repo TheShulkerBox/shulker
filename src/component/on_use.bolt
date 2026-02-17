@@ -2,8 +2,8 @@ from typing import Literal, Any
 from dataclasses import field
 from nbtlib.tag import Byte
 
-from component:base import Component
-from item:meta import ItemType
+from component:type import Component
+from item:type import ItemType
 from lib:errors import CustomComponentError
 from lib:helpers import deep_merge_dicts
 from server:services/playerdb import PlayerDB
@@ -42,9 +42,8 @@ class OnUse(Component):
     sound: str = ""
     on_use_effects: list[dict[str, Any]] = field(default_factory=list)
 
-    def render(self) -> dict[str, Any]:
+    def build(self) -> dict[str, Any]:
         """Using consume_item adv, replace item with same components on use."""
-        
         on_use_path = f"{self.item.path}/on_use"
         advancement on_use_path {
             "parent": ROOT_ADVANCEMENT,
@@ -60,9 +59,7 @@ class OnUse(Component):
                     }
                 }
             },
-            "rewards": {
-                "function": on_use_path
-            }
+            "rewards": { "function": on_use_path }
         }
 
         function on_use_path:
@@ -115,8 +112,7 @@ class OnUse(Component):
         
         return output
 
-    def post_render(self, resolved_components: dict[str, Any]) -> None:
+    def post_build(self, resolved_components: dict[str, Any]) -> None:
         """After completing all components rendering, fill in use_remainder with the final components"""
-
         if self.replace:
             resolved_components["use_remainder"] = {"id": self.item.id, "components": dict(resolved_components)}

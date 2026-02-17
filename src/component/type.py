@@ -56,11 +56,12 @@ so they're automatically discovered and applied during item resolution.
 
 from typing import Any, ClassVar, Self, TYPE_CHECKING
 from dataclasses import dataclass, field
+from bolt_expressions import DataSource
 
 from lib.helpers import camel_case_to_snake_case
 
 if TYPE_CHECKING:
-    from item.meta import ItemType
+    from item.type import ItemType
 
 
 @dataclass
@@ -80,8 +81,8 @@ class Component:
     ## Subclassing
 
     1. Define fields for user input (with type hints)
-    2. Implement `render()` to return vanilla components
-    3. Optionally implement `post_render()` for cleanup
+    2. Implement `build()` to return vanilla components
+    3. Optionally implement `post_build()` for cleanup
 
     ## Caching
 
@@ -98,9 +99,10 @@ class Component:
     item: "ItemType" = field(kw_only=True)
     resolved_components: dict[str, Any] = field(kw_only=True)
 
-    def __init_subclass__(cls, cache: bool = True):
+    def __init_subclass__(cls, cache: bool = True, base_type: type = None):
         """Auto-register component and convert to dataclass."""
         cls._skip_cache = not cache
+        cls._base_type = base_type if base_type is not None else None
         new_cls = dataclass(cls)
         new_cls.__module__ = cls.__module__
         cls.registered.append(new_cls)
@@ -111,7 +113,7 @@ class Component:
         """Get the snake_case name of this component."""
         return camel_case_to_snake_case(cls.__name__)
 
-    def render(self) -> dict[str, Any] | None:
+    def build(self) -> dict[str, Any] | None:
         """Render this component into vanilla Minecraft components.
 
         Returns:
@@ -122,7 +124,7 @@ class Component:
         """
         raise NotImplementedError
 
-    def post_render(self, resolved_components: dict[str, Any]) -> None:
+    def post_build(self, resolved_components: dict[str, Any]) -> None:
         """Optional post-processing after all components are resolved.
 
         Use this to modify resolved_components in-place after rendering.
@@ -132,7 +134,9 @@ class Component:
         Args:
             resolved_components: All resolved components (mutable)
         """
-        ...
+    
+    def render(self, item_data: DataSource) -> None:
+        """Optional runtime rendering"""
 
 
 @dataclass
@@ -188,7 +192,7 @@ class Transformer:
         """Get the snake_case name of this transformer."""
         return camel_case_to_snake_case(cls.__name__)
 
-    def render(self) -> Any | None:
+    def build(self) -> Any | None:
         """Transform the component value.
 
         Returns:
@@ -199,7 +203,7 @@ class Transformer:
         """
         raise NotImplementedError
 
-    def post_render(self, resolved_components: dict[str, Any]) -> None:
+    def post_build(self, resolved_components: dict[str, Any]) -> None:
         """Optional post-processing after all components are resolved.
 
         Use this to modify resolved_components in-place after transformation.
@@ -209,4 +213,6 @@ class Transformer:
         Args:
             resolved_components: All resolved components (mutable)
         """
-        ...
+
+    def render(self, item_data: DataSource) -> None:
+        """Optional runtime rendering"""

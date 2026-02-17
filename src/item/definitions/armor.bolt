@@ -2,4 +2,4 @@ from ../base import Item
 
 
 class Armor(Item):
-    ...
+    unbreakable = {}
