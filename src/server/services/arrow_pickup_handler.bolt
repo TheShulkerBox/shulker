@@ -1,0 +1,19 @@
+from ../core import SERVER_TICK
+
+ARROW_PROCESSED_TAG = "arrow.processed"
+ARROW_DESPAWN_TIMER = Scoreboard("arrow.despawn_timer", criteria="dummy")
+
+
+append function SERVER_TICK:
+    execute as @e[type=arrow, tag=!ARROW_PROCESSED_TAG] at @s run function ./process_arrow:
+        """Process newly fired arrows"""
+        # 2b means only creative mode players can pick up the arrows
+        SELF.pickup = 2
+        ARROW_DESPAWN_TIMER["@s"] = 20 * 20
+        tag @s add ARROW_PROCESSED_TAG
+
+    execute as @e[type=arrow,scores={ARROW_DESPAWN_TIMER=1..}] at @s run function ./tick_arrow_despawn_timer:
+        """Tick arrow despawn timer, kill when appropriate"""
+        ARROW_DESPAWN_TIMER["@s"] -= 1
+        if ARROW_DESPAWN_TIMER["@s"] <= 0:
+            kill @s
