@@ -1,6 +1,12 @@
 from component:type import Component
+from item:type import ItemType
 
 dynamic_key = Scoreboard("item.dynamic_key", criteria="dummy")
 
 class DynamicKey(Component, base_type=bool):
-    def prepare
+    def build(self) -> dict[str, Any] | None:
+        return None
+    
+    def render(self, item: ItemType, item_data: DataSource):
+        dynamic_key[item.name] += 1
+        item_data[item.name].components["minecraft:custom_data"].dynamic_key = dynamic_key[item.name]

@@ -1,4 +1,5 @@
 import component:on_use as _
+import component:dynamic_key as _
 from component:on_hold import ON_USING_TIMER
 from item:base import Item
 from lib:motion import apply_motion_vector
@@ -19,6 +20,7 @@ class PoisonDart(Item):
     item_model = "poisonous_potato"
     item_name = "poison taco sauce 3 deluxe"
     on_use = {callback: ~/on_use_poison, replace: true, cooldown: 0.5}
+    dynamic_key = true
 
 
 function ~/on_use_poison:

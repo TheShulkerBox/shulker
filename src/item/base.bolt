@@ -78,14 +78,15 @@ class Item(metaclass=ItemType):
         
         # render the components
         for component_or_transformer in chain(self.custom_components.values(), self.custom_transformers.values()):
-            component_or_transformer.render(SHULKER_BOX.Items[-1])
+            component_or_transformer.render(self, SHULKER_BOX.Items[-1])
 
     @classmethod
     def build(self):
-        function f"item:give/{self.name}":
-            SHULKER_BOX.Items = []
-            self.prepare()
-            loot give @s mine SHULKER_BOX_COORDS SHULKER_DROP_CONTENTS
+        if not self.is_anonymous:
+            function f"item:give/{self.name}":
+                SHULKER_BOX.Items = []
+                self.prepare()
+                loot give @s mine SHULKER_BOX_COORDS SHULKER_DROP_CONTENTS
 
 
 # Yes, this deletes the above item in storage but that's ok

@@ -135,7 +135,7 @@ class Component:
             resolved_components: All resolved components (mutable)
         """
     
-    def render(self, item_data: DataSource) -> None:
+    def render(self, item: ItemType, item_data: DataSource) -> None:
         """Optional runtime rendering"""
 
 
@@ -214,5 +214,5 @@ class Transformer:
             resolved_components: All resolved components (mutable)
         """
 
-    def render(self, item_data: DataSource) -> None:
+    def render(self, item: ItemType, item_data: DataSource) -> None:
         """Optional runtime rendering"""

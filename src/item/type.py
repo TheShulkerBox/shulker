@@ -647,7 +647,7 @@ class ItemType(type):
                         subtree = tree.add(err.args[0])
                         handle_suberrors(subtree, errors)
                     case err:
-                        tree.add(f"[x]{pretty_type(type(err))}[/x]: {err.args[0]}")
+                        tree.add(f"[x]{pretty_type(type(err))}[/x]: {err.args[:1]}")
 
         for name, component in output_components.items():
             # Only use base_type validation for components that explicitly set it
@@ -735,6 +735,11 @@ class ItemType(type):
     def is_generated(self) -> bool:
         """Check if this is a generated item (e.g., from Item(...) calls)."""
         return "generated" in self.name
+
+    @property
+    def is_anonymous(self) -> bool:
+        """Check if this is an anonymous item created via __call__."""
+        return self.name.startswith("zz_")
 
     @property
     def path(self) -> str:
