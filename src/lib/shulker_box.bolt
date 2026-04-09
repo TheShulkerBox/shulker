@@ -64,6 +64,8 @@ loot_table minecraft:blocks/yellow_shulker_box {
     "random_sequence": "minecraft:blocks/yellow_shulker_box"
 }
 
-SHULKER_BOX_COORDS = "0 50 0"
-SHULKER_BOX = Data.block(SHULKER_BOX_COORDS)
-SHULKER_DROP_CONTENTS = "stick[custom_data={drop_contents:1b}]"
+class ShulkerBox:
+    Coords = "0 50 0"
+    Contents = "stick[custom_data={drop_contents:1b}]"
+    Data = Data.block(Coords)
+    Items = Data.Items

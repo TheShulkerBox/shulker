@@ -8,23 +8,17 @@ MCMETA_URL = "https://raw.githubusercontent.com/misode/mcmeta/refs/heads/summary
 type Json = dict[str, Json] | list[Json] | str | int | float | bool | None
 
 # Define the VERSION constant
-VERSION = "1.21.11"
+VERSION = "26.1"
 
 
 def compare_versions(v1: str, v2: str) -> int:
-    _, *v1 = (int(part) for part in v1.split("."))
-    _, *v2 = (int(part) for part in v2.split("."))
+    v1_parts = tuple(int(part) for part in v1.split("."))
+    v2_parts = tuple(int(part) for part in v2.split("."))
 
-    if len(v1) < 2:
-        v1.append(0)
-
-    if len(v2) < 2:
-        v2.append(0)
-
-    if tuple(v1) > tuple(v2):
+    if v1_parts > v2_parts:
         return 1
 
-    if tuple(v2) > tuple(v1):
+    if v2_parts > v1_parts:
         return -1
 
     return 0

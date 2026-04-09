@@ -475,7 +475,7 @@ class ItemType(type):
 
         # Phase 2: Initialize with item metadata
         output_components = deep_merge_dicts(
-            original_components, {"custom_data": {"item_id": self.name}}, inplace=False
+            original_components, {"custom_data": {"item": self.name}}, inplace=False
         )
 
         # Phase 3: Apply custom components and transformers
@@ -739,7 +739,7 @@ class ItemType(type):
     @property
     def is_anonymous(self) -> bool:
         """Check if this is an anonymous item created via __call__."""
-        return self.name.startswith("zz_")
+        return self.name.startswith("anonymous_")
 
     @property
     def path(self) -> str:
@@ -917,7 +917,7 @@ class ItemType(type):
         # Generate unique name based on location and counter
         # Format: zz_<function_name>_<counter>
         name = (
-            "zz_"
+            "anonymous_"
             + runtime.get_nested_location().split("/").pop()
             + f"_{next(self.counter)}"
         )

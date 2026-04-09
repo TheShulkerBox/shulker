@@ -6,7 +6,7 @@ from typing import ClassVar
 
 from ./db import Database
 from ./helpers import id_to_number
-from ./rom import load_rom
+from ./rom import LOAD_ROM
 
 from server:core import SERVER_LOAD
 
@@ -105,7 +105,7 @@ class CustomResource(CustomBaseModel):
     def on_load(self):
         """Called when the custom resource is loaded."""
         # Save to read-only storage
-        append function load_rom:
+        append function LOAD_ROM:
             self._storage.append(self.model_component())
 
 

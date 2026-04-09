@@ -20,6 +20,7 @@ require:
 pipeline:
   - mecha
   - plugins.minecraft_namespace_checker
+  - plugins.cleanup_empty_functions
 
 data_pack:
   load: [vendor/persist]

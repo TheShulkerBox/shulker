@@ -5,6 +5,8 @@ from item:base import Item
 from item:type import ItemType
 from lib:helpers import id_to_number
 from lib:const import ARMOR_SLOTS
+from lib:shulker_box import ShulkerBox
+from server:core import SERVER_LOAD
 
 item_type = Item | tuple[Item, int]
 
@@ -18,9 +20,7 @@ class Kit:
     hotbar: list[item_type] = field(default_factory=list)
     offhand: item_type | None = None
 
-    # Store ref. to all items in one place 
     _all_items: list[ItemType] = field(init=False, default_factory=list)
-
     _all_kits: ClassVar[list["Kit"]] = []
 
     def __post_init__(self):
@@ -33,7 +33,7 @@ class Kit:
             self._all_items.append(self.offhand)
         
         self.build()
-
+        
     @property
     def id(self) -> str:
         return self.name.lower().replace(" ", "_")
@@ -43,27 +43,98 @@ class Kit:
         return id_to_number(self.id)
     
     @property
-    def loadout(self) -> str:
-        return f"kit:loadout/{self.id}/apply"
-
-    def apply_loadout(self):
-        for slot, armor in self.armor.items():
-            item replace entity @s f"armor.{slot}" with armor armor.count
-
+    def hotbar_items(self):
         for index, item in enumerate(self.hotbar):
-            if item is not None:
-                item replace entity @s f"hotbar.{index}" with item item.count
-        
+            yield (f"hotbar.{index}", item.as_dict())
+    
+    @property
+    def armor_items(self):
+        # We manually unroll the loop bc we need to return feet -> head in that specific order
+        if "feet" in self.armor:
+            yield ("armor.feet", self.armor["feet"].as_dict())
+        if "legs" in self.armor:
+            yield ("armor.legs", self.armor["legs"].as_dict())
+        if "chest" in self.armor:
+            yield ("armor.chest", self.armor["chest"].as_dict())
+        if "head" in self.armor:
+            yield ("armor.head", self.armor["head"].as_dict())
+    
+    @property
+    def offhand_items(self):
         if self.offhand is not None:
-            item replace entity @s weapon.offhand with self.offhand self.offhand.count
+            yield ("weapon.offhand", self.offhand.as_dict())
+    
+    def __iter__(self):
+        yield from self.armor_items
+        yield from self.hotbar_items
+        yield from self.offhand_items
 
+    def as_dict(self):
+        base = {
+            "name": self.name,
+            "tagline": self.tagline,
+            # "icon": self.icon.as_dict(),
+        }
+
+        for slot, item in self.armor.items():
+            base[f"armor.{slot}"] = item.as_dict()
+        
+        for index, item in enumerate(self.hotbar):
+            base[f"hotbar.{index}"] = item.as_dict()
+
+        if self.offhand is not None:
+            base["weapon.offhand"] = self.offhand.as_dict()
+        
+        return base
+    
     def build(self):
-        function self.loadout:
-            self.apply_loadout()
+        """Main generation logic for per-kit files"""
+        kit_temp = STORAGE.temp.kit
 
-            function ~/../as_mannequin:
-                execute summon mannequin function ~/../configure_mannequin:
-                    function self.loadout
-                    if len(self.hotbar) > 1:
-                        item replace entity @s weapon.mainhand with self.hotbar[0]
-                    SELF.CustomName = self.name
+        function ./loadout:
+            # TODO: add kit id, player id, and other relevant info to the temp storage for use in functions
+            for kit in Kit._all_kits:
+                # This function will prepare the items in the kit in storage
+                function ~/{kit.id}/prepare:
+                    kit_temp.kit = kit.as_dict()
+
+                    for slot, item in kit:
+                        kit_temp.kit[slot].components."minecraft:custom_data".merge({"meta": {"original_slot": slot}})
+
+                # applies the kit to the player (assuming @s)
+                function ~/{kit.id}/apply:
+                    function ~/../prepare
+
+                    # armor
+                    ShulkerBox.Items = []
+                    for index, item in enumerate(kit.armor_items):
+                        kit_temp.kit[item[0]].Slot = index
+                        ShulkerBox.Items.append(kit_temp.kit[item[0]])
+                    tellraw @a ShulkerBox.Items
+                    loot replace entity @s armor.feet 4 mine ShulkerBox.Coords ShulkerBox.Contents
+
+                    # hotbar
+                    ShulkerBox.Items = []
+                    for index, item in enumerate(kit.hotbar_items):
+                        kit_temp.kit[item[0]].Slot = index
+                        ShulkerBox.Items.append(kit_temp.kit[item[0]])
+                    loot replace entity @s hotbar.0 9 mine ShulkerBox.Coords ShulkerBox.Contents
+
+                    # offhand
+                    for index, item in enumerate(kit.offhand_items):
+                        kit_temp.kit[item[0]].Slot = index
+                        ShulkerBox.Items = [kit_temp.kit[item[0]]]
+                        loot replace entity @s weapon.offhand 1 mine ShulkerBox.Coords ShulkerBox.Contents
+
+                function ~/{kit.id}/mannequin:
+                    function ~/../prepare
+
+                    execute summon mannequin function ~/inner:
+                        for slot, item in kit.armor.items():
+                            SELF.equipment[slot] = item.as_dict()
+                        
+                        if kit.hotbar:
+                            SELF.equipment["mainhand"] = kit.hotbar[0].as_dict()
+                        
+                        if kit.offhand:
+                            SELF.equipment["offhand"] = kit.offhand.as_dict()

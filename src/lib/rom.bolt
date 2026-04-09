@@ -1,8 +1,8 @@
 from server:core import SERVER_LOAD
 
-load_rom = ~/load
+LOAD_ROM = ~/load
 
 prepend function SERVER_LOAD:
-    execute function load_rom:
+    execute function LOAD_ROM:
         # reset rom before thing write to it on load
         STORAGE.rom = {}

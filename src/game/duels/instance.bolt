@@ -123,6 +123,7 @@ function ./pregame:
         if GAME_TIMER["@s"] == 60:
             playsound minecraft:entity.experience_orb.pickup master @s ~ ~ ~ 1 1
             title @s title {text: "3"}
+            function kit:loadout/archer/apply
 
         if GAME_TIMER["@s"] == 40:
             playsound minecraft:entity.experience_orb.pickup master @s ~ ~ ~ 1 1
