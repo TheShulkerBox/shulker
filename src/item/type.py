@@ -785,7 +785,7 @@ class ItemType(type):
 
     def as_dict(self) -> dict[str, Any]:
         """Convert item to a dictionary suitable for NBT serialization."""
-        return {"id": self.id, "count": self.count, **self.components}
+        return {"id": self.id, "count": self.count, "components": self.components}
 
     __neg__ = __invert__ = conditional_string
     __pos__ = __str__ = item_string

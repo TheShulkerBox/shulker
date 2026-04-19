@@ -23,7 +23,7 @@ pipeline:
   - plugins.cleanup_empty_functions
 
 data_pack:
-  load: [vendor/persist]
+  load: [ vendor/* ]
 
   filter:
     block:
@@ -46,7 +46,7 @@ meta:
 
   bolt:
     entrypoint: "*"
-    prelude: ["server:prelude"]
+    prelude: [ "server:prelude" ]
 
   bolt_expressions:
     temp_objective: "temp"

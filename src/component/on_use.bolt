@@ -1,4 +1,4 @@
-from typing import Literal, Any
+from typing import Literal, Any, Annotated
 from dataclasses import field
 from nbtlib.tag import Byte
 
@@ -10,7 +10,7 @@ from server:services/playerdb import PlayerDB
 from server:core import ROOT_ADVANCEMENT
 
 
-AnimationLiteral = (
+AnimationLiteral = Annotated[
     Literal["none"]
     | Literal["eat"]
     | Literal["drink"]
@@ -20,8 +20,9 @@ AnimationLiteral = (
     | Literal["spyglass"]
     | Literal["toot_horn"]
     | Literal["brush"]
-    | Literal["spear"]
-)
+    | Literal["spear"],
+    "Right click animations"
+]
 
 # thrown_item_scores: dict[str, ScoreSource] = {}
 
@@ -33,27 +34,33 @@ AnimationLiteral = (
 
 
 class OnUse(Component):
-    callback: str
-    replace: bool = False
-    delay: float = 0.1
-    cooldown: float = 0.25
-    cooldown_group: str = ""
+    """This component helps create right-click items.
+    
+    Mostly leveraging the `consumable` component. Can be customized as a proper
+    consumable or an 'infinite' use item.
+
+    """
+    callback: Annotated[str, "Function path that gets called when you use the item"]
+    infinite: Annotated[bool, "Whether the item should be infinite or not"] = False
+    delay: Annotated[float, "How long you hold right-click before using the item"] = 0.05
+    cooldown: Annotated[float, "How much you have to wait before you can use the item again"] = 0.25
+    cooldown_group: Annotated[str, "Group for cooldowns"] = ""
     animation: AnimationLiteral = "none"
     sound: str = ""
     on_use_effects: list[dict[str, Any]] = field(default_factory=list)
 
     def build(self) -> dict[str, Any]:
-        """Using consume_item adv, replace item with same components on use."""
+        """Using consume_item adv."""
         on_use_path = f"{self.item.path}/on_use"
         advancement on_use_path {
             "parent": ROOT_ADVANCEMENT,
             "criteria": {
-                "requirement": {
+                "on_use": {
                     "trigger": "minecraft:consume_item",
                     "conditions": {
                         "item": {
                             "predicates": {
-                                "minecraft:custom_data": {"item_id": self.item.name}
+                                "minecraft:custom_data": { "item": self.item.name }
                             }
                         }
                     }
@@ -65,37 +72,29 @@ class OnUse(Component):
         function on_use_path:
             advancement revoke @s only on_use_path
             
-            # if replacing, cache data based on slot
-            if self.replace:
-                # mainhand items get used over offhand so we check that first
+            # for infinite items, toggling some data will make the item persist
+            if self.infinite:
                 unless items entity @s weapon.mainhand self.item.conditional_string():
-                    STORAGE.temp.item = SELF.equipment.offhand
-                    STORAGE.temp.item.slot = "offhand"
+                    item modify entity @s weapon.offhand {function: "set_custom_data", tag: {infinite: false}}
+                    item modify entity @s weapon.offhand {function: "set_custom_data", tag: {infinite: true}}
 
                 if items entity @s weapon.mainhand self.item.conditional_string():
-                    STORAGE.temp.item = SELF.SelectedItem
-                    STORAGE.temp.item.slot = "mainhand"
-                
+                    item modify entity @s weapon.mainhand {function: "set_custom_data", tag: {infinite: false}}
+                    item modify entity @s weapon.mainhand {function: "set_custom_data", tag: {infinite: true}}
+                    
             function self.callback
 
-            # return item by macroing it back onto the item
-            # we need to flicker the item by replacing it with a blank item w/ an id
-            if self.replace:
-                execute function ~/return_item with var STORAGE.temp.item:
-                    $item replace entity @s weapon.$(slot) with $(id)
-                    $item modify entity @s weapon.$(slot) {function: 'set_components', components: $(components)}
-        
-        # setup base component
+        # setup base vanilla components
         output = {
             "consumable": {
                 "consume_seconds": self.delay,
                 "animation": self.animation,
                 "has_consume_particles": false,
                 "sound": {"sound_id": self.sound},
-            }
+            },
         }
 
-        # add conditional stuff based on arguments
+        # add conditional attributes to our component
         if self.on_use_effects:
             output["consumable"]["on_consume_effects"] = self.on_use_effects
         
@@ -107,12 +106,8 @@ class OnUse(Component):
             else:
                 output["use_cooldown"]["cooldown_group"] = self.item.name
 
-        if self.replace:
+        if self.infinite:
             output["max_stack_size"] = 1
+            output["custom_data"] = { infinite: true }
         
         return output
-
-    def post_build(self, resolved_components: dict[str, Any]) -> None:
-        """After completing all components rendering, fill in use_remainder with the final components"""
-        if self.replace:
-            resolved_components["use_remainder"] = {"id": self.item.id, "components": dict(resolved_components)}

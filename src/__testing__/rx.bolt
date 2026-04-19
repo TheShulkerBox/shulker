@@ -8,22 +8,23 @@ class Dart(Item):
     id = "arrow"
     item_model = "stone"
     item_name = "taco sauce 2 deluxe"
-    on_use = {callback: ~/on_use, replace: true, cooldown: 0.2}
+    on_use = {callback: ./dart_on_use, infinite: true, cooldown: 0.2}
 
 
-function ~/on_use:
+function ./dart_on_use:
     apply_motion_vector([0.0, 1.5, 2.0])
+    say i've used za dart
 
 
 class PoisonDart(Item):
     id = "arrow"
     item_model = "poisonous_potato"
     item_name = "poison taco sauce 3 deluxe"
-    on_use = {callback: ~/on_use_poison, replace: true, cooldown: 0.5}
+    on_use = {callback: ./poison_dart_on_use, infinite: true, cooldown: 0.5}
     dynamic_key = true
 
 
-function ~/on_use_poison:
+function ./poison_dart_on_use:
     STORAGE.temp.vector = [0] * 3
     for i in range(3):
         store result storage shulker:temp vector[i] double 0.01 random value -500..500

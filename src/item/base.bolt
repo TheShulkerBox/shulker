@@ -73,12 +73,23 @@ class Item(metaclass=ItemType):
         # if not self.is_anonymous:
         append function LOAD_ROM:
             ITEM_ROM[self.name] = self.as_dict()
+        
+        append function ./list:
+            if not self.is_anonymous:
+                tellraw @s {
+                    text: f"[ {self.name} ]",
+                    color: "gold",
+                    click_event: {action: "run_command", command: f"function item:give {{item: {self.name}}}"}
+                }
 
 
 function ./give:
     raw f"$data modify {TEMP_ITEM} set from {ITEM_ROM}.$(item)"
-    function ./render with var TEMP_ITEM.components."minecraft:custom_data"
-    ShulkerBox.Items = [TEMP_ITEM]
+    tellraw @s TEMP_ITEM
+    function ./render {item: $(item)}
+    ShulkerBox.Items = []
+    ShulkerBox.Items.append(TEMP_ITEM)
+    tellraw @s ShulkerBox.Items
     loot give @s mine ShulkerBox.Coords ShulkerBox.Contents
 
 
