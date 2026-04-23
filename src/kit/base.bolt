@@ -4,7 +4,7 @@ from typing import ClassVar, NamedTuple
 from item:base import Item
 from item:type import ItemType
 from lib:helpers import id_to_number
-from lib:storage_helpers import Database
+from lib:db import Database
 from lib:const import ARMOR_SLOTS
 from lib:shulker_box import ShulkerBox
 from server:core import SERVER_LOAD
@@ -76,6 +76,7 @@ class Kit:
         yield from self.offhand_items
 
     def meta_dict(self):
+        """Metadata related to kits (does not contain actual items)"""
         return {
             name: self.name,
             tagline: self.tagline,

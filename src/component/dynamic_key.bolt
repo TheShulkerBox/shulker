@@ -3,7 +3,7 @@ from item:type import ItemType
 
 dynamic_key = Scoreboard("item.dynamic_key", criteria="dummy")
 
-class DynamicKey(Component, base_type=bool):
+class DynamicKey(Component, base_type=int):
     def build(self) -> dict[str, Any] | None:
         return None
     
