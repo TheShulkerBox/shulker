@@ -1,23 +1,23 @@
 function admin:kit_armor_stand_rename:
-    execute as @e[type=armor_stand,tag=KitStand,name="Kit Archer"] run data modify entity @s CustomName set value archer
-    execute as @e[type=armor_stand,tag=KitStand,name="Kit Headsman"] run data modify entity @s CustomName set value headsman
-    execute as @e[type=armor_stand,tag=KitStand,name="Kit Assassin"] run data modify entity @s CustomName set value assassin
-    execute as @e[type=armor_stand,tag=KitStand,name="Kit Witch Doctor"] run data modify entity @s CustomName set value witch_doctor
-    execute as @e[type=armor_stand,tag=KitStand,name="Kit Javelineer"] run data modify entity @s CustomName set value javelineer
-    execute as @e[type=armor_stand,tag=KitStand,name="Kit Medic"] run data modify entity @s CustomName set value medic
-    execute as @e[type=armor_stand,tag=KitStand,name="Kit Spearfisher"] run data modify entity @s CustomName set value spearfisher
-    execute as @e[type=armor_stand,tag=KitStand,name="Kit Swashbuckler"] run data modify entity @s CustomName set value swashbuckler
-    execute as @e[type=armor_stand,tag=KitStand,name="Kit Captain"] run data modify entity @s CustomName set value captain
-    execute as @e[type=armor_stand,tag=KitStand,name="Kit Berzerker"] run data modify entity @s CustomName set value berserker
-    execute as @e[type=armor_stand,tag=KitStand,name="Kit Bombardier"] run data modify entity @s CustomName set value bombardier
-    execute as @e[type=armor_stand,tag=KitStand,name="Kit Juggernaut"] run data modify entity @s CustomName set value juggernaut
-    execute as @e[type=armor_stand,tag=KitStand,name="Kit Warrior"] run data modify entity @s CustomName set value warrior
-    execute as @e[type=armor_stand,tag=KitStand,name="Kit Barbarian"] run data modify entity @s CustomName set value barbarian
-    execute as @e[type=armor_stand,tag=KitStand,name="Kit Footman"] run data modify entity @s CustomName set value footman
-    execute as @e[type=armor_stand,tag=KitStand,name="Kit Conquistador"] run data modify entity @s CustomName set value conquistador
-    execute as @e[type=armor_stand,tag=KitStand,name="Kit Brigadier"] run data modify entity @s CustomName set value brigadier
-    execute as @e[type=armor_stand,tag=KitStand,name="Kit Ranger"] run data modify entity @s CustomName set value ranger
-    execute as @e[type=armor_stand,tag=KitStand,name="Kit Warbow"] run data modify entity @s CustomName set value warbow
-    execute as @e[type=armor_stand,tag=KitStand,name="Kit Poacher"] run data modify entity @s CustomName set value poacher
-    execute as @e[type=armor_stand,tag=KitStand,name="Kit Engineer"] run data modify entity @s CustomName set value engineer
-    execute as @e[type=armor_stand,tag=KitStand,name="Kit Maceman"] run data modify entity @s CustomName set value maceman
+    execute as @s[type=armor_stand,tag=KitStand,name="Kit Archer"] run data modify entity @s CustomName set value archer
+    execute as @s[type=armor_stand,tag=KitStand,name="Kit Headsman"] run data modify entity @s CustomName set value headsman
+    execute as @s[type=armor_stand,tag=KitStand,name="Kit Assassin"] run data modify entity @s CustomName set value assassin
+    execute as @s[type=armor_stand,tag=KitStand,name="Kit Witch Doctor"] run data modify entity @s CustomName set value witch_doctor
+    execute as @s[type=armor_stand,tag=KitStand,name="Kit Javelineer"] run data modify entity @s CustomName set value javelineer
+    execute as @s[type=armor_stand,tag=KitStand,name="Kit Medic"] run data modify entity @s CustomName set value medic
+    execute as @s[type=armor_stand,tag=KitStand,name="Kit Spearfisher"] run data modify entity @s CustomName set value spearfisher
+    execute as @s[type=armor_stand,tag=KitStand,name="Kit Swashbuckler"] run data modify entity @s CustomName set value swashbuckler
+    execute as @s[type=armor_stand,tag=KitStand,name="Kit Captain"] run data modify entity @s CustomName set value captain
+    execute as @s[type=armor_stand,tag=KitStand,name="Kit Berzerker"] run data modify entity @s CustomName set value berserker
+    execute as @s[type=armor_stand,tag=KitStand,name="Kit Bombardier"] run data modify entity @s CustomName set value bombardier
+    execute as @s[type=armor_stand,tag=KitStand,name="Kit Juggernaut"] run data modify entity @s CustomName set value juggernaut
+    execute as @s[type=armor_stand,tag=KitStand,name="Kit Warrior"] run data modify entity @s CustomName set value warrior
+    execute as @s[type=armor_stand,tag=KitStand,name="Kit Barbarian"] run data modify entity @s CustomName set value barbarian
+    execute as @s[type=armor_stand,tag=KitStand,name="Kit Footman"] run data modify entity @s CustomName set value footman
+    execute as @s[type=armor_stand,tag=KitStand,name="Kit Conquistador"] run data modify entity @s CustomName set value conquistador
+    execute as @s[type=armor_stand,tag=KitStand,name="Kit Brigadier"] run data modify entity @s CustomName set value brigadier
+    execute as @s[type=armor_stand,tag=KitStand,name="Kit Ranger"] run data modify entity @s CustomName set value ranger
+    execute as @s[type=armor_stand,tag=KitStand,name="Kit Warbow"] run data modify entity @s CustomName set value warbow
+    execute as @s[type=armor_stand,tag=KitStand,name="Kit Poacher"] run data modify entity @s CustomName set value poacher
+    execute as @s[type=armor_stand,tag=KitStand,name="Kit Engineer"] run data modify entity @s CustomName set value engineer
+    execute as @s[type=armor_stand,tag=KitStand,name="Kit Maceman"] run data modify entity @s CustomName set value maceman

@@ -1,0 +1,35 @@
+#> Runs on the context of a kit display armor stand, which should be appropriately named with a kit id (e.g. "archer")
+# Uses class ID (entity name) to lookup the Kit information
+# Checks for interaction and text display entities: spawns them if they do not exist already and edits them if they do
+# Text display shows Kit name
+# Interaction entity 
+
+from kit:base import Kit
+#from lib:interaction import Interaction
+
+#archer_stand = Interaction(id="archer_stand")
+
+function ./kit_stand_update:
+    kit_metadata = Kit.get(id=SELF.CustomName)
+    STORAGE.temp.stand_rotation = SELF.Rotation
+    
+    execute positioned ~ ~2 ~ on passengers return:
+    # Check for interaction entity presence, if it's here:
+        # TODO add unique identifier from Interaction object: SELF.merge({Tags:["interaction.tag"], response:1, width:1.2, height: -2.9})
+        execute on passengers return:
+            SELF.merge({text:"*punch for info*",view_range:0.0625,billboard:"vertical"})
+            execute on passengers return:
+                SELF.merge({text: kit_metadata.name,Rotation: STORAGE.temp.stand_rotation})
+            # If there is an interaction entity and "punch me" text_display, but no kit name display
+            summon text_display ~ ~ ~ {Tags:["NEW_SUMMON"],text: kit_metadata.name,Rotation: STORAGE.temp.stand_rotation}
+            ride @n[tag=NEW_SUMMON] mount @n[type=text_display]
+            tag @e remove NEW_SUMMON
+        # If there is an interaction entity but no text
+        summon text_display ~ ~ ~ {Tags:["NEW_SUMMON"], text:"*punch for info*", view_range:0.0625, billboard:"vertical"}
+        ride @n[tag=NEW_SUMMON] mount @n[type=text_display]
+        tag @e remove NEW_SUMMON
+    # If there are not passengers (no interact entity):
+    # TODO rename interaction.tag to be less ambiguous
+    summon interaction ~ ~ ~ {Tags:["NEW_SUMMON","interaction.tag"], response:1, width:1.2, height: -2.9}
+    ride @n[tag=NEW_SUMMON] mount @n[type=armor_stand]
+    tag @e remove NEW_SUMMON
