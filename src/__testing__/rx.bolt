@@ -4,6 +4,8 @@ from component:on_hold import ON_USING_TIMER
 from item:base import Item
 from lib:motion import apply_motion_vector
 
+from server:core import SERVER_TICK
+
 class Dart(Item):
     id = "arrow"
     item_model = "stone"
@@ -13,7 +15,7 @@ class Dart(Item):
 
 function ./dart_on_use:
     apply_motion_vector([0.0, 1.5, 2.0])
-    say i've used za dart
+    # say i've used za dart
 
 
 class PoisonDart(Item):
@@ -53,3 +55,4 @@ function ./poison_dart_on_use:
 
 # function ~/potato/release:
 #     say surprise!
+

@@ -1,0 +1,23 @@
+from lib:inventory_management import mass_modify
+
+
+
+function ./test:
+    mass_modify [inventory, hotbar] {
+        function: "filtered", 
+        item_filter: {
+            predicates: {
+                custom_data: {
+                    item: "dart"
+                }
+            }
+        },
+        on_pass: {
+            function: "set_name",
+            name: "taco salad"
+        },
+        on_fail: {
+            function: "set_name",
+            name: "sad salad"
+        }
+    }

@@ -70,10 +70,6 @@ class Item(metaclass=ItemType):
             for component_or_transformer in chain(self.custom_components.values(), self.custom_transformers.values()):
                 component_or_transformer.render(self, TEMP_ITEM)
 
-        # if not self.is_anonymous:
-        append function LOAD_ROM:
-            ITEM_ROM[self.name] = self.as_dict()
-        
         append function ./list:
             if not self.is_anonymous:
                 tellraw @s {

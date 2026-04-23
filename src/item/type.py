@@ -778,10 +778,10 @@ class ItemType(type):
         Used for detecting if a player has this item via custom_data matching.
 
         Returns:
-            String like "*[custom_data~{item_id:'dart'}]"
+            String like "*[custom_data~{item:'dart'}]"
         """
         id = self.id or "*"
-        return f"{id}[custom_data~{{item_id:'{self.name}'}}]"
+        return f"{id}[custom_data~{{item:'{self.name}'}}]"
 
     def as_dict(self) -> dict[str, Any]:
         """Convert item to a dictionary suitable for NBT serialization."""

@@ -10,6 +10,12 @@ class DuelsMap(Map):
     dimension: str = "overworld"
     max_player_count: int = 2
 
+    def on_load(self):
+        super().on_load()
+
+        append function admin:debug/map_info:
+            tellraw @s [{text: self.id, color: "gray"}, " (hash=", {text: str(self.hashed_id), color: "gold"}, ")\n", {storage: "rom:main", nbt: f"root.game.maps[{{id: '{self.id}'}}]"}, "\n"]
+
 
 macro duels_map path=brigadier:string data=mecha:nested_json:
     DuelsMap.generate(id=path, data=data)

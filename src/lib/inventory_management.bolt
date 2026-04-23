@@ -1,0 +1,196 @@
+from collections.abc import Iterator
+from functools import cache
+from operator import itemgetter
+
+from mecha.ast import AstNbtList, AstNbtValue
+from nbtlib.tag import String
+
+VALID_SLOT_GROUPS = ["hotbar", "inventory", "weapon", "armor", "cursor", "crafting"]
+
+def slot_groups(
+    hotbar: bool = False,
+    inventory: bool = False,
+    weapon: bool = False,
+    armor: bool = False,
+    cursor: bool = False,
+    crafting: bool = False,
+) -> Iterator[tuple[int, str]]:
+    if hotbar:
+        for i in range(9):
+            yield (i, f"container.{i}")
+    
+    if inventory:
+        for i in range(9, 36):
+            yield (i, f"container.{i}")
+
+    if weapon:
+        yield (98, "weapon.mainhand")
+        yield (99, "weapon.offhand")
+    
+    if armor:
+        for i, slot in enumerate(["armor.feet", "armor.legs", "armor.chest", "armor.head"]):
+            yield (100 + i, slot)
+    
+    if cursor:
+        yield (499, "player.cursor")
+
+    if crafting:
+        for i in range(4):
+            yield (500 + i, f"player.crafting.{i}")
+
+
+def slot_pool(slot_name: str) -> dict[str, Any]:
+    """Return a loot-table pool that drops the item in *slot_name*, or nothing."""
+    return {
+        "rolls": 1,
+        "entries": [
+            {
+                "type": "minecraft:alternatives",
+                "children": [
+                    # If the slot is empty → discard
+                    {
+                        "type": "minecraft:item",
+                        # this item does not matter
+                        "name": "minecraft:stone",
+                        "conditions": [
+                            {
+                                "condition": "minecraft:entity_properties",
+                                "entity": "this",
+                                "predicate": {
+                                    "slots": {
+                                        slot_name: {"items": "minecraft:air"}
+                                    }
+                                }
+                            }
+                        ],
+                        "functions": [{"function": "minecraft:discard"}]
+                    },
+                    # Otherwise → yield whatever is in the slot
+                    {
+                        "type": "minecraft:slots",
+                        "slot_source": {
+                            "type": "minecraft:slot_range",
+                            "source": "this",
+                            "slots": slot_name
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+
+def gap_pool(gap_size: int) -> dict:
+    """Return a padding pool with *gap_size* rolls that always discards."""
+    return {
+        "rolls": gap_size,
+        "entries": [
+            {
+                "type": "minecraft:item",
+                "name": "minecraft:stone",
+                "functions": [{"function": "minecraft:discard"}]
+            }
+        ]
+    }
+
+@cache
+def generate_loot_table(**kwargs: dict[str, Any]) -> str:
+    """
+    Build a loot table using the first *num_groups* slot groups.
+    Gaps between groups are filled with discard padding pools.
+    """ 
+    pools = []
+    last_index = 0  # exclusive end of the previous group
+ 
+    for index, slot in slot_groups(**kwargs):
+        # Insert gap padding if needed
+        if index > last_index:
+            pools.append(gap_pool(index - last_index))
+ 
+        pools.append(slot_pool(slot))
+
+        # update with new exclusive end
+        last_index = index + 1
+ 
+
+    subpath = "_".join(list(map(itemgetter(0), filter(itemgetter(1), kwargs.items()))))
+    path = f"lib:mass_modify/{subpath}"
+
+    loot_table path {"pools": pools}
+    return path
+
+
+
+# ------------------------------ #
+#          User Stuff
+# ------------------------------ #
+
+
+HOTBAR_WITH_SLOT = lib:mass_modify/inventory_with_slot
+
+pools = []
+for index, slot in slot_groups(hotbar=True):
+    pools.append(slot_pool(slot))
+    pools[-1]["entries"][0]["children"][1]["functions"] = [{"function": "set_custom_data", "tag": {"meta": {"original_slot": slot}}}]
+
+loot_table HOTBAR_WITH_SLOT {"pools": pools}
+
+
+
+macro mass_modify slot_groups=minecraft:nbt_tag loot_modifier=minecraft:loot_modifier:
+    validated_slot_groups = []
+
+    if type(slot_groups) is AstNbtValue:
+        if type(slot_groups.value) is not String:
+            raise ValueError(
+                "Input provided should be either a string or list of strings of valid slot group types: {slot_groups.value!r}"
+            )
+        validated_slot_groups.append(str(slot_groups.value))
+        
+    elif type(slot_groups) is AstNbtList:
+        for element in slot_groups.elements:
+            if type(element.value) is not String:
+                raise ValueError(
+                    "Input provided should be either a string or list of strings of valid slot group types: {element!r}"
+                )
+
+            validated_slot_groups.append(str(element.value))
+    else:
+        raise ValueError(
+            "Input provided should be either a string or list of strings of valid slot group types: {slot_groups!r}"
+        )
+
+    kwargs = {}
+
+    for slot_group in validated_slot_groups:
+        if slot_group not in VALID_SLOT_GROUPS:
+            raise ValueError(f"Slot group {slot_group!r} not in allowed types: `{VALID_SLOT_GROUPS!r}`")
+        kwargs[slot_group] = True
+
+    if type(loot_modifier) is not AstNbtList:
+        loot_modifier = AstNbtList(elements=[loot_modifier])
+    
+    loot replace entity @s container.0 loot {
+        pools: [
+            {
+                rolls: 1,
+                entries: [
+                    { type: "loot_table", value: (generate_loot_table(**kwargs)) }
+                ]
+            }
+        ],
+        functions: loot_modifier,
+    }
+
+
+macro hotbar_with_slots_modify loot_modifier=minecraft:loot_modifier:
+    loot replace entity @s container.0 loot {
+        pools: [
+            {
+                rolls: 1,
+                entries: [
+                    { type: "loot_table", value: HOTBAR_WITH_SLOT }
+                ]
+            }
+        ],
+        functions: loot_modifier,
+    }
