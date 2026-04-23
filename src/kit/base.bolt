@@ -4,10 +4,14 @@ from typing import ClassVar, NamedTuple
 from item:base import Item
 from item:type import ItemType
 from lib:helpers import id_to_number
+from lib:storage_helpers import Database
 from lib:const import ARMOR_SLOTS
 from lib:shulker_box import ShulkerBox
 from server:core import SERVER_LOAD
 from lib:inventory_management import hotbar_with_slots_modify
+from lib:rom import LOAD_ROM
+
+KITS_ROM = STORAGE.rom.kits
 
 item_type = Item | tuple[Item, int]
 
@@ -23,6 +27,7 @@ class Kit:
 
     _all_items: list[ItemType] = field(init=False, default_factory=list)
     _all_kits: ClassVar[list["Kit"]] = []
+    _storage: ClassVar[Database] = Database(STORAGE.rom.kits)
 
     def __post_init__(self):
         self._all_kits.append(self)
@@ -32,7 +37,7 @@ class Kit:
         
         if self.offhand is not None:
             self._all_items.append(self.offhand)
-        
+
         self.build()
         
     @property
@@ -40,7 +45,7 @@ class Kit:
         return self.name.lower().replace(" ", "_")
 
     @property
-    def numerical_id(self) -> int:
+    def hashed_id(self) -> int:
         return id_to_number(self.id)
     
     @property
@@ -70,23 +75,12 @@ class Kit:
         yield from self.hotbar_items
         yield from self.offhand_items
 
-    def as_dict(self):
-        base = {
-            "name": self.name,
-            "tagline": self.tagline,
-            # "icon": self.icon.as_dict(),
+    def meta_dict(self):
+        return {
+            name: self.name,
+            tagline: self.tagline,
+            # "icon": self.icon.as_dict()
         }
-
-        for slot, item in self.armor.items():
-            base[f"armor.{slot}"] = item.as_dict()
-        
-        for index, item in enumerate(self.hotbar):
-            base[f"hotbar.{index}"] = item.as_dict()
-
-        if self.offhand is not None:
-            base["weapon.offhand"] = self.offhand.as_dict()
-        
-        return base
     
     def build(self):
         """Main generation logic for per-kit files"""
@@ -95,9 +89,39 @@ class Kit:
             for kit in Kit._all_kits:
                 # applies the kit to the player (assuming @s)
                 function ~/{kit.id}/apply:
-                    for slot, item in kit.armor_items:
+                    for slot, item in kit:
                         item replace entity @s slot with item
                     hotbar_with_slots_modify {function: "set_custom_data", tag: {taco: bell}}
 
                 function ~/{kit.id}/mannequin:
                     execute summon mannequin function ~/../apply
+        
+        append function LOAD_ROM:
+            KITS_ROM[self.id] = self.meta_dict()
+
+    @classmethod
+    def get(cls, **kwargs) -> DataSource:
+        """Returns a storage location for storing custom resource data for a kit with the given ID.
+
+        ## Example
+        For the case of kits, `id` is a kit id and can be:
+        - a string (compile-time)
+        - a DataSource (like a storage location) (runtime)
+        - a ScoreSource (an objective + selector/name) (runtime)
+        
+        ```py
+        kit = Kit.get(id="archer")
+        # or
+        kit = Kit.get(id=SELF.CustomName)
+        # or
+        kit = Kit.get(hashed_id=SCORE.temp["kit_id"])
+
+        tellraw @a kit.name
+        ```
+
+        Example data-layout for output (might not be up to date):
+        ```json
+        { name: "Archer", tagline: "" }
+        ```
+        """
+        return cls._storage.get(output=STORAGE.temp.resource, **kwargs)

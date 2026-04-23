@@ -115,7 +115,6 @@ def select_instance_players(instance_id: int | ScoreSource | DataSource) -> str:
     tag @a remove SAME_INSTANCE_TAG
 
 
-
 append function SERVER_TICK:
     execute function ./instance_tick:
         for instance in INSTANCE_META.loop(name=~/loop):

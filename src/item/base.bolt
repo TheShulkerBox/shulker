@@ -70,8 +70,12 @@ class Item(metaclass=ItemType):
             for component_or_transformer in chain(self.custom_components.values(), self.custom_transformers.values()):
                 component_or_transformer.render(self, TEMP_ITEM)
 
-        append function ./list:
-            if not self.is_anonymous:
+        # if not self.is_anonymous:
+        append function LOAD_ROM:
+            ITEM_ROM[self.name] = self.as_dict()
+        
+        if not self.is_anonymous:
+            append function ./list:
                 tellraw @s {
                     text: f"[ {self.name} ]",
                     color: "gold",
@@ -79,14 +83,14 @@ class Item(metaclass=ItemType):
                 }
 
 
-function ./give:
-    raw f"$data modify {TEMP_ITEM} set from {ITEM_ROM}.$(item)"
-    tellraw @s TEMP_ITEM
-    function ./render {item: $(item)}
-    ShulkerBox.Items = []
-    ShulkerBox.Items.append(TEMP_ITEM)
-    tellraw @s ShulkerBox.Items
-    loot give @s mine ShulkerBox.Coords ShulkerBox.Contents
+            function f"item:give/{self.name}":
+                raw f"$data modify {TEMP_ITEM} set from {ITEM_ROM}.$(item)"
+                tellraw @s TEMP_ITEM
+                function ./render {item: $(item)}
+                ShulkerBox.Items = []
+                ShulkerBox.Items.append(TEMP_ITEM)
+                tellraw @s ShulkerBox.Items
+                loot give @s mine ShulkerBox.Coords ShulkerBox.Contents
 
 
 function ./render:

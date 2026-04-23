@@ -143,46 +143,49 @@ function ./pregame:
 
 
 prepend function ON_DEATH:
-    execute unless score var DURING_DEATH_TIMER["@s"] matches 1.. run function ./on_death:
-        with select_instance_players(INSTANCE_ID["@s"]) as instance_tag:
-            # game is considered tied if everybody is dead!
-            execute store result score var SCORE.temp["#player_count"] if entity @a[tag=instance_tag]
-            execute store result score var SCORE.temp["#dead_count"] if entity @a[tag=instance_tag, scores={DEATH_SCORE=1..}]
-            tellraw @a ["player count: ", SCORE.temp["#player_count"], ", dead count: ", SCORE.temp["#dead_count"]]
-            if SCORE.temp["#player_count"] == SCORE.temp["#dead_count"]:
-                return run function ./tie_match:
-                    tellraw @a {text: "The duel has ended in a tie!", color: Theme.Body}
-                    title @a[tag=instance_tag] title {text: "Tie Round", color: "gray"}
+    # TODO: state for in duels but not fighting
+    instance = INSTANCE_META.get(id=INSTANCE_ID["@s"])
+    if instance.gamemode == Gamemode.Duels:
+        execute unless score var DURING_DEATH_TIMER["@s"] matches 1.. run function ./on_death:
+            with select_instance_players(INSTANCE_ID["@s"]) as instance_tag:
+                # game is considered tied if everybody is dead!
+                execute store result score var SCORE.temp["#player_count"] if entity @a[tag=instance_tag]
+                execute store result score var SCORE.temp["#dead_count"] if entity @a[tag=instance_tag, scores={DEATH_SCORE=1..}]
+                tellraw @a ["player count: ", SCORE.temp["#player_count"], ", dead count: ", SCORE.temp["#dead_count"]]
+                if SCORE.temp["#player_count"] == SCORE.temp["#dead_count"]:
+                    return run function ./tie_match:
+                        tellraw @a {text: "The duel has ended in a tie!", color: Theme.Body}
+                        title @a[tag=instance_tag] title {text: "Tie Round", color: "gray"}
+                        display_score_subtitle(instance_tag)
+                        DURING_DEATH_TIMER[f"@a[tag={instance_tag}]"] = DEATH_COUNTDOWN
+                        gamemode spectator @a[tag=instance_tag]
+                        schedule function ./during_death 1t replace
+
+                # increment team score
+                scoreboard players add var KILLS[f"@a[tag={instance_tag}, predicate=!{TEAM_MATCHER()}]"] 1
+
+                # check if we exceeded 3 kills (short-circuit here if so) TODO: hardcoded
+                execute as @a[tag=instance_tag, scores={KILLS=3..}, limit=1] return run function ./end_game:
+                    # GAME_TIMER[f"@a[tag={instance_tag}]"] = POSTGAME_COUNTDOWN
+                    title @a[tag=instance_tag, predicate=TEAM_MATCHER()] title "Match Won"
+                    title @a[tag=instance_tag, predicate=!TEAM_MATCHER()] title "Match Lost"
                     display_score_subtitle(instance_tag)
-                    DURING_DEATH_TIMER[f"@a[tag={instance_tag}]"] = DEATH_COUNTDOWN
-                    gamemode spectator @a[tag=instance_tag]
-                    schedule function ./during_death 1t replace
-
-            # increment team score
-            scoreboard players add var KILLS[f"@a[tag={instance_tag}, predicate=!{TEAM_MATCHER()}]"] 1
-
-            # check if we exceeded 3 kills (short-circuit here if so) TODO: hardcoded
-            execute as @a[tag=instance_tag, scores={KILLS=3..}, limit=1] return run function ./end_game:
-                # GAME_TIMER[f"@a[tag={instance_tag}]"] = POSTGAME_COUNTDOWN
-                title @a[tag=instance_tag, predicate=TEAM_MATCHER()] title "Match Won"
-                title @a[tag=instance_tag, predicate=!TEAM_MATCHER()] title "Match Lost"
+                    execute as @a[tag=instance_tag]:
+                        leave_duels()
+                
+                # Display the `x-y` (my kills - opponent kills)
+                title @a[tag=instance_tag] title ""
                 display_score_subtitle(instance_tag)
-                execute as @a[tag=instance_tag]:
-                    leave_duels()
-            
-            # Display the `x-y` (my kills - opponent kills)
-            title @a[tag=instance_tag] title ""
-            display_score_subtitle(instance_tag)
-            
-            # during death timer
-            DURING_DEATH_TIMER["@s"] = DEATH_COUNTDOWN
-            tellraw @a[tag=instance_tag] ["opponent healths: ", HEALTH[f"@a[tag={instance_tag}, predicate=!{TEAM_MATCHER()}]"]]
+                
+                # during death timer
+                DURING_DEATH_TIMER["@s"] = DEATH_COUNTDOWN
+                tellraw @a[tag=instance_tag] ["opponent healths: ", HEALTH[f"@a[tag={instance_tag}, predicate=!{TEAM_MATCHER()}]"]]
 
-            gamemode spectator @s
-            effect give @a[tag=instance_tag, predicate=!TEAM_MATCHER()] minecraft:instant_health infinite 0 true
-            effect give @a[tag=instance_tag, predicate=!TEAM_MATCHER()] minecraft:resistance infinite 0 true
+                gamemode spectator @s
+                effect give @a[tag=instance_tag, predicate=!TEAM_MATCHER()] minecraft:instant_health infinite 0 true
+                effect give @a[tag=instance_tag, predicate=!TEAM_MATCHER()] minecraft:resistance infinite 0 true
 
-            schedule function ./during_death 1t replace
+                schedule function ./during_death 1t replace
 
     
 function ./during_death:
