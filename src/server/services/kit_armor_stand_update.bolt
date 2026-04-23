@@ -19,17 +19,25 @@ function ./kit_stand_update:
         execute on passengers return:
             SELF.merge({text:"*punch for info*",view_range:0.0625,billboard:"vertical"})
             execute on passengers return:
-                SELF.merge({text: kit_metadata.name,Rotation: STORAGE.temp.stand_rotation})
+                SELF.merge({"text": kit_metadata.name, "Rotation": STORAGE.temp.stand_rotation, "transformation":{"left_rotation":[0f,0f,0f,1f],"right_rotation":[0f,0f,0f,1f],"translation":[0f,0.5f,0f],"scale":[0.75f,0.75f,1f]}})
             # If there is an interaction entity and "punch me" text_display, but no kit name display
-            summon text_display ~ ~ ~ {Tags:["NEW_SUMMON"],text: kit_metadata.name,Rotation: STORAGE.temp.stand_rotation}
+            summon text_display ~ ~ ~ {Tags:["NEW_SUMMON","KIT_NAME","KIT_STAND_ERRATA"],text: kit_metadata.name,Rotation: STORAGE.temp.stand_rotation}
             ride @n[tag=NEW_SUMMON] mount @n[type=text_display]
             tag @e remove NEW_SUMMON
         # If there is an interaction entity but no text
-        summon text_display ~ ~ ~ {Tags:["NEW_SUMMON"], text:"*punch for info*", view_range:0.0625, billboard:"vertical"}
+        summon text_display ~ ~ ~ {Tags:["NEW_SUMMON","KIT_PROMPT","KIT_STAND_ERRATA"], text:"*punch for info*", view_range:0.0625, billboard:"vertical"}
         ride @n[tag=NEW_SUMMON] mount @n[type=text_display]
         tag @e remove NEW_SUMMON
     # If there are not passengers (no interact entity):
-    # TODO rename interaction.tag to be less ambiguous
-    summon interaction ~ ~ ~ {Tags:["NEW_SUMMON","interaction.tag"], response:1, width:1.2, height: -2.9}
+    # TODO rename interaction.tag to be less ambiguous (and work with API)
+    summon interaction ~ ~ ~ {Tags:["NEW_SUMMON","interaction.tag","KIT_INTERACTION","KIT_STAND_ERRATA"], response:1, width:1.2, height: -2.9}
     ride @n[tag=NEW_SUMMON] mount @n[type=armor_stand]
     tag @e remove NEW_SUMMON
+
+    # Clean up orphaned display and interaction entities
+    execute function ./validate_vehicle: 
+        execute as @e[tag=KIT_STAND_ERRATA] on vehicle return:
+            # This can't be empty? TODO
+            say hi
+        kill @s
+    
