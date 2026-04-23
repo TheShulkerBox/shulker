@@ -19,3 +19,5 @@ function admin:kit_armor_stand_rename:
     execute as @e[type=armor_stand,tag=KitStand,name="Kit Ranger"] run data modify entity @s CustomName set value ranger
     execute as @e[type=armor_stand,tag=KitStand,name="Kit Warbow"] run data modify entity @s CustomName set value warbow
     execute as @e[type=armor_stand,tag=KitStand,name="Kit Poacher"] run data modify entity @s CustomName set value poacher
+    execute as @e[type=armor_stand,tag=KitStand,name="Kit Engineer"] run data modify entity @s CustomName set value engineer
+    execute as @e[type=armor_stand,tag=KitStand,name="Kit Maceman"] run data modify entity @s CustomName set value maceman
