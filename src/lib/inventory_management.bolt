@@ -183,6 +183,9 @@ macro mass_modify slot_groups=minecraft:nbt_tag loot_modifier=minecraft:loot_mod
 
 
 macro hotbar_with_slots_modify loot_modifier=minecraft:loot_modifier:
+    if type(loot_modifier) is not AstNbtList:
+        loot_modifier = AstNbtList(elements=[loot_modifier])
+
     loot replace entity @s container.0 loot {
         pools: [
             {
