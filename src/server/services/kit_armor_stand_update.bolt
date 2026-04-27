@@ -30,9 +30,11 @@ function ./kit_stand_update:
         execute on passengers return:
             SELF.merge(
                 {
-                    text:"*punch for info*",
-                    view_range:0.03,
+                    text:[{text:"*punch for info*",italic:true}],
+                    text_opacity:100,
+                    view_range:0.045,
                     billboard:"vertical",
+                    see_through:true,
                     brightness:{
                         block:9,
                         sky:9
@@ -42,7 +44,7 @@ function ./kit_stand_update:
             SELF.transformation = {
                 left_rotation: [0.0, 0.0, 0.0, 1.0],
                 right_rotation: [0.0, 0.0, 0.0, 1.0],
-                translation: [0.0, 3.0, 0.0],
+                translation: [0.0, 1.625, 0.0],
                 scale: [0.5, 0.5, 1.0]
             }
 
@@ -53,7 +55,7 @@ function ./kit_stand_update:
                 SELF.transformation = {
                     left_rotation: [0.0, 0.0, 0.0, 1.0],
                     right_rotation: [0.0, 0.0, 0.0, 1.0],
-                    translation: [0.0, 3.25, 0.0],
+                    translation: [0.0, 3.0, 0.0],
                     scale: [1.0, 1.0, 1.0]
                 }
 
@@ -67,7 +69,7 @@ function ./kit_stand_update:
                 transformation:{
                     left_rotation: [0.0, 0.0, 0.0, 1.0],
                     right_rotation: [0.0, 0.0, 0.0, 1.0],
-                    translation: [0.0, 3.25, 0.0],
+                    translation: [0.0, 3.0, 0.0],
                     scale: [1.0, 1.0, 1.0]
                 }
             }
@@ -83,12 +85,14 @@ function ./kit_stand_update:
                 block:9,
                 sky:9
             },
-            text:"*punch for info*", view_range:0.03, 
+            text:[{text:"*punch for info*",italic:true}], view_range:0.045,
+            see_through:true, 
             billboard:"vertical",
+            text_opacity:100,
             transformation:{
                 left_rotation: [0.0, 0.0, 0.0, 1.0],
                 right_rotation: [0.0, 0.0, 0.0, 1.0],
-                translation: [0.0, 3.0, 0.0],
+                translation: [0.0, 1.625, 0.0],
                 scale: [0.5, 0.5, 1.0]
             }
         }
