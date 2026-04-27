@@ -1,0 +1,17 @@
+
+
+
+# class Weapon(Item):
+#     ...
+
+
+# class LightWeapon(Weapon):
+#     damage_type = 
+
+
+# class MediumWeapon(Weapon):
+#     damage_type = 
+
+
+# class HeavyWeapon(Weapon):
+#     damage_type = 

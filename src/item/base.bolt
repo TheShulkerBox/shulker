@@ -10,6 +10,8 @@ ITEM_ROM = STORAGE.rom.items
 TEMP_ITEM = STORAGE.temp.item
 ItemType.ctx = ctx
 
+dynamic_key = Scoreboard("item.dynamic_key", criteria="dummy")
+
 
 class Item(metaclass=ItemType):
     """Item is the base class for all items in the data pack. This is a special behaving structure that
@@ -65,12 +67,6 @@ class Item(metaclass=ItemType):
 
     @classmethod
     def build(self):
-        append function f"item:render/{self.name}":
-            # render the components
-            for component_or_transformer in chain(self.custom_components.values(), self.custom_transformers.values()):
-                component_or_transformer.render(self, TEMP_ITEM)
-
-        # if not self.is_anonymous:
         append function LOAD_ROM:
             ITEM_ROM[self.name] = self.as_dict()
         
@@ -84,13 +80,7 @@ class Item(metaclass=ItemType):
 
 
             function f"item:give/{self.name}":
-                raw f"$data modify {TEMP_ITEM} set from {ITEM_ROM}.$(item)"
-                tellraw @s TEMP_ITEM
-                function ./render {item: $(item)}
-                ShulkerBox.Items = []
-                ShulkerBox.Items.append(TEMP_ITEM)
-                tellraw @s ShulkerBox.Items
-                loot give @s mine ShulkerBox.Coords ShulkerBox.Contents
+                give @s self self.count
 
 
 function ./render:

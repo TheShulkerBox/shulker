@@ -91,7 +91,7 @@ class Kit:
                 # applies the kit to the player (assuming @s)
                 function ~/{kit.id}/apply:
                     for slot, item in kit:
-                        item replace entity @s slot with item
+                        item replace entity @s slot with item item.count
                     hotbar_with_slots_modify {function: "set_custom_data", tag: {taco: bell}}
 
                 function ~/{kit.id}/mannequin:
@@ -122,7 +122,7 @@ class Kit:
 
         Example data-layout for output (might not be up to date):
         ```json
-        { name: "Archer", tagline: "" }
+        { name: "Archer", tagline: "Trusty bowman" }
         ```
         """
         return cls._storage.get(output=STORAGE.temp.resource, **kwargs)

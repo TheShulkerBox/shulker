@@ -1,0 +1,25 @@
+light_damage_type = ../weapon/light
+medium_damage_type = ../weapon/medium
+heavy_damage_type = ../weapon/heavy
+
+damage_type_tag light_damage_type {"values": [light_damage_type]}
+damage_type_tag medium_damage_type {"values": [medium_damage_type]}
+damage_type_tag heavy_damage_type {"values": [heavy_damage_type]}
+
+damage_type light_damage_type {
+    "exhaustion": 0.1,
+    "message_id": "player",
+    "scaling": "when_caused_by_living_non_player"
+}
+
+damage_type medium_damage_type {
+    "exhaustion": 0.1,
+    "message_id": "player",
+    "scaling": "when_caused_by_living_non_player"
+}
+
+damage_type heavy_damage_type {
+    "exhaustion": 0.5,
+    "message_id": "player",
+    "scaling": "when_caused_by_living_non_player"
+}

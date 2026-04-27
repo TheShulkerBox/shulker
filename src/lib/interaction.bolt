@@ -1,0 +1,91 @@
+from dataclasses import dataclass
+from functools import cached_property
+
+# @dataclass
+# class Interaction:
+#     id: str
+
+#     def __post_init__(self):
+#         advancement 
+
+#     @cached_property
+#     def path(self):
+#         return ~/interact_{id}
+    
+#     @cached_property
+#     def on_right_click(self):
+#         return f"{self.path}/on_right_click"
+    
+#     @cached_property
+#     def on_left_click(self):
+#         return f"{self.path}/on_left_click"
+
+#     @cached_property
+#     def tag(self):
+#         return f"interaction.{id}"
+
+
+# interaction = Interaction(id="archer_stand")
+
+# summon interaction ~ ~ ~ {Tags: [interaction.tag]}
+
+# function interaction.on_right_click:
+#     say hi
+
+
+# function interaction.on_left_click:
+#     say hi
+
+
+def create_interaction(tag_str: str, /, interact: bool = True, attack: bool = False):
+    """A helper function to create functions that respond to interacting with interaction entities.
+    
+    Usage:
+        from lib:interaction import create_interaction
+
+        append function create_interaction("taco.bell", interact=True, attack=True):
+            if 
+    """
+
+    if (not interact) and (not attack):
+        raise ValueError("You need atleast `interact=True` or `attack=True`")
+
+    reward_path = ~/interaction/player
+    data = {
+        "criteria": {},
+        "requirements": [[]],
+        "rewards": { "function": reward_path }
+    }
+
+    if interact:
+        data["criteria"]["interact"] = {
+            "trigger": "minecraft:player_interacted_with_entity",
+            "conditions": {
+                "entity": {
+                    "type": "minecraft:interaction",
+                    "nbt": f'{{Tags:["{tag_str}"]}}'
+                }
+            }
+        }
+        data["requirements"][0].append("interact")
+    
+    if attack:
+        data["criteria"]["attack"] = {
+            "trigger": "minecraft:player_hurt_entity",
+            "conditions": {
+                "entity": {
+                    "type": "minecraft:interaction",
+                    "nbt": f'{{Tags:["{tag_str}"]}}'
+                }
+            }
+        }
+        data["requirements"][0].append("attack")
+
+    advancement reward_path data
+
+    append function reward_path:
+        advancement revoke @s only reward_path
+        # execute store result var SCORE.temp["#gametime"] run time query gametime
+        # execute as @e[type=interaction, tag=tag_str, distance=..8]
+
+    return reward_path

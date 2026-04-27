@@ -19,7 +19,14 @@ function ./kit_stand_update:
         execute on passengers return:
             SELF.merge({text:"*punch for info*",view_range:0.0625,billboard:"vertical"})
             execute on passengers return:
-                SELF.merge({"text": kit_metadata.name, "Rotation": STORAGE.temp.stand_rotation, "transformation":{"left_rotation":[0f,0f,0f,1f],"right_rotation":[0f,0f,0f,1f],"translation":[0f,0.5f,0f],"scale":[0.75f,0.75f,1f]}})
+                SELF.text = kit_metadata.name
+                SELF.Rotation = STORAGE.temp.stand_rotation
+                SELF.transformation = {
+                    left_rotation: [0.0, 0.0, 0.0, 1.0],
+                    right_rotation: [0.0, 0.0, 0.0, 1.0],
+                    translation: [0.0, 0.5, 0.0],
+                    scale: [0.75, 0.75, 1.0],
+                }
             # If there is an interaction entity and "punch me" text_display, but no kit name display
             summon text_display ~ ~ ~ {Tags:["NEW_SUMMON","KIT_NAME","KIT_STAND_ERRATA"],text: kit_metadata.name,Rotation: STORAGE.temp.stand_rotation}
             ride @n[tag=NEW_SUMMON] mount @n[type=text_display]

@@ -3,3 +3,26 @@ from ../base import Item
 
 class Food(Item):
     id = "pumpkin_pie"
+
+
+class Rations(Item):
+    """Quick healing food that can be eaten quickly in battle."""
+
+    item_model = "dried_kelp"
+    item_name = "Rations"
+    consumable = {
+        consume_seconds: 0.8,
+        on_consume_effects: [
+            {
+                type: "apply_effects",
+                effects: [
+                    {
+                        id: "regeneration",
+                        amplifier: 3,
+                        duration: 3 * 20,
+                    }
+                ]
+            }
+        ]
+    }
+

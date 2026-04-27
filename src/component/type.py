@@ -25,15 +25,6 @@ Subclass `Component` and define fields for user input:
         value: str
         enabled: bool = True
 
-        def render(self) -> dict[str, Any] | None:
-            if not self.enabled:
-                return None
-
-            return {
-                "minecraft:custom_data": {
-                    "my_component": {"value": self.value}
-                }
-            }
 
 ## Creating Custom Transformers
 
@@ -56,7 +47,6 @@ so they're automatically discovered and applied during item resolution.
 
 from typing import Any, ClassVar, Self, TYPE_CHECKING
 from dataclasses import dataclass, field
-from bolt_expressions import DataSource
 
 from lib.helpers import camel_case_to_snake_case
 
@@ -135,9 +125,6 @@ class Component:
             resolved_components: All resolved components (mutable)
         """
     
-    def render(self, item: ItemType, item_data: DataSource) -> None:
-        """Optional runtime rendering"""
-
 
 @dataclass
 class Transformer:
@@ -213,6 +200,3 @@ class Transformer:
         Args:
             resolved_components: All resolved components (mutable)
         """
-
-    def render(self, item: ItemType, item_data: DataSource) -> None:
-        """Optional runtime rendering"""
