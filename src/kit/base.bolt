@@ -78,6 +78,7 @@ class Kit:
     def meta_dict(self):
         """Metadata related to kits (does not contain actual items)"""
         return {
+            id: self.id,
             name: self.name,
             tagline: self.tagline,
             # "icon": self.icon.as_dict()

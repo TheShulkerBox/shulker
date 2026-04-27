@@ -49,6 +49,11 @@ class Interaction:
             "rewards": { "function": self.path }
         }
 
+        function self.path:
+            execute if entity @s[advancements={self.path={interact=true}}] run function self.on_right_click
+            execute if entity @s[advancements={self.path={attack=true}}] run function self.on_left_click
+            advancement revoke @s only self.path
+
     @cached_property
     def path(self):
         return ~/interact_{self.tag}
