@@ -33,7 +33,7 @@ function ./kit_stand_update:
             SELF.transformation = {
                 left_rotation: [0.0, 0.0, 0.0, 1.0],
                 right_rotation: [0.0, 0.0, 0.0, 1.0],
-                translation: [0.0, 2.0, 0.0],
+                translation: [0.0, 3.0, 0.0],
                 scale: [0.75, 0.75, 1.0]
             }
 
@@ -43,7 +43,7 @@ function ./kit_stand_update:
                 SELF.transformation = {
                     left_rotation: [0.0, 0.0, 0.0, 1.0],
                     right_rotation: [0.0, 0.0, 0.0, 1.0],
-                    translation: [0.0, 2.25, 0.0],
+                    translation: [0.0, 3.25, 0.0],
                     scale: [0.75, 0.75, 1.0]
                 }
             # If there is an interaction entity and "punch me" text_display, but no kit name display
@@ -51,7 +51,7 @@ function ./kit_stand_update:
 
                     left_rotation: [0.0, 0.0, 0.0, 1.0],
                     right_rotation: [0.0, 0.0, 0.0, 1.0],
-                    translation: [0.0, 2.25, 0.0],
+                    translation: [0.0, 3.25, 0.0],
                     scale: [0.75, 0.75, 1.0]}
 
                     }
@@ -63,7 +63,7 @@ function ./kit_stand_update:
 
                     left_rotation: [0.0, 0.0, 0.0, 1.0],
                     right_rotation: [0.0, 0.0, 0.0, 1.0],
-                    translation: [0.0, 2.0, 0.0],
+                    translation: [0.0, 3.0, 0.0],
                     scale: [0.75, 0.75, 1.0]}
 
                     }
