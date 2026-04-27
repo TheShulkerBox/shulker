@@ -21,12 +21,11 @@ for _kit in Kit._all_kits:
 function ./kit_stand_update:
     kit_metadata = Kit.get(id=SELF.CustomName)
     STORAGE.temp.stand_rotation = SELF.Rotation
-    STORAGE.temp.stand_id = SELF.CustomName
     
     execute positioned ~ ~2 ~ on passengers return:
     # Check for interaction entity presence, if it's here:
         SELF.merge({response:1, width:1.2, height: -2.9})
-        SELF.Tags = [STORAGE.temp.stand_id, "KIT_INTERACTION", "KIT_STAND_ERRATA"]
+        SELF.Tags = [kit_metadata.id, Interaction.global_tag, "KIT_INTERACTION", "KIT_STAND_ERRATA"]
 
         execute on passengers return:
             SELF.merge({text:"*punch for info*",view_range:0.0625,billboard:"vertical"})
@@ -47,33 +46,39 @@ function ./kit_stand_update:
                     scale: [0.75, 0.75, 1.0]
                 }
             # If there is an interaction entity and "punch me" text_display, but no kit name display
-            summon text_display ~ ~ ~ {Tags:["NEW_SUMMON","KIT_NAME","KIT_STAND_ERRATA"],text: kit_metadata.name,Rotation: STORAGE.temp.stand_rotation,transformation:{
-
+            summon text_display ~ ~ ~ {
+                Tags:["NEW_SUMMON","KIT_NAME","KIT_STAND_ERRATA"],
+                transformation:{
                     left_rotation: [0.0, 0.0, 0.0, 1.0],
                     right_rotation: [0.0, 0.0, 0.0, 1.0],
                     translation: [0.0, 3.25, 0.0],
-                    scale: [0.75, 0.75, 1.0]}
-
-                    }
+                    scale: [0.75, 0.75, 1.0]
+                }
+            }
+            Data.entity("@n[tag=NEW_SUMMON]").Rotation = STORAGE.temp.stand_rotation
+            Data.entity("@n[tag=NEW_SUMMON]").Tags.append(kit_metadata.id)
             ride @n[tag=NEW_SUMMON] mount @n[type=text_display,tag=KIT_PROMPT]
             tag @e remove NEW_SUMMON
 
         # If there is an interaction entity but no text
-        summon text_display ~ ~ ~ {Tags:["NEW_SUMMON","KIT_PROMPT","KIT_STAND_ERRATA"], text:"*punch for info*", view_range:0.0625, billboard:"vertical",transformation:{
-
-                    left_rotation: [0.0, 0.0, 0.0, 1.0],
-                    right_rotation: [0.0, 0.0, 0.0, 1.0],
-                    translation: [0.0, 3.0, 0.0],
-                    scale: [0.75, 0.75, 1.0]}
-
-                    }
+        summon text_display ~ ~ ~ {
+            Tags:["NEW_SUMMON","KIT_PROMPT","KIT_STAND_ERRATA"], 
+            text:"*punch for info*", view_range:0.0625, 
+            billboard:"vertical",
+            transformation:{
+                left_rotation: [0.0, 0.0, 0.0, 1.0],
+                right_rotation: [0.0, 0.0, 0.0, 1.0],
+                translation: [0.0, 3.0, 0.0],
+                scale: [0.75, 0.75, 1.0]
+            }
+        }
         ride @n[tag=NEW_SUMMON] mount @n[type=interaction,tag=KIT_INTERACTION]
         tag @e remove NEW_SUMMON
 
     # If there are not passengers (no interact entity):
     summon interaction ~ ~ ~ {Tags:["NEW_SUMMON","KIT_INTERACTION","KIT_STAND_ERRATA",Interaction.global_tag], response:1, width:1.2, height: -2.9}
     ride @n[tag=NEW_SUMMON] mount @n[type=armor_stand]
-    Data.entity("@n[tag=NEW_SUMMON]").Tags.append(STORAGE.temp.stand_id)
+    Data.entity("@n[tag=NEW_SUMMON]").Tags.append(kit_metadata.id)
     tag @e remove NEW_SUMMON
 
     # Clean up orphaned display and interaction entities
