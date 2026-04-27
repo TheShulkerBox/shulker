@@ -13,10 +13,10 @@ for _kit in Kit._all_kits:
     _interaction = Interaction(_kit.id)
 
     function _interaction.on_left_click:
-        say f"{_kit.name} was left clicked"
-    
+        function f"kit:{_kit.id}/description"
+
     function _interaction.on_right_click:
-        say f"{_kit.name} was right clicked"
+        function f"kit:{_kit.id}/select"
 
 function ./kit_stand_update:
     kit_metadata = Kit.get(id=SELF.CustomName)
@@ -74,7 +74,7 @@ function ./kit_stand_update:
                 }
             }
             Data.entity("@n[tag=NEW_SUMMON]").Rotation = STORAGE.temp.stand_rotation
-            Data.entity("@n[tag=NEW_SUMMON]").Text = kit_metadata.id
+            Data.entity("@n[tag=NEW_SUMMON]").text = kit_metadata.name
             ride @n[tag=NEW_SUMMON] mount @n[type=text_display,tag=KIT_PROMPT]
             tag @e remove NEW_SUMMON
 
@@ -105,8 +105,8 @@ function ./kit_stand_update:
     Data.entity("@n[tag=NEW_SUMMON]").Tags.append(kit_metadata.id)
     tag @e remove NEW_SUMMON
 
-    # Clean up orphaned display and interaction entities
-    execute function ./validate_vehicle: 
-        execute as @e[tag=KIT_STAND_ERRATA] on vehicle run return fail
+# Clean up orphaned display and interaction entities
+function admin:validate_kit_stand_entities: 
+    execute as @e[tag=KIT_STAND_ERRATA]:
+        execute on vehicle run return fail
         kill @s
-    
