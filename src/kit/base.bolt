@@ -99,7 +99,7 @@ class Kit:
                     execute summon mannequin function ~/../apply
         
         append function LOAD_ROM:
-            KITS_ROM[self.id] = self.meta_dict()
+            KITS_ROM.append(self.meta_dict())
 
     @classmethod
     def get(cls, **kwargs) -> DataSource:
