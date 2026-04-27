@@ -10,12 +10,12 @@ from lib:interaction import Interaction
 
 
 for _kit in Kit._all_kits:
-    interaction = Interaction(_kit.id)
+    _interaction = Interaction(_kit.id)
 
-    function interaction.on_left_click:
+    function _interaction.on_left_click:
         say f"{_kit.name} was left clicked"
     
-    function interaction.on_right_click:
+    function _interaction.on_right_click:
         say f"{_kit.name} was right clicked"
 
 function ./kit_stand_update:
