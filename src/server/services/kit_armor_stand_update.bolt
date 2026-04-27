@@ -5,9 +5,9 @@
 # Interaction entity 
 
 from kit:base import Kit
-#from lib:interaction import Interaction
+from lib:interaction import Interaction
 
-#archer_stand = Interaction(id="archer_stand")
+archer_stand = Interaction(id="archer_stand")
 
 function ./kit_stand_update:
     kit_metadata = Kit.get(id=SELF.CustomName)
@@ -15,7 +15,7 @@ function ./kit_stand_update:
     
     execute positioned ~ ~2 ~ on passengers return:
     # Check for interaction entity presence, if it's here:
-        # TODO add unique identifier from Interaction object: SELF.merge({Tags:["interaction.tag"], response:1, width:1.2, height: -2.9})
+        SELF.merge({Tags:[archer_stand.tag], response:1, width:1.2, height: -2.9})
         execute on passengers return:
             SELF.merge({text:"*punch for info*",view_range:0.0625,billboard:"vertical"})
             execute on passengers return:
@@ -25,24 +25,31 @@ function ./kit_stand_update:
                     left_rotation: [0.0, 0.0, 0.0, 1.0],
                     right_rotation: [0.0, 0.0, 0.0, 1.0],
                     translation: [0.0, 0.5, 0.0],
-                    scale: [0.75, 0.75, 1.0],
+                    scale: [0.75, 0.75, 1.0]
                 }
             # If there is an interaction entity and "punch me" text_display, but no kit name display
-            summon text_display ~ ~ ~ {Tags:["NEW_SUMMON","KIT_NAME","KIT_STAND_ERRATA"],text: kit_metadata.name,Rotation: STORAGE.temp.stand_rotation}
-            ride @n[tag=NEW_SUMMON] mount @n[type=text_display]
+            summon text_display ~ ~ ~ {Tags:["NEW_SUMMON","KIT_NAME","KIT_STAND_ERRATA"],text: kit_metadata.name,Rotation: STORAGE.temp.stand_rotation,transformation:{
+
+                    left_rotation: [0.0, 0.0, 0.0, 1.0],
+                    right_rotation: [0.0, 0.0, 0.0, 1.0],
+                    translation: [0.0, 0.5, 0.0],
+                    scale: [0.75, 0.75, 1.0]}
+
+                    }
+            ride @n[tag=NEW_SUMMON] mount @n[type=text_display,tag=KIT_PROMPT]
             tag @e remove NEW_SUMMON
         # If there is an interaction entity but no text
         summon text_display ~ ~ ~ {Tags:["NEW_SUMMON","KIT_PROMPT","KIT_STAND_ERRATA"], text:"*punch for info*", view_range:0.0625, billboard:"vertical"}
-        ride @n[tag=NEW_SUMMON] mount @n[type=text_display]
+        ride @n[tag=NEW_SUMMON] mount @n[type=interaction,tag=KIT_INTERACTION]
         tag @e remove NEW_SUMMON
     # If there are not passengers (no interact entity):
     # TODO rename interaction.tag to be less ambiguous (and work with API)
-    summon interaction ~ ~ ~ {Tags:["NEW_SUMMON","interaction.tag","KIT_INTERACTION","KIT_STAND_ERRATA"], response:1, width:1.2, height: -2.9}
+    summon interaction ~ ~ ~ {Tags:["NEW_SUMMON",archer_stand.tag,"KIT_INTERACTION","KIT_STAND_ERRATA"], response:1, width:1.2, height: -2.9}
     ride @n[tag=NEW_SUMMON] mount @n[type=armor_stand]
     tag @e remove NEW_SUMMON
 
     # Clean up orphaned display and interaction entities
     execute function ./validate_vehicle: 
-        execute as @e[tag=KIT_STAND_ERRATA] on vehicle run return 1
+        execute as @e[tag=KIT_STAND_ERRATA] on vehicle run return fail
         kill @s
     
