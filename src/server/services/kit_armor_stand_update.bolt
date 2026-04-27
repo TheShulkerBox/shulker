@@ -31,7 +31,7 @@ function ./kit_stand_update:
             SELF.merge(
                 {
                     text:"*punch for info*",
-                    view_range:0.0625,
+                    view_range:0.03,
                     billboard:"vertical",
                     brightness:{
                         block:9,
@@ -43,7 +43,7 @@ function ./kit_stand_update:
                 left_rotation: [0.0, 0.0, 0.0, 1.0],
                 right_rotation: [0.0, 0.0, 0.0, 1.0],
                 translation: [0.0, 3.0, 0.0],
-                scale: [0.75, 0.75, 1.0]
+                scale: [0.5, 0.5, 1.0]
             }
 
             execute on passengers return:
@@ -54,7 +54,7 @@ function ./kit_stand_update:
                     left_rotation: [0.0, 0.0, 0.0, 1.0],
                     right_rotation: [0.0, 0.0, 0.0, 1.0],
                     translation: [0.0, 3.25, 0.0],
-                    scale: [0.75, 0.75, 1.0]
+                    scale: [1.0, 1.0, 1.0]
                 }
 
             # If there is an interaction entity and "punch me" text_display, but no kit name display
@@ -68,7 +68,7 @@ function ./kit_stand_update:
                     left_rotation: [0.0, 0.0, 0.0, 1.0],
                     right_rotation: [0.0, 0.0, 0.0, 1.0],
                     translation: [0.0, 3.25, 0.0],
-                    scale: [0.75, 0.75, 1.0]
+                    scale: [1.0, 1.0, 1.0]
                 }
             }
             Data.entity("@n[tag=NEW_SUMMON]").Rotation = STORAGE.temp.stand_rotation
@@ -83,13 +83,13 @@ function ./kit_stand_update:
                 block:9,
                 sky:9
             },
-            text:"*punch for info*", view_range:0.0625, 
+            text:"*punch for info*", view_range:0.03, 
             billboard:"vertical",
             transformation:{
                 left_rotation: [0.0, 0.0, 0.0, 1.0],
                 right_rotation: [0.0, 0.0, 0.0, 1.0],
                 translation: [0.0, 3.0, 0.0],
-                scale: [0.75, 0.75, 1.0]
+                scale: [0.5, 0.5, 1.0]
             }
         }
         ride @n[tag=NEW_SUMMON] mount @n[type=interaction,tag=KIT_INTERACTION]
