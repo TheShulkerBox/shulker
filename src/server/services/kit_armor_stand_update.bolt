@@ -8,7 +8,13 @@ from kit:base import Kit
 from lib:interaction import Interaction
 
 for _kit in Kit._all_kits:
-    Interaction(_kit.id)
+    interaction = Interaction(_kit.id)
+
+    function interaction.on_left_click:
+        say f"{_kit.name} was left clicked"
+    
+    function interaction.on_right_click:
+        say f"{_kit.name} was right clicked"
 
 function ./kit_stand_update:
     kit_metadata = Kit.get(id=SELF.CustomName)
@@ -18,9 +24,7 @@ function ./kit_stand_update:
     execute positioned ~ ~2 ~ on passengers return:
     # Check for interaction entity presence, if it's here:
         SELF.merge({response:1, width:1.2, height: -2.9})
-        SELF.Tags = STORAGE.temp.stand_id
-        SELF.Tags.append("KIT_INTERACTION")
-        SELF.Tags.append("KIT_STAND_ERRATA")
+        SELF.Tags = [STORAGE.temp.stand_id, "KIT_INTERACTION", "KIT_STAND_ERRATA"]
 
         execute on passengers return:
             SELF.merge({text:"*punch for info*",view_range:0.0625,billboard:"vertical"})
