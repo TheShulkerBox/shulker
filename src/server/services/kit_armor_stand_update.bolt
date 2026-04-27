@@ -8,7 +8,7 @@ from kit:base import Kit
 from lib:interaction import Interaction
 
 for _kit in Kit._all_kits:
-    Interaction(f"{_kit.id}_stand")
+    Interaction(_kit.id)
 
 function ./kit_stand_update:
     kit_metadata = Kit.get(id=SELF.CustomName)
