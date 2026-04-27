@@ -43,8 +43,6 @@ function ./kit_stand_update:
 
     # Clean up orphaned display and interaction entities
     execute function ./validate_vehicle: 
-        execute as @e[tag=KIT_STAND_ERRATA] on vehicle return:
-            # This can't be empty? TODO
-            say hi
+        execute as @e[tag=KIT_STAND_ERRATA] on vehicle run return 1
         kill @s
     
