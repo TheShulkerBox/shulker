@@ -7,6 +7,8 @@
 from kit:base import Kit
 from lib:interaction import Interaction
 
+
+
 for _kit in Kit._all_kits:
     interaction = Interaction(_kit.id)
 
@@ -28,6 +30,12 @@ function ./kit_stand_update:
 
         execute on passengers return:
             SELF.merge({text:"*punch for info*",view_range:0.0625,billboard:"vertical"})
+            SELF.transformation = {
+                left_rotation: [0.0, 0.0, 0.0, 1.0],
+                right_rotation: [0.0, 0.0, 0.0, 1.0],
+                translation: [0.0, 2.0, 0.0],
+                scale: [0.75, 0.75, 1.0]
+            }
 
             execute on passengers return:
                 SELF.text = kit_metadata.name
@@ -35,7 +43,7 @@ function ./kit_stand_update:
                 SELF.transformation = {
                     left_rotation: [0.0, 0.0, 0.0, 1.0],
                     right_rotation: [0.0, 0.0, 0.0, 1.0],
-                    translation: [0.0, 0.5, 0.0],
+                    translation: [0.0, 2.25, 0.0],
                     scale: [0.75, 0.75, 1.0]
                 }
             # If there is an interaction entity and "punch me" text_display, but no kit name display
@@ -43,7 +51,7 @@ function ./kit_stand_update:
 
                     left_rotation: [0.0, 0.0, 0.0, 1.0],
                     right_rotation: [0.0, 0.0, 0.0, 1.0],
-                    translation: [0.0, 0.5, 0.0],
+                    translation: [0.0, 2.25, 0.0],
                     scale: [0.75, 0.75, 1.0]}
 
                     }
@@ -51,10 +59,17 @@ function ./kit_stand_update:
             tag @e remove NEW_SUMMON
 
         # If there is an interaction entity but no text
-        summon text_display ~ ~ ~ {Tags:["NEW_SUMMON","KIT_PROMPT","KIT_STAND_ERRATA"], text:"*punch for info*", view_range:0.0625, billboard:"vertical"}
+        summon text_display ~ ~ ~ {Tags:["NEW_SUMMON","KIT_PROMPT","KIT_STAND_ERRATA"], text:"*punch for info*", view_range:0.0625, billboard:"vertical",transformation:{
+
+                    left_rotation: [0.0, 0.0, 0.0, 1.0],
+                    right_rotation: [0.0, 0.0, 0.0, 1.0],
+                    translation: [0.0, 2.0, 0.0],
+                    scale: [0.75, 0.75, 1.0]}
+
+                    }
         ride @n[tag=NEW_SUMMON] mount @n[type=interaction,tag=KIT_INTERACTION]
         tag @e remove NEW_SUMMON
-        
+
     # If there are not passengers (no interact entity):
     summon interaction ~ ~ ~ {Tags:["NEW_SUMMON","KIT_INTERACTION","KIT_STAND_ERRATA",Interaction.global_tag], response:1, width:1.2, height: -2.9}
     ride @n[tag=NEW_SUMMON] mount @n[type=armor_stand]
