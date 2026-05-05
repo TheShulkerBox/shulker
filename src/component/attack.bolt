@@ -14,7 +14,7 @@ class Attack(Component):
     crit: float | None = None
 
     def make_modifier(
-        self, type: str, value: float, attribute_id: str = "weapon"
+        self, type: str, value: float, attribute_id: str
     ) -> dict[str, Any]:
         return {
             "type": type,
@@ -29,20 +29,42 @@ class Attack(Component):
         output = {}
 
         if self.damage is not None:
-            modifiers.append(self.make_modifier("attack_damage", self.damage))
+            modifiers.append(
+                self.make_modifier(
+                    "attack_damage",
+                    self.damage - 1,
+                    attribute_id="minecraft:base_attack_damage",  # overrides vanilla
+                )
+            )
 
         if self.speed is not None:
-            modifiers.append(self.make_modifier("attack_speed", self.speed))
+            modifiers.append(
+                self.make_modifier(
+                    "attack_speed",
+                    self.speed - 4,
+                    attribute_id="minecraft:base_attack_speed",  # overrides vanilla
+                )
+            )
 
         if self.knockback is not None:
-            modifiers.append(self.make_modifier("attack_knockback", self.knockback))
-        
+            modifiers.append(
+                self.make_modifier(
+                    "attack_knockback",
+                    self.knockback,
+                    attribute_id="shulker:knockback",
+                )
+            )
+
         if self.crit is not None:
             if (self.crit % 0.5) != 0:
                 raise CustomComponentError("Crit subcomponent must be in intervals of `0.5`", "attack", self)
 
             modifiers.append(
-                self.make_modifier("attack_damage", self.crit, attribute_id="crit_damage")
+                self.make_modifier(
+                    "attack_damage",
+                    self.crit,
+                    attribute_id="shulker:crit_damage",
+                )
             )
             output.setdefault("enchantments", {})[nbt_dump("shulker:negative_sharpness")] = self.crit * 2
 
