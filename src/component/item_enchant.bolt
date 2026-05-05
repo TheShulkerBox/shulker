@@ -1,0 +1,37 @@
+from dataclasses import field
+from typing import ClassVar
+
+from lib:helpers import deep_merge_dicts, nbt_dump
+from ./type import Component
+
+
+class ItemEnchant(Component, base_type=dict[str, Any]):
+    _all_effects: ClassVar[dict[str, dict[str, Any]]] = {}
+    _built: ClassVar[bool] = False
+
+    def build(self) -> dict[str, Any]:
+        effects = {}
+        for key, value in self.base_type.items():
+            if not key.startswith("minecraft:"):
+                key = f"minecraft:{key}"
+            effects[key] = value
+        
+        deep_merge_dicts(self._all_effects, effects, inplace=True)
+
+        return {"enchantments": {nbt_dump(f"item:{self.item.name}"): 1}}
+    
+    def post_build(self, _, item_obj: "ItemType"):
+        if self._built or not self.base_type:
+            return
+        
+        enchantment f"item:{item_obj.name}" {
+            "description": f"{item_obj.name} Effects",
+            "supported_items": "#item:all",
+            "weight": 1,
+            "max_level": 1,
+            "min_cost": { "base": 0, "per_level_above_first": 0 },
+            "max_cost": { "base": 0, "per_level_above_first": 0 },
+            "anvil_cost": 0,
+            "slots": [ "any" ],
+            "effects": self._all_effects
+        }

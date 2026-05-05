@@ -18,6 +18,7 @@ require:
   - plugins.custom_load
 
 pipeline:
+  - plugins.component_import
   - mecha
   - plugins.minecraft_namespace_checker
   - plugins.cleanup_empty_functions

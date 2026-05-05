@@ -1,14 +1,16 @@
 from itertools import chain
+from typing import ClassVar
 
 from lib:shulker_box import ShulkerBox
+from lib:helpers import deep_merge_dicts, nbt_dump
 from lib:rom import LOAD_ROM
 from server:core import SERVER_TICK, SERVER_LOAD
+import component:all as _
 
 from ./type import ItemType
 
 ITEM_ROM = STORAGE.rom.items
 TEMP_ITEM = STORAGE.temp.item
-ALL_ITEM_TAG = "#item:all"
 
 ItemType.ctx = ctx
 
@@ -86,10 +88,5 @@ class Item(metaclass=ItemType):
                     click_event: {action: "run_command", command: f"function item:give {{item: {self.name}}}"}
                 }
 
-
             function f"item:give/{self.name}":
                 give @s self self.count
-
-
-function ./render:
-    $function item:render/$(item)

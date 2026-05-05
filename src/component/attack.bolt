@@ -1,6 +1,5 @@
 from typing import Any
 
-from item:base import ALL_ITEM_TAG
 from lib:errors import CustomComponentError
 from lib:helpers import nbt_dump
 

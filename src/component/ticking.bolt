@@ -1,66 +1,42 @@
 from dataclasses import dataclass, field
 
-from item:base import ALL_ITEM_TAG
 from lib:helpers import period_to_ticks, nbt_dump, coerce_type
 
-from ./type import Component
+from ./item_enchant import ItemEnchant
+from ./type import Component, RecursiveComponent
 
 SlotLiteral = Literal["mainhand", "offhand", "head", "chest", "legs", "feet", "any"]
 
 
 @dataclass
 class TickingEntry:
-    function: str
+    callback: str
     period: str = "1t"
 
 
-class Ticking(Component):
+class Ticking(Component, base_type=list[TickingEntry]):
     """This component ticks the player if the item is on the player.
 
     You can specify a specific slot and also a clock speed for ticking.
     """
 
-    callbacks: list[TickingEntry]
-    slot: SlotLiteral = "any"
-
-    def build(self) -> dict[str, Any]:
-        if not self.callbacks:
+    def build(self):
+        if not self.base_type:
             raise ValueError("At least one ticking callback must be defined")
         
-        self.callbacks = coerce_type(self.callbacks, list[TickingEntry])
-
-        return { "enchantments": {nbt_dump(self.make_enchantment()): 1} }
-
-    def make_enchantment(self) -> str:
-        enchantment_id = f"item:{self.item.name}/ticking"
-        template = {
-            "description": f"Ticking {self.item.name}",
-            "supported_items": ALL_ITEM_TAG,
-            "weight": 1,
-            "max_level": 1,
-            "min_cost": { "base": 0, "per_level_above_first": 0 },
-            "max_cost": { "base": 0, "per_level_above_first": 0 },
-            "anvil_cost": 0,
-            "slots": [ self.slot ],
-            "effects": {
-                "minecraft:tick": []
-            }
-        }
-
-        for callback in self.callbacks:
-            template["effects"]["minecraft:tick"].append({
+        effects = {}
+        for entry in self.base_type:
+            effects["minecraft:tick"] = [{
                 "requirements": {
                     "condition": "minecraft:time_check",
                     "clock": "minecraft:overworld",
                     "value": 0,
-                    "period": (period_to_ticks(callback.period))
+                    "period": (period_to_ticks(entry.period))
                 },
                 "effect": {
                     "type": "minecraft:run_function",
-                    "function": callback.function
+                    "function": entry.callback
                 }
-            })
+            }]
         
-        enchantment enchantment_id template
-
-        return enchantment_id
+        return {"item_enchant": RecursiveComponent(ItemEnchant, effects)}

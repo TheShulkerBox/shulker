@@ -55,6 +55,12 @@ from lib.helpers import camel_case_to_snake_case
 if TYPE_CHECKING:
     from item.type import ItemType
 
+@dataclass
+class RecursiveComponent:
+    """Marker class to help indicate recursive composition of components within other components."""
+    component: type[Component]
+    data: Any
+
 
 @dataclass(repr=False)
 class Component:
@@ -119,7 +125,7 @@ class Component:
         """
         raise NotImplementedError
 
-    def post_build(self, resolved_components: dict[str, Any]) -> None:
+    def post_build(self, resolved_components: dict[str, Any], item_obj: "ItemType") -> None:
         """Optional post-processing after all components are resolved.
 
         Use this to modify resolved_components in-place after rendering.
@@ -204,7 +210,7 @@ class Transformer:
         """
         raise NotImplementedError
 
-    def post_build(self, resolved_components: dict[str, Any]) -> None:
+    def post_build(self, resolved_components: dict[str, Any], item_obj: "ItemType") -> None:
         """Optional post-processing after all components are resolved.
 
         Use this to modify resolved_components in-place after transformation.

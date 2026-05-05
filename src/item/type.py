@@ -10,13 +10,14 @@ import dataclasses
 import json
 from typing import Any, ClassVar, Self
 from itertools import chain, count
+from collections import deque
 
 from beet import Context
 from bolt import Runtime
 import difflib
 import pprint
 
-from component.type import Component, Transformer
+from component.type import Component, RecursiveComponent, Transformer
 from lib.helpers import (
     camel_case_to_snake_case,
     coerce_type,
@@ -123,7 +124,7 @@ class ItemType(type):
     @staticmethod
     def _validate_dataclass_fields(
         data: Any,
-        component: Component | Transformer,
+        component: type[Component | Transformer],
     ) -> tuple[dict[str, Any], list[ValidationError]]:
         """Validate and reconstruct data according to dataclass field definitions.
 
@@ -202,7 +203,7 @@ class ItemType(type):
                     reconstructed_data[field.name] = value
 
         # Check for unexpected keys (only for dict data)
-        if check_type(data, dict):
+        if component._base_type is None and check_type(data, dict):
             unexpected_keys = set(data.keys()) - set(reconstructed_data.keys())
             for key in unexpected_keys:
                 if key not in field_map:
@@ -280,7 +281,7 @@ class ItemType(type):
         return NonExistentComponentError(component_name, suggestions=suggestions)
 
     def handle_custom_components(
-        self, custom_components: list[Component], resolved_components: dict[str, Any]
+        self, custom_components: list[type[Component]], resolved_components: dict[str, Any]
     ) -> tuple[list[Component], list[CustomComponentError], dict[str, Component]]:
         """Process custom components and transform them into vanilla components.
 
@@ -303,8 +304,11 @@ class ItemType(type):
         errors: list[CustomComponentError] = []
         output_component_mapping: dict[str, Component] = {}
 
-        for component in custom_components:
-            name: str = component.name()
+        components_queue = deque(custom_components)
+
+        while components_queue:
+            component = components_queue.popleft()
+            name = component.name()
 
             try:
                 # Check if this component is used in the item definition
@@ -335,7 +339,17 @@ class ItemType(type):
                             **reconstructed_data,
                         )
                         output = constructed_component.build()
+
+                        for key, value in output.items():
+                            if type(value) is RecursiveComponent:
+                                # If we have a recursive component, we need to add it back to the queue
+                                # so that it gets processed as a normal component. We also need to merge
+                                # its output into the current output (replacing the wrapper.)
+                                components_queue.append(value.component)
+                                output[key] = value.data
+
                         constructed_components.append(constructed_component)
+
                     except Exception as err:
                         source_info = self._component_sources.get(name)
                         raise ComponentError(
@@ -353,12 +367,12 @@ class ItemType(type):
                 # Merge component output into resolved_components
                 if output is not None:
                     # Track original component data in custom_data for runtime access
-                    metadata = {"custom_components": {name: data}}
-                    resolved_components["custom_data"] = deep_merge_dicts(
-                        resolved_components.get("custom_data", {}), metadata
-                    )
+                    # metadata = {"custom_components": {name: data}}
+                    # resolved_components["custom_data"] = deep_merge_dicts(
+                    #     resolved_components.get("custom_data", {}), metadata
+                    # )
                     
-                    # Track which output components came from this custom component
+                    # Track base_type component
                     if constructed_component.__class__._base_type is not None:
                         output_component_mapping[constructed_component.name] = constructed_component
                     
@@ -498,11 +512,10 @@ class ItemType(type):
 
         if "count" in output_components:
             self.count = output_components.pop("count")
-
+        
         # Phase 5: Allow components/transformers to post-process
         for component_or_transformer in chain(custom_components, custom_transformers):
-            if component_or_transformer.name() in original_components:
-                component_or_transformer.post_build(output_components)
+            component_or_transformer.post_build(output_components, self)
 
         # Phase 6: Validate and collect errors
         if not self._has_errored:
