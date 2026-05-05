@@ -14,7 +14,7 @@ class Attack(Component):
     crit: float | None = None
 
     def make_modifier(
-        self, type: str, value: float, attribute_id: str
+        self, type: str, value: float, attribute_id: str, **kwargs
     ) -> dict[str, Any]:
         return {
             "type": type,
@@ -22,6 +22,7 @@ class Attack(Component):
             "id": attribute_id,
             "amount": value,
             "operation": "add_value",
+            **kwargs,
         }
 
     def build(self) -> dict[str, Any]:
@@ -58,12 +59,13 @@ class Attack(Component):
         if self.crit is not None:
             if (self.crit % 0.5) != 0:
                 raise CustomComponentError("Crit subcomponent must be in intervals of `0.5`", "attack", self)
-
+            
             modifiers.append(
                 self.make_modifier(
                     "attack_damage",
                     self.crit,
                     attribute_id="shulker:crit_damage",
+                    display={"type": "override", "value": {"text": f" {self.crit} Crit Boost", "color": "dark_green"}}
                 )
             )
             output.setdefault("enchantments", {})[nbt_dump("shulker:negative_sharpness")] = self.crit * 2

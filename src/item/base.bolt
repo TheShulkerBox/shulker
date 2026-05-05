@@ -67,7 +67,7 @@ class Item(metaclass=ItemType):
     count = 1
     tool = { "can_destroy_blocks_in_creative": false, "rules": [] }
     unbreakable = {}
-    tooltip_display = { "hidden_components": [ "unbreakable" ] }
+    tooltip_display = { "hidden_components": [ "unbreakable", "enchantments" ] }
     enchantment_glint_override = false
     rarity = "common"
 

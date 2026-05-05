@@ -34,7 +34,7 @@ function ./poison_dart_on_use:
 
 class EngineerPickaxe(Item):
     id = "iron_pickaxe"
-    item_name = "engineer's pickaxe"
+    item_name = "Engineer's Pickaxe"
     attack = {damage: 4, speed: 1.6, crit: 3}
     ticking = {callbacks:[{function: ./engineer_pickaxe_tick}]}
 
