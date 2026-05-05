@@ -14,27 +14,28 @@ def slot_groups(
     armor: bool = False,
     cursor: bool = False,
     crafting: bool = False,
+    all: bool = False,
 ) -> Iterator[tuple[int, str]]:
-    if hotbar:
+    if all or hotbar:
         for i in range(9):
             yield (i, f"container.{i}")
     
-    if inventory:
+    if all or inventory:
         for i in range(9, 36):
             yield (i, f"container.{i}")
 
-    if weapon:
+    if all or weapon:
         yield (98, "weapon.mainhand")
         yield (99, "weapon.offhand")
     
-    if armor:
+    if all or armor:
         for i, slot in enumerate(["armor.feet", "armor.legs", "armor.chest", "armor.head"]):
             yield (100 + i, slot)
     
-    if cursor:
+    if all or cursor:
         yield (499, "player.cursor")
 
-    if crafting:
+    if all or crafting:
         for i in range(4):
             yield (500 + i, f"player.crafting.{i}")
 
@@ -92,8 +93,8 @@ def gap_pool(gap_size: int) -> dict:
         ]
     }
 
-@cache
-def generate_loot_table(**kwargs: dict[str, Any]) -> str:
+
+def generate_loot_table(modifier = None, **kwargs: dict[str, Any]) -> list[dict[str, Any]]:
     """
     Build a loot table using the first *num_groups* slot groups.
     Gaps between groups are filled with discard padding pools.
@@ -105,13 +106,23 @@ def generate_loot_table(**kwargs: dict[str, Any]) -> str:
         # Insert gap padding if needed
         if index > last_index:
             pools.append(gap_pool(index - last_index))
- 
-        pools.append(slot_pool(slot))
+        
+        calculated_pool = slot_pool(slot)
+
+        if modifier is not None:
+            calculated_pool = modifier(calculated_pool)
+        
+        pools.append(calculated_pool)
 
         # update with new exclusive end
         last_index = index + 1
+    
+    return pools
  
 
+@cache
+def save_loot_table(**kwargs: dict[str, Any]) -> str:
+    pools = generate_loot_table(**kwargs)
     subpath = "_".join(list(map(itemgetter(0), filter(itemgetter(1), kwargs.items()))))
     path = f"lib:mass_modify/{subpath}"
 
@@ -174,7 +185,7 @@ macro mass_modify slot_groups=minecraft:nbt_tag loot_modifier=minecraft:loot_mod
             {
                 rolls: 1,
                 entries: [
-                    { type: "loot_table", value: (generate_loot_table(**kwargs)) }
+                    { type: "loot_table", value: (save_loot_table(**kwargs)) }
                 ]
             }
         ],

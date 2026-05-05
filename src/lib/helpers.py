@@ -1,11 +1,13 @@
 from collections.abc import Callable, Iterator
 import copy
 from contextlib import contextmanager
+import dataclasses
 import json
 import re
 from typing import Any, Literal, Protocol, Union, get_args, get_origin, overload
 import zlib
 
+import dacite
 from typeguard import check_type as _check_type, TypeCheckError
 
 
@@ -38,7 +40,9 @@ def nbt_dump(obj: dict[str, Any]):
                 items = [serialize(element) for element in obj]
                 return "[" + ", ".join(items) + "]"
             case str():
-                return f"'{obj}'"
+                if "'" not in obj:
+                    return f"'{obj}'"
+                return f'"{obj}"'
             case bool() as b:
                 if b:
                     return "true"
@@ -130,10 +134,25 @@ def id_to_number(id: str) -> int:
     """
     return zlib.crc32(id.encode()) & int("0x7FFFFFFF", 16)
 
+def coerce_type(value: Any, t: type) -> Any:
+    """Coerces a value to a type if possible, handling special cases like lists and dataclasses."""
+    origin, args = get_origin(t), get_args(t)
+    # unwrap list[X] so each element can be coerced individually
+    if origin is list and args and isinstance(value, list):
+        return [coerce_type(v, args[0]) for v in value]
+    # convert plain dicts into dataclass instances before typeguard sees them
+    if dataclasses.is_dataclass(t) and isinstance(t, type) and isinstance(value, dict):
+        return dacite.from_dict(t, value, config=dacite.Config(strict=True))
+    return value
 
 def check_type(value: Any, expected_type: type) -> bool:
+    """Wrapper around typeguard's check_type that returns a boolean instead of raising an error."""
     try:
-        _check_type(value, expected_type)
+        _coerceed_value = coerce_type(value, expected_type)
+    except dacite.DaciteError:
+        return False
+    try:
+        _check_type(_coerceed_value, expected_type)
     except TypeCheckError:
         return False
 
@@ -162,3 +181,23 @@ def camel_case_to_snake_case(s: str) -> str:
     """Converts a camelCase or PascalCase string to snake_case."""
     step1 = _CAMEL_TO_SNAKE_PAT1.sub(r"\1_\2", s)
     return _CAMEL_TO_SNAKE_PAT2.sub(r"\1_\2", step1).lower()
+
+
+def period_to_ticks(period: str) -> int:
+    """Converts a period string (e.g., "1s", "50t") to ticks (1s = 20t)."""
+    match = re.match(r"(\d+)(t|s|d)", period)
+    if not match:
+        raise ValueError(f"Invalid period format: {period}")
+
+    value, unit = match.groups()
+    value = int(value)
+
+    match unit:
+        case "t":
+            return value
+        case "s":
+            return value * 20
+        case "d":
+            return value * 24000
+
+    raise ValueError(f"Unknown time unit: {unit}")

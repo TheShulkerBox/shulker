@@ -1,0 +1,59 @@
+from typing import Any
+
+from item:base import ALL_ITEM_TAG
+from lib:errors import CustomComponentError
+from lib:helpers import nbt_dump
+
+from ./type import Component
+
+
+class Attack(Component):
+    damage: float | None = None
+    speed: float | None = None
+    knockback: float | None = None
+    crit: float | None = None
+
+    def make_modifier(
+        self, type: str, value: float, attribute_id: str = "weapon"
+    ) -> dict[str, Any]:
+        return {
+            "type": type,
+            "slot": "mainhand",
+            "id": attribute_id,
+            "amount": value,
+            "operation": "add_value",
+        }
+
+    def build(self) -> dict[str, Any]:
+        modifiers = []
+        output = {}
+
+        if self.damage is not None:
+            modifiers.append(self.make_modifier("attack_damage", self.damage))
+
+        if self.speed is not None:
+            modifiers.append(self.make_modifier("attack_speed", self.speed))
+
+        if self.knockback is not None:
+            modifiers.append(self.make_modifier("attack_knockback", self.knockback))
+        
+        if self.crit is not None:
+            if (self.crit % 0.5) != 0:
+                raise CustomComponentError("Crit subcomponent must be in intervals of `0.5`", "attack", self)
+
+            modifiers.append(
+                self.make_modifier("attack_damage", self.crit, attribute_id="crit_damage")
+            )
+            output.setdefault("enchantments", {})[nbt_dump("shulker:negative_sharpness")] = self.crit * 2
+
+        if modifiers:
+            output["attribute_modifiers"] = modifiers
+
+        if output:
+            return output
+
+        raise CustomComponentError(
+            "Need to define one of ['damage', 'speed', 'knockback', 'crit']",
+            "attack",
+            self,
+        )

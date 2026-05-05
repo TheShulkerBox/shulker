@@ -1,5 +1,6 @@
 import component:on_use as _
-from component:on_hold import ON_USING_TIMER
+import component:attack as _
+import component:ticking as _
 from item:base import Item
 from lib:motion import apply_motion_vector
 
@@ -29,6 +30,16 @@ function ./poison_dart_on_use:
     for i in range(3):
         store result storage shulker:temp vector[i] double 0.01 random value -500..500
     apply_motion_vector(STORAGE.temp.vector)
+
+
+class EngineerPickaxe(Item):
+    id = "iron_pickaxe"
+    item_name = "engineer's pickaxe"
+    attack = {damage: 4, speed: 1.6, crit: 3}
+    ticking = {callbacks:[{function: ./engineer_pickaxe_tick}]}
+
+function ./engineer_pickaxe_tick:
+    particle minecraft:witch ~ ~ ~ 0.5 0.5 0.5 0 1 normal 
 
 
 # class Potato(Item):

@@ -145,10 +145,24 @@ async def push_to_server(path: str):
     await make_request(
         route="command", data={"command": "tellraw @a[tag=op] " + tellraw()}
     )
-    await make_request(route="command", data={"command": "reload"})
+    restart = os.environ.get("DEPLOY_RESTART") == "1"
 
-    async with asyncio.timeout(1):
-        errors = await task
+    if restart:
+        await asyncio.sleep(1.5)
+        await make_request(route="power", data={"signal": "restart"})
+        try:
+            async with asyncio.timeout(120):
+                errors = await task
+        except TimeoutError:
+            errors = []
+    else:
+        await make_request(route="command", data={"command": "reload"})
+
+        try:
+            async with asyncio.timeout(1):
+                errors = await task
+        except TimeoutError:
+            errors = []
 
     if errors:
         msg = [{"text": "\n" + error, "color": Theme.Failure} for error in errors]

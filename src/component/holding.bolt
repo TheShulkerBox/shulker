@@ -7,7 +7,7 @@ from player:services import PLAYER_TICK
 ON_USING_TIMER = Scoreboard("component.on_using", criteria="dummy")
 
 
-class on_hold(Component):
+class Holding(Component):
     tick_callback: str = ""
     release_callback: str = ""
     cooldown: float = 5

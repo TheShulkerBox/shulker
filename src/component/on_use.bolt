@@ -1,4 +1,3 @@
-from typing import Literal, Any, Annotated
 from dataclasses import field
 from nbtlib.tag import Byte
 
@@ -39,6 +38,7 @@ class OnUse(Component):
     Mostly leveraging the `consumable` component. Can be customized as a proper
     consumable or an 'infinite' use item.
 
+    The main trick for infinite items is toggling some data to trick MC into not consuming the item.
     """
     callback: Annotated[str, "Function path that gets called when you use the item"]
     infinite: Annotated[bool, "Whether the item should be infinite or not"] = False

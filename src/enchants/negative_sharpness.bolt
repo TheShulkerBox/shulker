@@ -1,0 +1,31 @@
+#> Reduces damage of weapon, opposite of sharpness
+# It is primarily used for adding crit damage via the attack.crit subcomponent.
+#
+# Deviates from normal sharpness as it starts from -0.5 dmg at lvl 1 (sharpness starts at +1dmg)
+
+from item:base import ALL_ITEM_TAG
+
+enchantment shulker:negative_sharpness {
+    "anvil_cost": 1,
+    "description": "Negative Sharpness",
+    "effects": {
+        "minecraft:damage": [
+            {
+                "effect": {
+                    "type": "minecraft:add",
+                    "value": {
+                        "type": "minecraft:linear",
+                        "base": -0.5,
+                        "per_level_above_first": -0.5
+                    }
+                }
+            }
+        ]
+    },
+    "max_cost": { "base": 1, "per_level_above_first": 1 },
+    "min_cost": { "base": 1, "per_level_above_first": 1 },
+    "max_level": 255,
+    "slots": [ "mainhand", "offhand" ],
+    "supported_items": ALL_ITEM_TAG,
+    "weight": 1
+}

@@ -19,6 +19,7 @@ import pprint
 from component.type import Component, Transformer
 from lib.helpers import (
     camel_case_to_snake_case,
+    coerce_type,
     nbt_dump,
     deep_merge_dicts,
     check_type,
@@ -122,7 +123,7 @@ class ItemType(type):
     @staticmethod
     def _validate_dataclass_fields(
         data: Any,
-        fields: list,
+        component: Component | Transformer,
     ) -> tuple[dict[str, Any], list[ValidationError]]:
         """Validate and reconstruct data according to dataclass field definitions.
 
@@ -137,6 +138,11 @@ class ItemType(type):
         Returns:
             Tuple of (reconstructed_data, field_errors)
         """
+        fields = [
+            field
+            for field in dataclasses.fields(component)
+            if field.name not in ("item", "resolved_components")
+        ]
         field_errors: list[ValidationError] = []
         reconstructed_data = {}
 
@@ -201,12 +207,26 @@ class ItemType(type):
             for key in unexpected_keys:
                 if key not in field_map:
                     field_errors.append(UnexpectedValidationError(key, data[key]))
+        
+        # Check basetype
+        if component._base_type is not None:
+            if check_type(data, component._base_type):
+                reconstructed_data["base_type"] = coerce_type(data, component._base_type)
+            else:
+                field_errors.append(
+                    ComponentTypeError(
+                        "base_type",
+                        data,
+                        component._base_type,
+                        type(data),
+                    )
+                )
 
         return reconstructed_data, field_errors
 
     @classmethod
     def validate_component(
-        cls, component_name: str, component: Any, base_type: type = None
+        cls, component_name: str, component: Any, base_type: type | None = None
     ) -> ComponentError | None:
         """Validate a component against its mcdoc schema or base_type.
 
@@ -300,22 +320,16 @@ class ItemType(type):
                     output = self._component_cache[name]
                 else:
                     # Validate fields and reconstruct data
-                    component_fields = [
-                        field
-                        for field in dataclasses.fields(component)
-                        if field.name not in ("item", "resolved_components")
-                    ]
-                    reconstructed_data, field_errors = self._validate_dataclass_fields(
-                        data, component_fields
-                    )
+                    reconstructed_data, field_errors = self._validate_dataclass_fields(data, component)
 
                     # Raise validation error if fields are invalid
                     if field_errors:
                         raise ComponentError(name, data, field_errors)
-
+                    
                     # Attempt to instantiate and builder the component
                     try:
-                        constructed_component = component(
+                        # TODO: convert to pydantic ;_;
+                        constructed_component: Component = component(
                             item=self,
                             resolved_components=dict(resolved_components),
                             **reconstructed_data,
@@ -345,9 +359,8 @@ class ItemType(type):
                     )
                     
                     # Track which output components came from this custom component
-                    if hasattr(constructed_component.__class__, '_base_type') and constructed_component.__class__._base_type is not None:
-                        for output_component_name in output.keys():
-                            output_component_mapping[output_component_name] = constructed_component
+                    if constructed_component.__class__._base_type is not None:
+                        output_component_mapping[constructed_component.name] = constructed_component
                     
                     # Merge built vanilla components
                     deep_merge_dicts(resolved_components, output, inplace=True)
@@ -392,14 +405,7 @@ class ItemType(type):
                 del resolved_components[name]
 
                 # Validate transformer fields
-                transformer_fields = [
-                    field
-                    for field in dataclasses.fields(transformer)
-                    if field.name not in ("item", "resolved_components")
-                ]
-                reconstructed_data, field_errors = self._validate_dataclass_fields(
-                    data, transformer_fields
-                )
+                reconstructed_data, field_errors = self._validate_dataclass_fields(data, transformer)
 
                 # Raise validation error if fields are invalid
                 if field_errors:
@@ -597,7 +603,7 @@ class ItemType(type):
         # Create a mapping of output component names to their base_types from custom components
         component_base_types = {}
         for component_name, component in custom_component_mapping.items():
-            if hasattr(component.__class__, '_base_type') and component.__class__._base_type is not None:
+            if component.__class__._base_type is not None:
                 component_base_types[component_name] = component.__class__._base_type
 
         def handle_suberrors(tree: Tree, suberrors: list[ValidationError | Exception]):
@@ -612,7 +618,7 @@ class ItemType(type):
                             f"[red]Wrong type:[/red] Expected [x]{pretty_type(expected)!r}[/x] but got [x]{pretty_type(actual_type)!r}[/x]"
                         )
                         tree.add(
-                            f"[yellow]💡 Hint:[/yellow] This component should be a dictionary with multiple fields, not a {pretty_type(actual_type)}"
+                            f"[yellow]💡 Hint:[/yellow] This component should be a 'dict' with multiple fields, not a {pretty_type(actual_type)!r}"
                         )
                     case UnexpectedValidationError(
                         name=name,

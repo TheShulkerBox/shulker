@@ -1,0 +1,66 @@
+from dataclasses import dataclass, field
+
+from item:base import ALL_ITEM_TAG
+from lib:helpers import period_to_ticks, nbt_dump, coerce_type
+
+from ./type import Component
+
+SlotLiteral = Literal["mainhand", "offhand", "head", "chest", "legs", "feet", "any"]
+
+
+@dataclass
+class TickingEntry:
+    function: str
+    period: str = "1t"
+
+
+class Ticking(Component):
+    """This component ticks the player if the item is on the player.
+
+    You can specify a specific slot and also a clock speed for ticking.
+    """
+
+    callbacks: list[TickingEntry]
+    slot: SlotLiteral = "any"
+
+    def build(self) -> dict[str, Any]:
+        if not self.callbacks:
+            raise ValueError("At least one ticking callback must be defined")
+        
+        self.callbacks = coerce_type(self.callbacks, list[TickingEntry])
+
+        return { "enchantments": {nbt_dump(self.make_enchantment()): 1} }
+
+    def make_enchantment(self) -> str:
+        enchantment_id = f"item:{self.item.name}/ticking"
+        template = {
+            "description": f"Ticking {self.item.name}",
+            "supported_items": ALL_ITEM_TAG,
+            "weight": 1,
+            "max_level": 1,
+            "min_cost": { "base": 0, "per_level_above_first": 0 },
+            "max_cost": { "base": 0, "per_level_above_first": 0 },
+            "anvil_cost": 0,
+            "slots": [ self.slot ],
+            "effects": {
+                "minecraft:tick": []
+            }
+        }
+
+        for callback in self.callbacks:
+            template["effects"]["minecraft:tick"].append({
+                "requirements": {
+                    "condition": "minecraft:time_check",
+                    "clock": "minecraft:overworld",
+                    "value": 0,
+                    "period": (period_to_ticks(callback.period))
+                },
+                "effect": {
+                    "type": "minecraft:run_function",
+                    "function": callback.function
+                }
+            })
+        
+        enchantment enchantment_id template
+
+        return enchantment_id

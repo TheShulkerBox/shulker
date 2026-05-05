@@ -43,6 +43,8 @@ Subclass `Transformer` and define transformation logic:
 
 Both components and transformers auto-register via `__init_subclass__`,
 so they're automatically discovered and applied during item resolution.
+
+TODO: rewrite with pydantic man
 """
 
 from typing import Any, ClassVar, Self, TYPE_CHECKING
@@ -54,7 +56,7 @@ if TYPE_CHECKING:
     from item.type import ItemType
 
 
-@dataclass
+@dataclass(repr=False)
 class Component:
     """Base class for custom item components.
 
@@ -89,11 +91,14 @@ class Component:
     item: "ItemType" = field(kw_only=True)
     resolved_components: dict[str, Any] = field(kw_only=True)
 
-    def __init_subclass__(cls, cache: bool = True, base_type: type = None):
+    def __init_subclass__(cls, cache: bool = True, base_type: type | None = None):
         """Auto-register component and convert to dataclass."""
         cls._skip_cache = not cache
-        cls._base_type = base_type if base_type is not None else None
-        new_cls = dataclass(cls)
+        cls._base_type = base_type
+        if base_type is not None:
+            cls.__annotations__["base_type"] = cls._base_type
+        
+        new_cls = dataclass(cls, repr=False)
         new_cls.__module__ = cls.__module__
         cls.registered.append(new_cls)
         return new_cls
@@ -125,8 +130,16 @@ class Component:
             resolved_components: All resolved components (mutable)
         """
     
+    def __repr__(self) -> str:
+        field_str = ", ".join(
+            f"{field.name}={getattr(self, field.name)!r}"
+            for field in self.__dataclass_fields__.values()
+            if field.name not in {"item", "registered", "resolved_components"}
+        )
+        return f"{self.__class__.__name__}({field_str})"
+    
 
-@dataclass
+@dataclass(repr=False)
 class Transformer:
     """Base class for component value transformers.
 
@@ -169,7 +182,8 @@ class Transformer:
 
     def __init_subclass__(cls):
         """Auto-register transformer and convert to dataclass."""
-        new_cls = dataclass(cls)
+        cls._base_type = None
+        new_cls = dataclass(cls, repr=False)
         new_cls.__module__ = cls.__module__
         cls.registered.append(new_cls)
         return new_cls
@@ -200,3 +214,11 @@ class Transformer:
         Args:
             resolved_components: All resolved components (mutable)
         """
+    
+    def __repr__(self) -> str:
+        field_str = ", ".join(
+            f"{field.name}={getattr(self, field.name)!r}"
+            for field in self.__dataclass_fields__.values()
+            if field.name not in {"item", "registered", "resolved_components"}
+        )
+        return f"{self.__class__.__name__}({field_str})"

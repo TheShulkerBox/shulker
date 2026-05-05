@@ -1,17 +1,18 @@
+from item:base import Item
+from ../damage_types import light_damage_type, medium_damage_type, heavy_damage_type
 
 
-
-# class Weapon(Item):
-#     ...
-
-
-# class LightWeapon(Weapon):
-#     damage_type = 
+class Weapon(Item):
+    ...
 
 
-# class MediumWeapon(Weapon):
-#     damage_type = 
+class LightWeapon(Weapon):
+    damage_type = light_damage_type
 
 
-# class HeavyWeapon(Weapon):
-#     damage_type = 
+class MediumWeapon(Weapon):
+    damage_type = medium_damage_type
+
+
+class HeavyWeapon(Weapon):
+    damage_type = heavy_damage_type

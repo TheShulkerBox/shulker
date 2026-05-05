@@ -334,9 +334,10 @@ class McdocValidator:
                         ):
                             if isinstance(field_key, Schema):
                                 # TODO WEE WOO
-                                print(
-                                    f"Warning. Unsure what to do /shrug. {field_key}\n{data}"
+                                logging.debug(
+                                    f"Warning. Unsure what to do /shrug. Likely enchantment registry {field_key}\n{data}"
                                 )
+                                remaining_keys = set()
                                 continue
 
                             if field_key in data:
