@@ -54,9 +54,10 @@ function ./armor_stand_update:
     # 0: Execute on entity context (kit armor stands)
     # 1: Update Kit Loadouts using name data
     with var kit_metadata:
-        data modify entity @s DisabledSlots set value 0
+        SELF.DisabledSlots = 0
         $function kit:loadout/$(id)/apply
-        data modify entity @s DisabledSlots set value 2039583
+        SELF.DisabledSlots = 2039583
+    
     # 2: Cleanup invalid KIT_STAND_ERRATA entities
     execute function admin:validate_kit_stand_entities: 
         execute as @e[tag=KIT_STAND_ERRATA]:
@@ -77,6 +78,7 @@ function ./armor_stand_update:
 
             execute at @s positioned ~ ~2 ~ run ride @s mount @n[type=armor_stand,tag=KIT_STAND]
             tag @s remove NEW_SUMMON
+    
     # If entity doesn't exist, run the following block:
     if passenger_valid == 0:
         summon interaction ~ ~ ~ {Tags:["NEW_SUMMON","KIT_ERRATA","KIT_INTERACTION"]}
@@ -116,6 +118,7 @@ function ./armor_stand_update:
 
             execute at @s positioned ~ ~2 ~ run ride @s mount @n[type=armor_stand,tag=KIT_STAND]
             tag @s remove NEW_SUMMON
+    
     # If entity doesn't exist, run the following block:
     if passenger_valid == 0:
         summon text_display ~ ~ ~ {Tags:["NEW_SUMMON","KIT_ERRATA","KIT_NAME"]}
@@ -154,6 +157,7 @@ function ./armor_stand_update:
 
             execute at @s positioned ~ ~2 ~ run ride @s mount @n[type=armor_stand,tag=KIT_STAND]
             tag @s remove NEW_SUMMON
+    
     # If entity doesn't exist, run the following block:
     if passenger_valid == 0:
         summon text_display ~ ~ ~ {Tags:["NEW_SUMMON","KIT_ERRATA","KIT_PROMPT"]}
