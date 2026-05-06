@@ -44,12 +44,12 @@ function admin:kit_armor_stand_modernizer:
     execute as @s[type=armor_stand,tag=KitStand] run tag @s add KIT_STAND
     execute as @s[type=armor_stand,tag=KitStand] run tag @s remove KitStand
 
+
 # TODO Try to avoid splitting kit_armor_stand_update and armor_stand_update folders on compilation, append didn't work.
 function ./armor_stand_update:
     kit_metadata = Kit.get(id=SELF.CustomName)
     STORAGE.temp.stand_rotation = SELF.Rotation
     passenger_valid = SCORE.temp["#passenger_valid"]
-
 
     # 0: Execute on entity context (kit armor stands)
     # 1: Update Kit Loadouts using name data
