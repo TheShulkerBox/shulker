@@ -23,14 +23,6 @@ AnimationLiteral = Annotated[
     "Right click animations"
 ]
 
-# thrown_item_scores: dict[str, ScoreSource] = {}
-
-# def thrown_item_score(item: str):
-#     if item not in thrown_item_scores:
-#         thrown_item_scores[item] = Scoreboard(f"thrown_item_{item}", criteria=f"minecraft.dropped:minecraft.{item}")
-    
-#     return thrown_item_scores[item]
-
 
 class OnUse(Component):
     """This component helps create right-click items.
@@ -51,8 +43,7 @@ class OnUse(Component):
 
     def build(self) -> dict[str, Any]:
         """Using consume_item adv."""
-        on_use_path = f"{self.item.path}/on_use"
-        advancement on_use_path {
+        advancement self.path {
             "parent": ROOT_ADVANCEMENT,
             "criteria": {
                 "on_use": {
@@ -66,11 +57,11 @@ class OnUse(Component):
                     }
                 }
             },
-            "rewards": { "function": on_use_path }
+            "rewards": { "function": self.path }
         }
 
-        function on_use_path:
-            advancement revoke @s only on_use_path
+        function self.path:
+            advancement revoke @s only self.path
             
             # for infinite items, toggling some data will make the item persist
             if self.infinite:

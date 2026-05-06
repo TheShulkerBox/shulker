@@ -17,7 +17,7 @@ from bolt import Runtime
 import difflib
 import pprint
 
-from component.type import Component, RecursiveComponent, Transformer
+from component.type import Component, ComponentBuildError, RecursiveComponent, Transformer
 from lib.helpers import (
     camel_case_to_snake_case,
     coerce_type,
@@ -565,8 +565,13 @@ class ItemType(type):
                     unexpected = sum(
                         1 for e in suberrors if isinstance(e, UnexpectedValidationError)
                     )
+                    build_errors = sum(
+                        1
+                        for e in suberrors
+                        if isinstance(e, ComponentBuildError)
+                    )
                     other = (
-                        len(suberrors) - missing - wrong_type - unexpected - type_errors
+                        len(suberrors) - missing - wrong_type - unexpected - type_errors - build_errors
                     )
 
                     parts = []
@@ -580,6 +585,8 @@ class ItemType(type):
                         parts.append(f"{unexpected} unexpected")
                     if other:
                         parts.append(f"{other} other")
+                    if build_errors:
+                        parts.append(f"{build_errors} build errors")
 
                     summaries.append(f"{name}: {', '.join(parts)}")
 

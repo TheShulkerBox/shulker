@@ -16,7 +16,11 @@ def deploy(ctx: click.Context, restart: bool):
     ctx.invoke(commands.build)
 
 
-@beet.command()
+@beet.group()
+def server():
+    """Server management commands."""
+
+@server.command()
 def logs():
     import asyncio
     from plugins.bloom import make_request, watch_for_errors
@@ -26,4 +30,56 @@ def logs():
         data = resp.json()["data"]
         await watch_for_errors(data["socket"], data["token"])
         
+    asyncio.run(watch())
+
+@server.command()
+def restart():
+    import asyncio
+    from plugins.bloom import make_request, watch_for_errors
+    
+    async def watch():
+        await make_request(route="power", data={"signal": "restart"})
+        resp = await make_request("websocket")
+        data = resp.json()["data"]
+        await watch_for_errors(data["socket"], data["token"])
+
+    asyncio.run(watch())
+
+@server.command()
+def start():
+    import asyncio
+    from plugins.bloom import make_request, watch_for_errors
+    
+    async def watch():
+        await make_request(route="power", data={"signal": "start"})
+        resp = await make_request("websocket")
+        data = resp.json()["data"]
+        await watch_for_errors(data["socket"], data["token"])
+
+    asyncio.run(watch())
+
+@server.command()
+def kill():
+    import asyncio
+    from plugins.bloom import make_request, watch_for_errors
+    
+    async def watch():
+        await make_request(route="power", data={"signal": "kill"})
+        resp = await make_request("websocket")
+        data = resp.json()["data"]
+        await watch_for_errors(data["socket"], data["token"])
+
+    asyncio.run(watch())
+
+@server.command()
+def stop():
+    import asyncio
+    from plugins.bloom import make_request, watch_for_errors
+    
+    async def watch():
+        await make_request(route="power", data={"signal": "stop"})
+        resp = await make_request("websocket")
+        data = resp.json()["data"]
+        await watch_for_errors(data["socket"], data["token"])
+
     asyncio.run(watch())

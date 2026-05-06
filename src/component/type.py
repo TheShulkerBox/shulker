@@ -55,6 +55,12 @@ from lib.helpers import camel_case_to_snake_case
 if TYPE_CHECKING:
     from item.type import ItemType
 
+
+class ComponentBuildError(ValueError):
+    """Raised when a component fails to build properly."""
+
+
+
 @dataclass
 class RecursiveComponent:
     """Marker class to help indicate recursive composition of components within other components."""
@@ -106,6 +112,7 @@ class Component:
         
         new_cls = dataclass(cls, repr=False)
         new_cls.__module__ = cls.__module__
+        new_cls.path = property(Component.path)
         cls.registered.append(new_cls)
         return new_cls
 
@@ -113,6 +120,9 @@ class Component:
     def name(cls) -> str:
         """Get the snake_case name of this component."""
         return camel_case_to_snake_case(cls.__name__)
+
+    def path(self) -> str:
+        return f"{self.item.path}/components/{self.name()}"
 
     def build(self) -> dict[str, Any] | None:
         """Render this component into vanilla Minecraft components.

@@ -1,0 +1,95 @@
+from functools import cached_property
+
+from server:events import ON_PLAYER_RESET, ON_END_TICK
+from server:core import ROOT_ADVANCEMENT
+from player:services import PLAYER_TICK
+
+from ./on_use import AnimationLiteral
+from ./item_enchant import ItemEnchant
+from ./type import Component, ComponentBuildError, RecursiveComponent
+
+USING_SCORE = Scoreboard("component.using", criteria="dummy")
+PREV_USING_SCORE = Scoreboard("component.prev_using", criteria="dummy")
+
+
+class Using(Component):
+    start: str = ""
+    during: str = ""
+    end: str = ""
+
+    cooldown: float = 5
+    cooldown_group: str = ""
+    animation: AnimationLiteral = "bow"
+    sound: str = ""
+
+    def build(self):
+        if not (self.start or self.during or self.end):
+            raise ComponentBuildError("At least one of `start`, `during`, or `end` must be defined")
+
+        advancement self.path {
+            "parent": ROOT_ADVANCEMENT,
+            "criteria": {
+                "requirement": {
+                    "trigger": "minecraft:using_item",
+                    "conditions": {
+                        "item": {
+                            "predicates": { "minecraft:custom_data": {"item": self.item.name} }
+                        }
+                    }
+                }
+            },
+            "rewards": { "function": self.path }
+        }
+
+        function self.path: 
+            advancement revoke @s only self.path
+
+            # schedule detection for when we stop using the items
+            schedule function self.no_longer_using 1t replace
+
+            if self.start:
+                if not (USING_SCORE["@s"] > 0):
+                    function self.start
+
+            USING_SCORE["@s"] += 1
+
+            if self.during:
+                function self.during
+        
+        return {
+            consumable: {
+                consume_seconds: 2e8,
+                animation: self.animation,
+                sound: { sound_id: self.sound },
+                has_consume_particles: false,
+            }
+        }
+    
+    @cached_property
+    def no_longer_using(self):
+        """Schedule loop to look for players who are currently using an item.
+        
+        If the counter for using and previous using is the same, we have stopped.
+        """
+        path = f"{self.path}/no_longer_using"
+        function path:
+            execute as @a[scores={USING_SCORE=1..}]:
+                # only schedule loop if there's atleast one person using
+                schedule function path 1t replace
+                
+                # prev == current
+                if USING_SCORE["@s"] == PREV_USING_SCORE["@s"]:
+                    return:
+                        if self.end:
+                            function self.end
+                        USING_SCORE["@s"].reset()
+                        PREV_USING_SCORE["@s"].reset()
+                
+                # set prev for next tick detection (adv will incr using if we are using)
+                PREV_USING_SCORE["@s"] = USING_SCORE["@s"]
+
+        return path
+
+
+append function ON_PLAYER_RESET:
+    USING_SCORE["@s"].reset()

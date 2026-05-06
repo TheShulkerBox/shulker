@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from lib:helpers import period_to_ticks, nbt_dump, coerce_type
 
 from ./item_enchant import ItemEnchant
-from ./type import Component, RecursiveComponent
+from ./type import Component, ComponentBuildError, RecursiveComponent
 
 SlotLiteral = Literal["mainhand", "offhand", "head", "chest", "legs", "feet", "any"]
 
@@ -22,7 +22,7 @@ class Ticking(Component, base_type=list[TickingEntry]):
 
     def build(self):
         if not self.base_type:
-            raise ValueError("At least one ticking callback must be defined")
+            raise ComponentBuildError("At least one ticking callback must be defined")
         
         effects = {}
         for entry in self.base_type:
@@ -39,4 +39,4 @@ class Ticking(Component, base_type=list[TickingEntry]):
                 }
             }]
         
-        return {"item_enchant": RecursiveComponent(ItemEnchant, effects)}
+        return {item_enchant: RecursiveComponent(ItemEnchant, effects)}

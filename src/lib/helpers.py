@@ -201,3 +201,17 @@ def period_to_ticks(period: str) -> int:
             return value * 24000
 
     raise ValueError(f"Unknown time unit: {unit}")
+
+
+# def color_to_int(color: str) -> int:
+#     """Alpha<<24 + Red<<16 + Green<<8 + Blue"""
+#         color = color.removeprefix("#")
+#         if len(color) == 8:
+#             color = color[:6]  # handles VSCode auto-picker adding transparency
+#         elif len(color) != 6:
+#             raise CustomComponentError(
+#                 "Color needs to be in form '#aabbcc' (received: '{color}')",
+#                 "dyed_color",
+#                 self,
+#             )
+#         return int(color, 16)

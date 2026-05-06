@@ -72,6 +72,4 @@ function SERVER_LOAD:
 clock("1t")  # default clock at 1t, cached
 
 
-advancement ROOT_ADVANCEMENT {
-    "criteria": { "impossible": { "trigger": "minecraft:impossible" } }
-}
+advancement ROOT_ADVANCEMENT { "criteria": { "impossible": { "trigger": "minecraft:impossible" } } }

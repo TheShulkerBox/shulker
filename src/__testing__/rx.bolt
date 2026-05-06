@@ -29,11 +29,31 @@ function ./poison_dart_on_use:
     apply_motion_vector(STORAGE.temp.vector)
 
 
+def tester(component: str, phase: str):
+    path = ./engineer_pickaxe
+    path = f"{path}/{component}/{phase}"
+
+    function path:
+        say f">> {component}: {phase}"
+
+    return path
+
+
 class EngineerPickaxe(Item):
     id = "iron_pickaxe"
     item_name = "Engineer's Pickaxe"
     attack = {damage: 4, speed: 1.6, crit: 3}
     ticking = [{callback: ./engineer_pickaxe_tick}]
+    sneaking = {
+        start: tester("sneaking", "start"),
+        during: tester("sneaking", "during"),
+        end: tester("sneaking", "end"),
+    }
+    using = {
+        start: tester("using", "start"),
+        during: tester("using", "during"),
+        end: tester("using", "end"),
+    }
 
 function ./engineer_pickaxe_tick:
     particle minecraft:witch ~ ~ ~ 0.5 0.5 0.5 0 1 normal 

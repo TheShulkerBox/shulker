@@ -1,0 +1,86 @@
+from dataclasses import dataclass, field
+from functools import cached_property
+
+from lib:helpers import period_to_ticks, nbt_dump, coerce_type
+from server:events import ON_PLAYER_RESET
+
+from ./item_enchant import ItemEnchant
+from ./type import Component, ComponentBuildError, RecursiveComponent
+
+SlotLiteral = Literal["mainhand", "offhand", "head", "chest", "legs", "feet", "any"]
+SNEAKING_SCORE = Scoreboard("component.sneaking", criteria="dummy")
+
+
+class Sneaking(Component):
+    """This component ticks the player if the item is on the player and sneaking.
+
+    You can specify a specific slot and also a clock speed for ticking.
+    """
+    start: str = ""
+    during: str = ""
+    end: str = ""
+
+    def build(self):
+        if not (self.start or self.during or self.end):
+            raise ComponentBuildError("At least one of `start`, `during`, or `end` must be defined")
+        
+        effects = [
+            # tick if we are sneaking
+            {
+                "requirements": {
+                    "condition": "minecraft:entity_properties",
+                    "entity": "this",
+                    "predicate": { "flags": { "is_sneaking": true } }
+                },
+                "effect": { "type": "minecraft:run_function", "function": self.while_sneaking }
+            }
+        ]
+
+        effects.append(
+            # tick if we are no longer sneaking
+            {
+                "requirements": {
+                    "condition": "minecraft:all_of",
+                    "terms": [
+                        {
+                            "condition": "minecraft:entity_scores",
+                            "scores": { SNEAKING_SCORE.name: {min: 1} }
+                        },
+                        {
+                            "condition": "minecraft:entity_properties",
+                            "entity": "this",
+                            "predicate": { "flags": { "is_sneaking": false } }
+                        }
+                    ]
+                },
+                "effect": { "type": "minecraft:run_function", "function": self.no_longer_sneaking }
+            }
+        )
+
+        return {item_enchant: RecursiveComponent(ItemEnchant, {"minecraft:tick": effects})}
+        
+    @cached_property
+    def while_sneaking(self):
+        path = f"{self.path}/while_sneaking"
+        function path:
+            if self.start:
+                if not (SNEAKING_SCORE["@s"] > 0):
+                    function self.start
+                
+            SNEAKING_SCORE["@s"] += 1
+            function self.during
+            
+        return path
+    
+    @cached_property
+    def no_longer_sneaking(self):
+        path = f"{self.path}/no_longer_sneaking"
+        function path:
+            if self.end:
+                function self.end
+            SNEAKING_SCORE["@s"].reset()
+        
+        return path
+
+append function ON_PLAYER_RESET:
+    SNEAKING_SCORE["@s"].reset()
