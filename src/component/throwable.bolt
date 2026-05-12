@@ -1,0 +1,12 @@
+# from ./using import Using
+# from ./type import Component, ComponentBuildError
+
+# CHARGE_METER = Scoreboard("component.throwable_charge", criteria="dummy")
+
+
+# class Throwable(Component):
+#     charge_time: int
+#     keep_item: 
+
+#     def build(self):
+#         ...

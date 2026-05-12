@@ -183,9 +183,12 @@ def camel_case_to_snake_case(s: str) -> str:
     return _CAMEL_TO_SNAKE_PAT2.sub(r"\1_\2", step1).lower()
 
 
-def period_to_ticks(period: str) -> int:
+def ticks(period: str | int) -> int:
     """Converts a period string (e.g., "1s", "50t") to ticks (1s = 20t)."""
-    match = re.match(r"(\d+)(t|s|d)", period)
+    if type(period) is int:
+        return period
+
+    match = re.match(r"(\d+)(t|s|m|d)", period)
     if not match:
         raise ValueError(f"Invalid period format: {period}")
 
@@ -197,6 +200,8 @@ def period_to_ticks(period: str) -> int:
             return value
         case "s":
             return value * 20
+        case "m":
+            return value * 20 * 60
         case "d":
             return value * 24000
 

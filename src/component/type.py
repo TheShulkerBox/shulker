@@ -56,6 +56,9 @@ if TYPE_CHECKING:
     from item.type import ItemType
 
 
+BuildOutput = dict[str, Any] | None
+
+
 class ComponentBuildError(ValueError):
     """Raised when a component fails to build properly."""
 
@@ -124,7 +127,7 @@ class Component:
     def path(self) -> str:
         return f"{self.item.path}/components/{self.name()}"
 
-    def build(self) -> dict[str, Any] | None:
+    def build(self) -> BuildOutput:
         """Render this component into vanilla Minecraft components.
 
         Returns:

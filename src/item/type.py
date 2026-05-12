@@ -8,6 +8,7 @@ vanilla and custom components to build complex items with ease.
 import copy
 import dataclasses
 import json
+import traceback
 from typing import Any, ClassVar, Self
 from itertools import chain, count
 from collections import deque
@@ -340,13 +341,14 @@ class ItemType(type):
                         )
                         output = constructed_component.build()
 
-                        for key, value in output.items():
-                            if type(value) is RecursiveComponent:
-                                # If we have a recursive component, we need to add it back to the queue
-                                # so that it gets processed as a normal component. We also need to merge
-                                # its output into the current output (replacing the wrapper.)
-                                components_queue.append(value.component)
-                                output[key] = value.data
+                        if output:
+                            for key, value in output.items():
+                                if type(value) is RecursiveComponent:
+                                    # If we have a recursive component, we need to add it back to the queue
+                                    # so that it gets processed as a normal component. We also need to merge
+                                    # its output into the current output (replacing the wrapper.)
+                                    components_queue.append(value.component)
+                                    output[key] = value.data
 
                         constructed_components.append(constructed_component)
 
@@ -367,10 +369,10 @@ class ItemType(type):
                 # Merge component output into resolved_components
                 if output is not None:
                     # Track original component data in custom_data for runtime access
-                    # metadata = {"custom_components": {name: data}}
-                    # resolved_components["custom_data"] = deep_merge_dicts(
-                    #     resolved_components.get("custom_data", {}), metadata
-                    # )
+                    metadata = {"component": {name: {}}}
+                    resolved_components["custom_data"] = deep_merge_dicts(
+                        resolved_components.get("custom_data", {}), metadata
+                    )
                     
                     # Track base_type component
                     if constructed_component.__class__._base_type is not None:
@@ -673,7 +675,9 @@ class ItemType(type):
                         subtree = tree.add(err.args[0])
                         handle_suberrors(subtree, errors)
                     case err:
-                        tree.add(f"[x]{pretty_type(type(err))}[/x]: {err.args[:1]}")
+                        err_tree = tree.add(f"[x]{pretty_type(type(err))}[/x]: {err}")
+                        tb = '\n'.join(traceback.format_exception(err)).strip()
+                        err_tree.add(f"[dim]{tb}[/dim]")
 
         for name, component in output_components.items():
             # Only use base_type validation for components that explicitly set it
@@ -698,7 +702,7 @@ class ItemType(type):
                             )
                         if source_info := self._component_sources.get(name):
                             msg_parts.append(
-                                f"  [dim]Defined in:[/dim] {source_info['class']} ({source_info['module']})"
+                                f"  [dim]Defined in:[/dim] [bold green]{source_info['class']}[/bold green] ([italic green]{source_info['module']}[/italic green])"
                             )
                         messages.append("\n".join(msg_parts))
                     case ComponentError(
@@ -711,7 +715,7 @@ class ItemType(type):
                         header_parts = [f"Component [x]{name!r}[/x] failed validation"]
                         if source_info:
                             header_parts.append(
-                                f"[dim]Defined in:[/dim] {source_info['class']} ({source_info['module']})"
+                                f"[dim]Defined in:[/dim] [bold green]{source_info['class']}[/bold green] ([italic green]{source_info['module']}[/italic green])"
                             )
                         if hint:
                             header_parts.append(f"[yellow]💡 {hint}[/yellow]")

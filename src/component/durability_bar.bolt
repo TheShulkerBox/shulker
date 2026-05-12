@@ -1,0 +1,18 @@
+# from ./type import Component, ComponentBuildError
+# from lib:inventory_management import mass_modify
+# from lib:helpers import ticks
+
+# MAX_DAMAGE = 1000
+
+# class DurabilityBar(Component):
+#     def build(self):
+#         return { "max_damage": MAX_DAMAGE }
+    
+#     @classmethod
+#     def reset(cls):
+#         mass_modify {function: "set_components", components: {max_damage: MAX_DAMAGE}}
+
+#     @classmethod
+#     def fill(cls, time: str | int):
+#         time = ticks(time)
+#         STORAGE.temp.current = 

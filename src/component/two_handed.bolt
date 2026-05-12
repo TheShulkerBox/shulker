@@ -1,0 +1,67 @@
+from lib:inventory_management import SWAP_MAINHAND_OFFHAND, slot_pool
+from ./type import Component
+
+class TwoHanded(Component):
+    """Component for forcing an item to be two-handed.
+    
+    A two-handed item has the following conditionals:
+    a) cannot be offhanded
+        - if so, we swap the item with the mainhand (which is prolly empty)
+    b) cannot be held with another item in the offhand
+        - if so, we pop the offhand item and give it to the player
+    """
+    callback: str = ""
+
+    def build(self):
+        advancement f"{self.path}" {
+            "criteria": {
+                "holding_two_items": {
+                    "trigger": "minecraft:inventory_changed",
+                    "conditions": {
+                        "player": {
+                            "slots": {
+                                # are we holding a two-handed function
+                                "weapon.mainhand": {
+                                    "predicates": {
+                                        "minecraft:custom_data": { "item": self.item.name }
+                                    }
+                                },
+                                # and do we have something in the offhand
+                                "weapon.offhand": { "count": { "min": 1 } }
+                            }
+                        }
+                    }
+                },
+                "offhanding_item": {
+                    "trigger": "minecraft:inventory_changed",
+                    "conditions": {
+                        "player": {
+                            "slots": {
+                                # is this in the offhand
+                                "weapon.offhand": {
+                                    "predicates": {
+                                        "minecraft:custom_data": { "item": self.item.name }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "requirements": [ [ "holding_two_items", "offhanding_item" ] ],
+            "rewards": { "function": self.path }
+        }
+
+        function self.path:
+            execute if entity @s[advancements={self.path={offhanding_item=true}}]:
+                loot replace entity @s weapon.mainhand loot SWAP_MAINHAND_OFFHAND
+            
+            execute if entity @s[advancements={self.path={holding_two_items=true}}]:
+                loot give entity loot {"pools": [slot_pool("weapon.offhand")]}
+                item replace entity @s weapon.offhand with air
+
+            # TODO: how would u read the advancement to detect in callback
+            if self.callback:
+                function self.callback
+            
+            advancement revoke @s only self.path

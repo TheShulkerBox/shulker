@@ -1,7 +1,6 @@
 from dataclasses import dataclass, field
 
-from lib:helpers import period_to_ticks, nbt_dump, coerce_type
-
+from lib:helpers import ticks, nbt_dump, coerce_type
 from ./item_enchant import ItemEnchant
 from ./type import Component, ComponentBuildError, RecursiveComponent
 
@@ -31,7 +30,7 @@ class Ticking(Component, base_type=list[TickingEntry]):
                     "condition": "minecraft:time_check",
                     "clock": "minecraft:overworld",
                     "value": 0,
-                    "period": (period_to_ticks(entry.period))
+                    "period": (ticks(entry.period))
                 },
                 "effect": {
                     "type": "minecraft:run_function",

@@ -5,6 +5,7 @@ from operator import itemgetter
 from mecha.ast import AstNbtList, AstNbtValue
 from nbtlib.tag import String
 
+SWAP_MAINHAND_OFFHAND = ./swap_mainhand_offhand
 VALID_SLOT_GROUPS = ["hotbar", "inventory", "weapon", "armor", "cursor", "crafting"]
 
 def slot_groups(
@@ -208,3 +209,7 @@ macro hotbar_with_slots_modify loot_modifier=minecraft:loot_modifier:
         ],
         functions: loot_modifier,
     }
+
+
+# We basically do the same logic but swap offhand and mainhand.
+loot_table SWAP_MAINHAND_OFFHAND { "pools": [ slot_pool("weapon.offhand"), slot_pool("weapon.mainhand") ] }

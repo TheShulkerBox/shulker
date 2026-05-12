@@ -14,7 +14,22 @@ class DuelsMap(Map):
         super().on_load()
 
         append function admin:debug/map_info:
-            tellraw @s [{text: self.id, color: "gray"}, " (hash=", {text: str(self.hashed_id), color: "gold"}, ")\n", {storage: "rom:main", nbt: f"root.game.maps[{{id: '{self.id}'}}]"}, "\n"]
+            tellraw @s {
+                text: self.id,
+                color: "gray",
+                extra: [" (hash=", {text: str(self.hashed_id), color: "gold"}, ")"],
+                hover_event: {
+                    action: show_text,
+                    value: [
+                        f"Click to copy ", {text: str(self.hashed_id), color: "gold"}, " to clipboard\n\n",
+                        {storage: "rom:main", nbt: f"root.game.maps[{{id: '{self.id}'}}]"}
+                    ]
+                },
+                click_event: {
+                    action: copy_to_clipboard,
+                    value: str(self.hashed_id)
+                }
+            }
 
 
 macro duels_map path=brigadier:string data=mecha:nested_json:

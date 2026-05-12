@@ -24,7 +24,7 @@ AnimationLiteral = Annotated[
 ]
 
 
-class OnUse(Component):
+class Usable(Component):
     """This component helps create right-click items.
     
     Mostly leveraging the `consumable` component. Can be customized as a proper

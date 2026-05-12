@@ -1,9 +1,8 @@
 from dataclasses import dataclass, field
 from functools import cached_property
 
-from lib:helpers import period_to_ticks, nbt_dump, coerce_type
+from lib:helpers import ticks, nbt_dump, coerce_type
 from server:events import ON_PLAYER_RESET
-
 from ./item_enchant import ItemEnchant
 from ./type import Component, ComponentBuildError, RecursiveComponent
 

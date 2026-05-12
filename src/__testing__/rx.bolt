@@ -7,7 +7,7 @@ class Dart(Item):
     id = "arrow"
     item_model = "stone"
     item_name = "taco sauce 2 deluxe"
-    on_use = {callback: ./dart_on_use, infinite: true, cooldown: 0.2}
+    usable = {callback: ./dart_on_use, infinite: true, cooldown: 0.2}
 
 
 function ./dart_on_use:
@@ -19,7 +19,7 @@ class PoisonDart(Item):
     id = "arrow"
     item_model = "poisonous_potato"
     item_name = "poison taco sauce 3 deluxe"
-    on_use = {callback: ./poison_dart_on_use, infinite: true, cooldown: 0.5}
+    usable = {callback: ./poison_dart_on_use, infinite: true, cooldown: 0.5}
 
 
 function ./poison_dart_on_use:
@@ -54,9 +54,10 @@ class EngineerPickaxe(Item):
         during: tester("using", "during"),
         end: tester("using", "end"),
     }
+    two_handed = {}
 
 function ./engineer_pickaxe_tick:
-    particle minecraft:witch ~ ~ ~ 0.5 0.5 0.5 0 1 normal 
+    particle minecraft:witch ~ ~ ~ 0.5 0.5 0.5 0 1 normal
 
 
 # class Potato(Item):

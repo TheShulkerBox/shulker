@@ -32,7 +32,7 @@ async def make_request(
     url = create_url() + route
     headers = create_headers() | {"Content-Type": "application/json"}
 
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=httpx.Timeout(timeout=30.0)) as client:
         if data is None:
             resp = await client.get(url, headers=headers)
         elif isinstance(data, dict):

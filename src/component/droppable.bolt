@@ -1,0 +1,51 @@
+# from server:services/item_dropping import HANDLE_ITEM
+from lib:helpers import ticks
+from ./type import Component, ComponentBuildError
+
+DEFAULT_AGE = ticks("5m") - ticks("1m")
+
+
+class Droppable(Component):
+    type: Literal["disabled", "team_item"]
+    time_alive: str | None = None
+    custom_item: str | None = None
+    callback: str | None = None
+
+    def build(self):
+        component_data = {"type": self.type}
+
+        if self.time_alive:
+            component_data.time_alive = ticks(self.time_alive)
+        
+        if self.custom_item:
+            if not self.type == "custom":
+                raise ComponentBuildError(
+                    f"Can only define `custom_item` for `type` 'custom': ({self.custom_item})"
+                )
+            
+            component_data.custom_item = self.custom_item
+        
+        if self.callback:
+            component_data.callback = self.callback
+
+        return { "custom_data": { "component": component_data } }
+    
+    @classmethod
+    def process_item_entity(cls, item_entity: DataSource):
+        component_data = item_entity.item."minecraft:custom_data"."component".droppable
+        
+        if component_data.type == "disabled":
+            item_entity.merge({
+                Owner: [0,0,0,0],
+                PickupDelay: 32767,
+                Age: DEFAULT_AGE  # overridden if set
+            })
+            if component_data.time_alive:
+                item_entity.Age = component_data.time_alive
+            
+        elif component_data.type == "team_item":
+            ...
+        
+        if component_data.callback:
+            with var component_data:
+                $function $(callback)
