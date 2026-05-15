@@ -6,6 +6,7 @@ from server:admin import error_debug
 from player:events import ON_DEATH, DEATH_SCORE
 from lib:utils import matching
 from lib:player import tag_self
+from kit:base import KIT_ID, KIT_ID_REQUEST, KITS_ROM
 
 from ../player import TEAM_SCORE
 from ../events import ON_LEAVE_GAME
@@ -34,6 +35,9 @@ TEAM_MATCHER = matching(TEAM_SCORE, TEAM_SCORE["@s"])
 def leave_duels():
     """Call when duels is done for a player."""
     INSTANCE_ID['@s'].reset()
+    KIT_ID['@s'].reset()
+    KIT_ID_REQUEST['@s'].reset()
+    clear @s
     trigger leave_game
 
 
@@ -50,7 +54,7 @@ append function SERVER_LOAD:
 
 append function SERVER_TICK:
     execute function ./tick_instance:
-        # TODO: swap start game trigger w/ kit selection
+        # TODO: deprecate START_GAME_TRIGGER, refactor Duels
         START_GAME_TRIGGER["@a"].enable()
         execute as @a[scores={START_GAME_TRIGGER=1..}] run function ~/attempt_start_game:
             START_GAME_TRIGGER["@s"].reset()
@@ -64,10 +68,10 @@ append function SERVER_TICK:
                 return run tellraw @s {text: "You are not in a valid duel instance!", color: Theme.Failure}
             
             with select_instance_players(INSTANCE_ID["@s"]) as instance_tag:
-                # condition: start only if we have at least 2 players
-                execute store result score var SCORE.temp["#player_count"] if entity @a[tag=instance_tag]
-                execute if score var SCORE.temp["#player_count"] matches ..1 return:
-                    tellraw @s {text: "You need at least 2 players to start the duel!", color: Theme.Failure}
+                # condition: start only if we have at least 2 "ready" (kit selected) players
+                execute store result score var SCORE.temp["#ready_player_count"] if entity @a[tag=instance_tag,scores={KIT_ID_REQUEST=1..}]
+                execute if score var SCORE.temp["#ready_player_count"] matches ..1 return:
+                    tellraw @s {text: "The duel will start when both players have joined and selected their kits!", color: Theme.Failure}
 
                 execute function ./start_game with var instance_map:
                     # make players join separate teams
@@ -83,6 +87,9 @@ append function SERVER_TICK:
                     tp @a[tag=instance_tag, team=TEAM_2] $(spawn_2)
 
                     execute as @a[tag=instance_tag] at @s function ~/per_player with var instance_map:
+                        # Confirm kit selection
+                        KIT_ID["@s"] = KIT_ID_REQUEST["@s"]
+
                         # setup spawnpoint
                         spawnpoint @s ~ ~ ~ ~ ~
                         gamemode spectator @s
@@ -123,7 +130,9 @@ function ./pregame:
         if GAME_TIMER["@s"] == 60:
             playsound minecraft:entity.experience_orb.pickup master @s ~ ~ ~ 1 1
             title @s title {text: "3"}
-            function kit:loadout/archer/apply
+            STORAGE.temp.kit_id = KITS_ROM.get(hashed_id=KIT_ID["@s"]).id
+            execute function kit:attempt_resupply with storage shulker:temp:
+                $function kit:loadout/$(kit_id)/apply
 
         if GAME_TIMER["@s"] == 40:
             playsound minecraft:entity.experience_orb.pickup master @s ~ ~ ~ 1 1
@@ -205,6 +214,11 @@ function ./during_death:
             # respawn
             if DURING_DEATH_TIMER["@s"] == 0:
                 execute function ./respawn:
+                    # Resupply
+                    execute as @a[tag=instance_tag]:
+                        STORAGE.temp.kit_id = KITS_ROM.get(hashed_id=KIT_ID["@s"]).id
+                        execute function kit:attempt_resupply with storage shulker:temp:
+                            $function kit:loadout/$(kit_id)/apply
                     gamemode adventure @a[tag=instance_tag]
                     DURING_DEATH_TIMER[f"@a[tag={instance_tag}]"].reset()
                     kill @a[tag=instance_tag]

@@ -11,7 +11,10 @@ from server:core import SERVER_LOAD
 from lib:inventory_management import hotbar_with_slots_modify
 from lib:rom import LOAD_ROM
 
-KITS_ROM = STORAGE.rom.kits
+KITS_ROM = Database(Data.storage("kits:rom").root)
+
+KIT_ID_REQUEST = Scoreboard("kit.request_id", criteria="dummy")
+KIT_ID = Scoreboard("kit.id", criteria="dummy")
 
 item_type = Item | tuple[Item, int]
 
@@ -79,6 +82,7 @@ class Kit:
         """Metadata related to kits (does not contain actual items)"""
         return {
             id: self.id,
+            hashed_id: self.hashed_id,
             name: self.name,
             tagline: self.tagline,
             # "icon": self.icon.as_dict()
@@ -97,6 +101,26 @@ class Kit:
 
                 function ~/{kit.id}/mannequin:
                     execute summon mannequin function ~/../apply
+
+                function ~/{kit.id}/select:
+                    tellraw @s {text:f"Selected {kit.name}!", color: Theme.Success}
+                    KIT_ID_REQUEST["@s"] = kit.hashed_id
+                    function ./validate_kit_selection:
+                        #> TODO:
+                        # Modify below selector and introduce additional mechanisms to filter kits (kit unlocks, game-specific restrictions, etc.)
+                        execute if entity @s return 1
+                        return fail
+
+                    execute if function ./validate_kit_selection:
+                        function game:duels/tick_instance/attempt_start_game
+                        #>TODO:
+                        # This sucks. Right now it just attempts to start a duels game regardless of gamemode. Ideally
+                        # the game join & start functionality should be located in the game definitions rather than here.
+                        # -T55
+
+                function ~/{kit.id}/description:
+                    tellraw @s {text:f"\"{kit.name} description\"", color: Theme.Success}
+                    
         
         append function LOAD_ROM:
             KITS_ROM.append(self.meta_dict())

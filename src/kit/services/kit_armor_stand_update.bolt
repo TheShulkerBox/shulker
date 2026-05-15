@@ -12,11 +12,11 @@ from lib:interaction import Interaction
 for _kit in Kit._all_kits:
     _interaction = Interaction(_kit.id)
 
-    function _interaction.on_left_click:
-        function f"kit:{_kit.id}/description"
-
     function _interaction.on_right_click:
-        function f"kit:{_kit.id}/select"
+        function f"kit:loadout/{_kit.id}/select"
+    function _interaction.on_left_click:
+        function f"kit:loadout/{_kit.id}/description"
+
 
 function admin:kit_armor_stand_modernizer:
     execute as @s[type=armor_stand,tag=KitStand,name="Kit Archer"] run data modify entity @s CustomName set value archer
@@ -50,6 +50,7 @@ function ./armor_stand_update:
     kit_metadata = Kit.get(id=SELF.CustomName)
     STORAGE.temp.stand_rotation = SELF.Rotation
     passenger_valid = SCORE.temp["#passenger_valid"]
+    vehicle_valid = SCORE.temp["#vehicle_valid"]
 
     # 0: Execute on entity context (kit armor stands)
     # 1: Update Kit Loadouts using name data
@@ -59,10 +60,15 @@ function ./armor_stand_update:
         SELF.DisabledSlots = 2039583
     
     # 2: Cleanup invalid KIT_STAND_ERRATA entities
+    function admin:validate_kit_stand_entities/vehicle:
+        execute on vehicle if entity @s[type=armor_stand,tag=KIT_STAND] run return 1
+        return fail
+    
     execute function admin:validate_kit_stand_entities: 
         execute as @e[tag=KIT_STAND_ERRATA]:
-            execute on vehicle unless entity @s[type=armor_stand,tag=KIT_STAND] run return fail
-            kill @s
+            execute unless function ~/vehicle:
+                kill @s         
+
     # 3: Summon KIT_STAND_ERRATA entities, if they're missing, and conform the entity data regardless
     # Interaction ----------------------
 
