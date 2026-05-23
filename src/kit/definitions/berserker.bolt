@@ -1,3 +1,25 @@
+from kit:base import Kit
+from item:base import Item
+from item:definitions/food import Food
+from item:definitions/armor import Armor 
+
+from item:definitions/rage_juice import Rage_Juice
+
+berserker = Kit(
+    name="Berserker",
+    tagline="Addicted to stimulants",
+    icon="potion", #potion[potion_contents={custom_color:11546150}]
+
+    armor={
+        # Nothing to see here
+    },
+
+    hotbar=[
+        Item(id="iron_sword", item_name="Iron Greatsword"),
+        Food(count=2),
+        Rage_Juice
+    ]
+)
 
 # # Berzerker [id:#5]
 

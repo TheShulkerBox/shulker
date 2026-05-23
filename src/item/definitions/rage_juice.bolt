@@ -1,0 +1,54 @@
+from kit:base import Item
+
+JUICE_DRINK = "item:rage_juice/drink"
+JUICE_EXPIRE = "item:rage_juice/expire"
+JUICE_RESET = "item:rage_juice/juice_reset"
+JUICE_TICK = "item:rage_juice/tick"
+
+RAGE_JUICE_TIMER = Scoreboard("item.rage_juice_timer", criteria="dummy")
+
+SPEED_ATTR = "rage_juice_movement_speed"
+ATTACK_ATTR = "rage_juice_attack_damage"
+
+class Rage_Juice(Item):
+    """The Berserker Potion."""
+
+    item_model = "potion"
+    item_name = "Rage Juice"
+    #potion_contents = {
+    #    custom_color: #750303
+    #}
+    on_use = {
+        delay: 1.6,
+        callback: JUICE_DRINK,
+        animation: "drink",
+        sound: "minecraft:entity.generic.drink"
+    }
+
+# Function executes when potion finishes drinking
+function JUICE_DRINK:
+    give @s glass_bottle
+    # +40% speed
+    attribute @s minecraft:movement_speed modifier add SPEED_ATTR 0.4 add_multiplied_base
+    # +3 damage
+    attribute @s minecraft:attack_damage modifier add ATTACK_ATTR 3 add_value
+    playsound minecraft:entity.vex.charge voice @a ~ ~ ~ 2 0.5
+    RAGE_JUICE_TIMER["@s"] = (12*20)
+    schedule function JUICE_TICK 1t replace
+
+# Tick players with active potion effects, otherwise the schedule stops renewing until someone drinks another potion
+function JUICE_TICK:
+    execute as @a[scores={RAGE_JUICE_TIMER=1..}] at @s:
+        # Functions to handle expiry of the potion. Run JUICE_RESET to remove attributes without applying termination effects
+        execute as @s[scores={RAGE_JUICE_TIMER=1}] run function JUICE_EXPIRE:
+            effect give @s darkness 2 0 true
+            effect give @s weakness 2 1 true
+            effect give @s slowness 1 1 true
+            playsound minecraft:entity.player.burp voice @a ~ ~ ~ 2 0.8
+            execute function JUICE_RESET: 
+                scoreboard players reset @s RAGE_JUICE_TIMER
+                attribute @s minecraft:movement_speed modifier remove SPEED_ATTR
+                attribute @s minecraft:attack_damage modifier remove ATTACK_ATTR
+        # Decrement timer
+        scoreboard players remove @s[scores={RAGE_JUICE_TIMER=1..}] RAGE_JUICE_TIMER 1
+        schedule function JUICE_TICK 1t replace
