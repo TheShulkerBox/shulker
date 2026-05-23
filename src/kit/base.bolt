@@ -11,7 +11,7 @@ from server:core import SERVER_LOAD
 from lib:inventory_management import hotbar_with_slots_modify
 from lib:rom import LOAD_ROM
 
-KITS_ROM = Database(Data.storage("kits:rom").root)
+KITS_ROM = Database(Data.storage("rom:main").root.kits)
 
 KIT_ID_REQUEST = Scoreboard("kit.request_id", criteria="dummy")
 KIT_ID = Scoreboard("kit.id", criteria="dummy")
