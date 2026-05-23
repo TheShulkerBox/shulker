@@ -56,4 +56,5 @@ function JUICE_TICK:
                     attribute @s minecraft:attack_damage modifier remove ATTACK_ATTR
         
         # Decrement timer
-        RAGE_JUICE_TIMER["@s"] -= 1
+        if RAGE_JUICE_TIMER["@s"] > 1:
+            RAGE_JUICE_TIMER["@s"] -= 1
