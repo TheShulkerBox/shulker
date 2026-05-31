@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from functools import cached_property
+from contextlib import contextmanager
 from typing import ClassVar
 
 @dataclass
@@ -65,3 +66,10 @@ class Interaction:
     @cached_property
     def on_left_click(self):
         return f"{self.path}/on_left_click"
+    
+    @contextmanager
+    def summon(self):
+        execute summon interaction:
+            tag @s add self.global_tag
+            tag @s add self.tag
+            yield SELF

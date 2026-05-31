@@ -10,15 +10,13 @@ RAGE_JUICE_TIMER = Scoreboard("item.rage_juice_timer", criteria="dummy")
 SPEED_ATTR = "rage_juice_movement_speed"
 ATTACK_ATTR = "rage_juice_attack_damage"
 
-class Rage_Juice(Item):
+class RageJuice(Item):
     """The Berserker Potion."""
 
     item_model = "potion"
     item_name = "Rage Juice"
-    #potion_contents = {
-    #    custom_color: #750303
-    #}
-    on_use = {
+    potion_contents = { custom_color: "#750303"}
+    useable = {
         delay: 1.6,
         callback: JUICE_DRINK,
         animation: "drink",

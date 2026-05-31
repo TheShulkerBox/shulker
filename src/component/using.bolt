@@ -4,7 +4,7 @@ from server:events import ON_PLAYER_RESET, ON_END_TICK
 from server:core import ROOT_ADVANCEMENT
 from player:services import PLAYER_TICK
 
-from ./usable import AnimationLiteral
+from ./useable import AnimationLiteral
 from ./item_enchant import ItemEnchant
 from ./type import Component, ComponentBuildError, RecursiveComponent
 

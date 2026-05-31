@@ -9,7 +9,6 @@ from lib.errors import CustomComponentError
 
 class DyedColor(Transformer):
     """Allows you to write dyed colors using traditional hex formatting"""
-
     color: str | Any
 
     def build(self) -> int | None:
@@ -26,6 +25,26 @@ class DyedColor(Transformer):
                 )
 
             return int(color, 16)
+
+
+class PotionContents(Transformer):
+    """Allows you to write dyed colors using traditional hex formatting"""
+    potion_contents: dict[str, Any]
+
+    def build(self) -> int | None:
+        if type(color := self.potion_contents.get("custom_color")) is str:
+            color = color.removeprefix("#")
+
+            if len(color) == 8:
+                color = color[:6]  # handles VSCode auto-picker adding transparency
+            elif len(color) != 6:
+                raise CustomComponentError(
+                    "Color needs to be in form '#aabbcc' (received: '{color}')",
+                    "dyed_color",
+                    self,
+                )
+
+            return self.potion_contents | {"custom_color": int(color, 16)}
 
 
 class Lore(Transformer):

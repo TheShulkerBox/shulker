@@ -1,12 +1,18 @@
 #> Adds the self tag and automatically removes it
 
+from collections import defaultdict
 from contextlib import contextmanager
+from itertools import count
 
-SELF_TAG = "player.self"
+from ./helpers import path_to_string
 
+COUNTERS = defaultdict(count)
 
 @contextmanager
 def tag_self() -> str:
-    tag @s add SELF_TAG
-    yield SELF_TAG
-    tag @s remove SELF_TAG
+    path_as_tag = path_to_string(~/)
+    suffix = next(COUNTERS[path_as_tag])
+    self_tag = f"player.self.{path_as_tag}_{suffix}"
+    tag @s add self_tag
+    yield self_tag
+    tag @s remove self_tag

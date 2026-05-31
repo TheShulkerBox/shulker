@@ -208,6 +208,10 @@ def ticks(period: str | int) -> int:
     raise ValueError(f"Unknown time unit: {unit}")
 
 
+def path_to_string(path: str) -> str:
+    return path.replace(":", "_").replace("/", "_")
+
+
 # def color_to_int(color: str) -> int:
 #     """Alpha<<24 + Red<<16 + Green<<8 + Blue"""
 #         color = color.removeprefix("#")

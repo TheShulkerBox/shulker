@@ -7,7 +7,7 @@ class Dart(Item):
     id = "arrow"
     item_model = "stone"
     item_name = "taco sauce 2 deluxe"
-    usable = {callback: ./dart_on_use, infinite: true, cooldown: 0.2}
+    useable = {callback: ./dart_on_use, infinite: true, cooldown: 0.2}
 
 
 function ./dart_on_use:
@@ -19,7 +19,7 @@ class PoisonDart(Item):
     id = "arrow"
     item_model = "poisonous_potato"
     item_name = "poison taco sauce 3 deluxe"
-    usable = {callback: ./poison_dart_on_use, infinite: true, cooldown: 0.5}
+    useable = {callback: ./poison_dart_on_use, infinite: true, cooldown: 0.5}
 
 
 function ./poison_dart_on_use:
