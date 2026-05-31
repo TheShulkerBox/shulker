@@ -33,6 +33,13 @@ class Kit:
     _storage: ClassVar[Database] = Database(STORAGE.rom.kits)
 
     def __post_init__(self):
+        if "body" not in self.armor:
+            self.armor["body"] = Item(
+                id="barrier",
+                item_name="Hidden Body Slot",
+                lore=["You should never see this!"],
+            )
+
         self._all_kits.append(self)
 
         self._all_items.extend(self.armor.values())
