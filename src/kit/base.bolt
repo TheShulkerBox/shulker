@@ -38,6 +38,7 @@ class Kit:
                 id="barrier",
                 item_name="Hidden Body Slot",
                 lore=["You should never see this!"],
+                equippable={slot: "body"},
             )
 
         self._all_kits.append(self)
