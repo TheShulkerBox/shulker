@@ -1,9 +1,9 @@
-from item:base import Item
+from item:base import KitItem
 from lib:motion import apply_motion_vector
 
 from server:core import SERVER_TICK
 
-class Dart(Item):
+class Dart(KitItem):
     id = "arrow"
     item_model = "stone"
     item_name = "taco sauce 2 deluxe"
@@ -15,7 +15,7 @@ function ./dart_on_use:
     # say i've used za dart
 
 
-class PoisonDart(Item):
+class PoisonDart(KitItem):
     id = "arrow"
     item_model = "poisonous_potato"
     item_name = "poison taco sauce 3 deluxe"
@@ -39,7 +39,7 @@ def tester(component: str, phase: str):
     return path
 
 
-class EngineerPickaxe(Item):
+class EngineerPickaxe(KitItem):
     id = "iron_pickaxe"
     item_name = "Engineer's Pickaxe"
     attack = {damage: 4, speed: 1.6, crit: 3}
@@ -60,7 +60,7 @@ function ./engineer_pickaxe_tick:
     particle minecraft:witch ~ ~ ~ 0.5 0.5 0.5 0 1 normal
 
 
-# class Potato(Item):
+# class Potato(KitItem):
 #     id = "stone"
 #     item_model = "potato"
 #     item_name = "Bouncing Betty"

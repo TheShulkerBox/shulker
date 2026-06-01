@@ -90,3 +90,7 @@ class Item(metaclass=ItemType):
 
             function f"item:give/{self.name}":
                 give @s self self.count
+
+class KitItem(Item):
+    
+    custom_data = { kit_item:true }
