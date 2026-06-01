@@ -1,6 +1,6 @@
 import component:armor as _
 from kit:base import Kit
-from item:base import Item
+from item:base import KitItem
 from item:definitions/food import Food
 from item:definitions/armor import Armor 
 
@@ -15,7 +15,7 @@ warbow = Kit(
         "feet": Armor(id="leather_boots", dyed_color="#DEB233"),
     },
     hotbar=[
-        Item(id="bow", item_name="Warbow"),
+        KitItem(id="bow", item_name="Warbow"),
         #Wabow Ammo,
         Food(count=3),
         #Spyglass

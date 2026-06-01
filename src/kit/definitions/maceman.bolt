@@ -1,6 +1,6 @@
 import component:armor as _
 from kit:base import Kit
-from item:base import Item
+from item:base import KitItem
 from item:definitions/food import Food
 from item:definitions/armor import Armor 
 
@@ -15,11 +15,11 @@ maceman = Kit(
         "feet": Armor(id="leather_boots", dyed_color="#454545"),
     },
     hotbar=[
-        Item(id="mace", item_name="Iron Mace"),
-        Item(id="stone_sword"),
+        KitItem(id="mace", item_name="Iron Mace"),
+        KitItem(id="stone_sword"),
         Food(count=3)
     ],
-    offhand=Item(id="shield")
+    offhand=KitItem(id="shield")
 )
 
 # # Maceman [id:#314]

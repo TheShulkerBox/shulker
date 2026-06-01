@@ -1,5 +1,5 @@
 from kit:base import Kit
-from item:base import Item
+from item:base import KitItem
 from item:definitions/food import Food
 from item:definitions/armor import Armor 
 
@@ -15,7 +15,7 @@ berserker = Kit(
     },
 
     hotbar=[
-        Item(id="iron_sword", item_name="Iron Greatsword"),
+        KitItem(id="iron_sword", item_name="Iron Greatsword"),
         Food(count=2),
         RageJuice
     ]

@@ -1,5 +1,5 @@
 from kit:base import Kit
-from item:base import Item
+from item:base import KitItem
 from item:definitions/food import Food
 from item:definitions/armor import Armor 
 
@@ -14,10 +14,10 @@ assassin = Kit(
         "feet": Armor(id="leather_boots", dyed_color="#191919"),
     },
     hotbar=[
-        Item(id="iron_sword", item_name="Iron Dagger"),
-        Item(id="bow", item_name="Dart Caster"),
+        KitItem(id="iron_sword", item_name="Iron Dagger"),
+        KitItem(id="bow", item_name="Dart Caster"),
         Food(count=2),
-        Item(id="tipped_arrow", item_name="Blindness Dart")
+        KitItem(id="tipped_arrow", item_name="Blindness Dart")
     ]
 )
 

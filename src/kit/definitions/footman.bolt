@@ -1,5 +1,5 @@
 from kit:base import Kit
-from item:base import Item
+from item:base import KitItem
 
 from item:definitions/food import Food, Rations
 # from item:definitions/throwable/net import Net
@@ -11,12 +11,12 @@ footman = Kit(
     icon="iron_sword",
 
     armor={
-        "chest": Item(id="iron_chestplate"),
-        "legs": Item(id="leather_leggings"),
-        "feet": Item(id="iron_boots"),
+        "chest": KitItem(id="iron_chestplate"),
+        "legs": KitItem(id="leather_leggings"),
+        "feet": KitItem(id="iron_boots"),
     },
     hotbar=[
-        Item(id="iron_sword", item_name="Iron Broadsword"),
+        KitItem(id="iron_sword", item_name="Iron Broadsword"),
         # Net,
         Food(count=3),
         Rations,

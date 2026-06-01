@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import ClassVar, NamedTuple
 
-from item:base import Item
+from item:base import Item, KitItem
 from item:type import ItemType
 from lib:helpers import id_to_number
 from lib:db import Database
@@ -16,7 +16,7 @@ KITS_ROM = Database(Data.storage("rom:main").root.kits)
 KIT_ID_REQUEST = Scoreboard("kit.request_id", criteria="dummy")
 KIT_ID = Scoreboard("kit.id", criteria="dummy")
 
-item_type = Item | tuple[Item, int]
+item_type = KitItem | tuple[KitItem, int]
 
 @dataclass
 class Kit:
@@ -34,7 +34,7 @@ class Kit:
 
     def __post_init__(self):
         if "body" not in self.armor:
-            self.armor["body"] = Item(
+            self.armor["body"] = KitItem(
                 id="barrier",
                 item_name="Hidden Body Slot",
                 lore=["You should never see this!"],
@@ -99,35 +99,32 @@ class Kit:
     def build(self):
         """Main generation logic for per-kit files"""
         function ./loadout:
-            # TODO: add kit id, player id, and other relevant info to the temp storage for use in functions
-            for kit in Kit._all_kits:
-                # applies the kit to the player (assuming @s)
-                function ~/{kit.id}/apply:
-                    for slot, item in kit:
-                        item replace entity @s slot with item item.count
-                    hotbar_with_slots_modify {function: "set_custom_data", tag: {taco: bell}}
+            function ~/{self.id}/apply:
+                for slot, item in self:
+                    item replace entity @s slot with item item.count
+                hotbar_with_slots_modify {function: "set_custom_data", tag: {taco: bell}}
 
-                function ~/{kit.id}/mannequin:
-                    execute summon mannequin function ~/../apply
+            function ~/{self.id}/mannequin:
+                execute summon mannequin function ~/../apply
 
-                function ~/{kit.id}/select:
-                    tellraw @s {text:f"Selected {kit.name}!", color: Theme.Success}
-                    KIT_ID_REQUEST["@s"] = kit.hashed_id
-                    function ./validate_kit_selection:
-                        #> TODO:
-                        # Modify below selector and introduce additional mechanisms to filter kits (kit unlocks, game-specific restrictions, etc.)
-                        execute if entity @s return 1
-                        return fail
+            function ~/{self.id}/select:
+                tellraw @s {text: f"Selected {self.name}!", color: Theme.Success}
+                KIT_ID_REQUEST["@s"] = self.hashed_id
+                function ./validate_kit_selection:
+                    #> TODO:
+                    # Modify below selector and introduce additional mechanisms to filter kits (kit unlocks, game-specific restrictions, etc.)
+                    execute if entity @s return 1
+                    return fail
 
-                    execute if function ./validate_kit_selection:
-                        function game:duels/tick_instance/attempt_start_game
-                        #>TODO:
-                        # This sucks. Right now it just attempts to start a duels game regardless of gamemode. Ideally
-                        # the game join & start functionality should be located in the game definitions rather than here.
-                        # -T55
+                execute if function ./validate_kit_selection:
+                    function game:duels/tick_instance/attempt_start_game
+                    #>TODO:
+                    # This sucks. Right now it just attempts to start a duels game regardless of gamemode. Ideally
+                    # the game join & start functionality should be located in the game definitions rather than here.
+                    # -T55
 
-                function ~/{kit.id}/description:
-                    tellraw @s {text:f"\"{kit.name} description\"", color: Theme.Success}
+            function ~/{self.id}/description:
+                tellraw @s {text: f'"{self.name} description"', color: Theme.Success}
                     
         
         append function LOAD_ROM:

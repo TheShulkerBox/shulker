@@ -1,5 +1,5 @@
 from kit:base import Kit
-from item:base import Item
+from item:base import KitItem
 from item:definitions/food import Food
 from item:definitions/armor import Armor 
 
@@ -15,9 +15,9 @@ archer = Kit(
         "feet": Armor(id="leather_boots")
     },
     hotbar=[
-        Item(id="wooden_sword", item_name="Wooden Dagger"),
-        Item(id="bow", item_name="Longbow"),
-        Item(id="arrow", count=20),
+        KitItem(id="wooden_sword", item_name="Wooden Dagger"),
+        KitItem(id="bow", item_name="Longbow"),
+        KitItem(id="arrow", count=20),
         Food(count=2)
     ]
 )
