@@ -93,4 +93,4 @@ class Item(metaclass=ItemType):
 
 class KitItem(Item):
     
-    custom_data = { kit_item:true }
+    custom_data = { kit_item: true }
