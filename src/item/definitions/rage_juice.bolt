@@ -22,10 +22,10 @@ class RageJuice(Item):
         animation: "drink",
         sound: "minecraft:entity.generic.drink"
     }
+    use_remainder = Item(id="glass_bottle").as_dict()
 
 # Function executes when potion finishes drinking
 function JUICE_DRINK:
-    give @s glass_bottle
     # +40% speed
     attribute @s minecraft:movement_speed modifier add SPEED_ATTR 0.4 add_multiplied_base
     # +3 damage

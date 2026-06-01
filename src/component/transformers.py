@@ -7,12 +7,10 @@ from lib.text import Theme
 from lib.errors import CustomComponentError
 
 
-class DyedColor(Transformer):
+class DyedColor(Transformer, base_type=str | Any):
     """Allows you to write dyed colors using traditional hex formatting"""
-    color: str | Any
-
     def build(self) -> int | None:
-        if type(color := self.color) is str:
+        if type(color := self.base_type) is str:
             color = color.removeprefix("#")
 
             if len(color) == 8:
@@ -27,12 +25,10 @@ class DyedColor(Transformer):
             return int(color, 16)
 
 
-class PotionContents(Transformer):
+class PotionContents(Transformer, base_type=dict[str, Any] | Any):
     """Allows you to write dyed colors using traditional hex formatting"""
-    potion_contents: dict[str, Any]
-
     def build(self) -> int | None:
-        if type(color := self.potion_contents.get("custom_color")) is str:
+        if type(color := self.base_type.get("custom_color")) is str:
             color = color.removeprefix("#")
 
             if len(color) == 8:
@@ -44,16 +40,13 @@ class PotionContents(Transformer):
                     self,
                 )
 
-            return self.potion_contents | {"custom_color": int(color, 16)}
+            return self.base_type | {"custom_color": int(color, 16)}
 
 
-class Lore(Transformer):
-    lore: str | list[str] | list[dict[str, Any]]
-
+class Lore(Transformer, base_type=str | list[str] | list[dict[str, Any]] | Any):
+    """Allows you to write lore using regular strings and auto applies formatting"""
     def build(self) -> list[TextComponent]:
-        """Allows you to write lore using regular strings and auto applies formatting"""
-
-        if type(lore := self.lore) is str:
+        if type(lore := self.base_type) is str:
             lore = [lore]
 
         return [

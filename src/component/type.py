@@ -108,6 +108,9 @@ class Component:
 
     def __init_subclass__(cls, cache: bool = True, base_type: type | None = None):
         """Auto-register component and convert to dataclass."""
+        if cls.__name__ == "Transformer":
+            # Don't register the base Transformer class
+            return super().__init_subclass__()
         cls._skip_cache = not cache
         cls._base_type = base_type
         if base_type is not None:
@@ -159,7 +162,7 @@ class Component:
     
 
 @dataclass(repr=False)
-class Transformer:
+class Transformer(Component):
     """Base class for component value transformers.
 
     Transformers modify the value of an existing component. They're useful
@@ -193,51 +196,4 @@ class Transformer:
         class MyItem(Item):
             dyed_color = "#ff0000"  # Transformed to 16711680
     """
-
-    registered: ClassVar[list[Self]] = []
-
-    item: "ItemType" = field(kw_only=True)
-    resolved_components: dict[str, Any] = field(kw_only=True)
-
-    def __init_subclass__(cls):
-        """Auto-register transformer and convert to dataclass."""
-        cls._base_type = None
-        new_cls = dataclass(cls, repr=False)
-        new_cls.__module__ = cls.__module__
-        cls.registered.append(new_cls)
-        return new_cls
-
-    @classmethod
-    def name(cls) -> str:
-        """Get the snake_case name of this transformer."""
-        return camel_case_to_snake_case(cls.__name__)
-
-    def build(self) -> Any | None:
-        """Transform the component value.
-
-        Returns:
-            Transformed value, or None to leave component unchanged
-
-        Raises:
-            NotImplementedError: Must be implemented by subclasses
-        """
-        raise NotImplementedError
-
-    def post_build(self, resolved_components: dict[str, Any], item_obj: "ItemType") -> None:
-        """Optional post-processing after all components are resolved.
-
-        Use this to modify resolved_components in-place after transformation.
-        This is called only if the transformer was present in the original
-        item definition.
-
-        Args:
-            resolved_components: All resolved components (mutable)
-        """
-    
-    def __repr__(self) -> str:
-        field_str = ", ".join(
-            f"{field.name}={getattr(self, field.name)!r}"
-            for field in self.__dataclass_fields__.values()
-            if field.name not in {"item", "registered", "resolved_components"}
-        )
-        return f"{self.__class__.__name__}({field_str})"
+    registered: ClassVar[list[Self]] = []  # Separate registry for transformers
