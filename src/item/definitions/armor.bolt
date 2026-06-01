@@ -1,5 +1,5 @@
-from ../base import Item
+from ../base import KitItem
 
 
-class Armor(Item):
+class Armor(KitItem):
     enchantments = { "binding_curse": 1 }

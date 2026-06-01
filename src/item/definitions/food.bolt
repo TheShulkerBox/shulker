@@ -1,11 +1,11 @@
-from ../base import Item
+from ../base import KitItem
 
 
-class Food(Item):
+class Food(KitItem):
     id = "pumpkin_pie"
 
 
-class Rations(Item):
+class Rations(KitItem):
     """Quick healing food that can be eaten quickly in battle."""
 
     item_model = "dried_kelp"

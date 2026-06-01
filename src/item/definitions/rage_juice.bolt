@@ -1,4 +1,4 @@
-from kit:base import Item
+from kit:base import KitItem
 
 JUICE_DRINK = "item:rage_juice/drink"
 JUICE_EXPIRE = "item:rage_juice/expire"
@@ -10,7 +10,7 @@ RAGE_JUICE_TIMER = Scoreboard("item.rage_juice_timer", criteria="dummy")
 SPEED_ATTR = "rage_juice_movement_speed"
 ATTACK_ATTR = "rage_juice_attack_damage"
 
-class RageJuice(Item):
+class RageJuice(KitItem):
     """The Berserker Potion."""
 
     item_model = "potion"
@@ -27,9 +27,8 @@ class RageJuice(Item):
 # Function executes when potion finishes drinking
 function JUICE_DRINK:
     # +40% speed
-    attribute @s minecraft:movement_speed modifier add SPEED_ATTR 0.4 add_multiplied_base
     # +3 damage
-    attribute @s minecraft:attack_damage modifier add ATTACK_ATTR 3 add_value
+    item modify entity @s armor.body {"function":"minecraft:set_attributes","modifiers":[{"attribute":"minecraft:attack_damage","id":f"ATTACK_ATTR","amount":3,"operation":"add_value","slot":"body"},{"attribute":"minecraft:movement_speed","id":f"SPEED_ATTR","amount":"0.4","operation":"add_multiplied_base","slot":"mainhand"}]}
     playsound minecraft:entity.vex.charge voice @a ~ ~ ~ 2 0.5
     RAGE_JUICE_TIMER["@s"] = (12*20)
     schedule function JUICE_TICK 1t replace
@@ -50,8 +49,7 @@ function JUICE_TICK:
                 
                 execute function JUICE_RESET: 
                     RAGE_JUICE_TIMER["@s"].reset()
-                    attribute @s minecraft:movement_speed modifier remove SPEED_ATTR
-                    attribute @s minecraft:attack_damage modifier remove ATTACK_ATTR
+                    item modify entity @s armor.body {"function":"minecraft:set_attributes","modifiers":[{"attribute":"minecraft:attack_damage","id":f"ATTACK_ATTR","amount":0,"operation":"add_value","slot":"body"},{"attribute":"minecraft:movement_speed","id":f"SPEED_ATTR","amount":"0","operation":"add_multiplied_base","slot":"mainhand"}]}
         
         # Decrement timer
         if RAGE_JUICE_TIMER["@s"] > 1:

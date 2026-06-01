@@ -1,8 +1,8 @@
-from item:base import Item
+from item:base import KitItem
 from ../damage_types import light_damage_type, medium_damage_type, heavy_damage_type
 
 
-class Weapon(Item):
+class Weapon(KitItem):
     ...
 
 

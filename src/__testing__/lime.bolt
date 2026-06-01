@@ -1,8 +1,8 @@
 import component:attack as _
-from item:base import Item
+from item:base import KitItem
 
 
-class Mace(Item):
+class Mace(KitItem):
     id = "iron_shovel"
     item_model = "mace"
     item_name = "Iron Mace"
