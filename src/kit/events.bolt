@@ -1,0 +1,4 @@
+KIT_RESET = kit:event/reset
+
+function KIT_RESET:
+    clear @s *[custom_data={kit_item: true}]
