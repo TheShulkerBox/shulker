@@ -41,7 +41,7 @@ def rage_attribute_modifier(atk_amt: int, spd_amt: int) -> dict[str, Any]:
                 "id": SPEED_ATTR,
                 "amount": spd_amt,
                 "operation": "add_multiplied_base",
-                "slot": "mainhand"
+                "slot": "body"
             }
         ]
     }

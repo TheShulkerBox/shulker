@@ -75,6 +75,8 @@ class Kit:
             yield ("armor.chest", self.armor["chest"])
         if "head" in self.armor:
             yield ("armor.head", self.armor["head"])
+        if "body" in self.armor:
+            yield ("armor.body", self.armor["body"])
     
     @property
     def offhand_items(self):
