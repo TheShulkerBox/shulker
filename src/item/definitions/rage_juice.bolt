@@ -1,3 +1,4 @@
+from kit:events import KIT_RESET
 from kit:base import KitItem
 
 JUICE_DRINK = "item:rage_juice/drink"
@@ -76,3 +77,6 @@ function JUICE_TICK:
         # Decrement timer
         if RAGE_JUICE_TIMER["@s"] > 1:
             RAGE_JUICE_TIMER["@s"] -= 1
+
+append function KIT_RESET:
+    function JUICE_RESET
