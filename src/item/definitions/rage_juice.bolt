@@ -22,7 +22,7 @@ class RageJuice(KitItem):
         animation: "drink",
         sound: "minecraft:entity.generic.drink"
     }
-    use_remainder = Item(id="glass_bottle").as_dict()
+    use_remainder = KitItem(id="glass_bottle").as_dict()
 
 
 def rage_attribute_modifier(atk_amt: int, spd_amt: int) -> dict[str, Any]:
