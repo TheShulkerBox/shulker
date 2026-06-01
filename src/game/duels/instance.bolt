@@ -7,6 +7,7 @@ from player:events import ON_DEATH, DEATH_SCORE
 from lib:utils import matching
 from lib:player import tag_self
 from kit:base import KIT_ID, KIT_ID_REQUEST, KITS_ROM
+from kit:events import KIT_RESET
 
 from ../player import TEAM_SCORE
 from ../events import ON_LEAVE_GAME
@@ -156,6 +157,7 @@ prepend function ON_DEATH:
     instance = INSTANCE_META.get(id=INSTANCE_ID["@s"])
     if instance.gamemode == Gamemode.Duels:
         execute unless score var DURING_DEATH_TIMER["@s"] matches 1.. run function ./on_death:
+            function KIT_RESET
             with select_instance_players(INSTANCE_ID["@s"]) as instance_tag:
                 # game is considered tied if everybody is dead!
                 execute store result score var SCORE.temp["#player_count"] if entity @a[tag=instance_tag]
@@ -216,8 +218,9 @@ function ./during_death:
                 execute function ./respawn:
                     # Resupply
                     execute as @a[tag=instance_tag]:
-                        STORAGE.temp.kit_id = KITS_ROM.get(hashed_id=KIT_ID["@s"]).id
-                        execute function kit:attempt_resupply with storage shulker:temp:
+                        function KIT_RESET
+                        STORAGE.macro = {"kit_id": KITS_ROM.get(hashed_id=KIT_ID["@s"]).id}
+                        with var STORAGE.macro:
                             $function kit:loadout/$(kit_id)/apply
                     gamemode adventure @a[tag=instance_tag]
                     DURING_DEATH_TIMER[f"@a[tag={instance_tag}]"].reset()
@@ -252,6 +255,7 @@ prepend function ON_LEAVE_GAME:
     KILLS["@s"].reset()
     TEAM_SCORE["@s"].reset()
     DURING_DEATH_TIMER["@s"].reset()
+    function KIT_RESET
 
 
 # TODO ON_SERVER_LEAVE queue to display message to people who leave

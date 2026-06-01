@@ -3,7 +3,7 @@ from item:base import KitItem
 from item:definitions/food import Food
 from item:definitions/armor import Armor 
 
-from item:definitions/rage_juice import RageJuice
+from item:definitions/consumable/rage_juice import RageJuice
 
 berserker = Kit(
     name="Berserker",

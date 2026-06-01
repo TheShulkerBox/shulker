@@ -1,7 +1,8 @@
 from kit:base import Kit
 from item:base import KitItem
 
-from item:definitions/food import Food, Rations
+from item:definitions/food import Food
+from item:definitions/consumable/rations import Rations
 # from item:definitions/throwable/net import Net
 
 
