@@ -1,4 +1,4 @@
-from ../food import Food
+from ../../base import KitItem
 
 class FlashBomb(KitItem):
     """Throw the Flash Bomb at enemies to blind them (idk if it literally applies blindness)."""

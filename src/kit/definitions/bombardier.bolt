@@ -17,7 +17,7 @@ bombardier = Kit(
     },
     hotbar=[
         Weapon(id="stone_sword", item_name="Stone Cutlass", enchantments={sweeping:3}),
-        KitItem(id="glowstone_dust", item_name="Flash Bomb"),
+        FlashBomb,
         KitItem(id="charcoal", item_name="Pitch Puck"),
         KitItem(id="glowstone_dust", item_name="Flame Bomb"),
         Food(count=3)
