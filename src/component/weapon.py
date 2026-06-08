@@ -25,7 +25,8 @@ class Weapon(Component):
             modifiers.extend(self.make_modifiers("attack_damage", self.damage))
 
         if self.speed is not None:
-            modifiers.extend(self.make_modifiers("attack_speed", self.speed))
+            self.speed = (4-self.speed)
+            modifiers.extend(self.make_modifiers("attack_speed", -self.speed))
 
         if self.weight is not None:
             if self.weight is "light":
