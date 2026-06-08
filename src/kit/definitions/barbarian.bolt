@@ -10,12 +10,12 @@ barbarian = Kit(
     icon="iron_axe",
 
     armor={
-        "chest": Armor(id="leather_chestplate", value=9 ,dyed_color="#993333"),
-        "legs": Armor(id="chainmail_leggings", value=0),
-        "feet": Armor(id="iron_boots", value=0)
+        "chest": Armor(id="leather_chestplate", dyed_color="#993333", armor={value:9}),
+        "legs": Armor(id="chainmail_leggings", armor={value:0}),
+        "feet": Armor(id="iron_boots", armor={value:0})
     },
     hotbar=[
-        Weapon(id="iron_axe", item_name="Iron Battleaxe", damage=9, speed=0.7, weight="heavy"),
+        Weapon(id="iron_axe", item_name="Iron Battleaxe", weapon={damage:9, speed:0.7, weight:"heavy"}),
         Weapon(id="wooden_sword", item_name="Wooden Club", enchantments={knockback:1}),
         Food(count=2)
     ]

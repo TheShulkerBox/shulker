@@ -11,7 +11,7 @@ bombardier = Kit(
     icon="gunpowder",
 
     armor={
-        "chest": Armor(id="chainmail_chestplate", value=8),
+        "chest": Armor(id="chainmail_chestplate", armor={value:8}),
         "legs": Armor(id="leather_leggings", dyed_color="#636363"),
         "feet": Armor(id="iron_boots")
     },
