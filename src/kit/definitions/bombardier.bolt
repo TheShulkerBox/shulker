@@ -1,3 +1,28 @@
+from kit:base import Kit
+from item:base import KitItem
+from item:definitions/food import Food
+from item:definitions/armor import Armor 
+from item:definitions/weapon import Weapon
+from item:definitions/throwable/flash_bomb import FlashBomb
+
+bombardier = Kit(
+    name="Bombardier",
+    tagline="An explosive and tactical artist",
+    icon="gunpowder",
+
+    armor={
+        "chest": Armor(id="chainmail_chestplate", value=8),
+        "legs": Armor(id="leather_leggings", dyed_color="#636363"),
+        "feet": Armor(id="iron_boots")
+    },
+    hotbar=[
+        Weapon(id="stone_sword", item_name="Stone Cutlass", enchantments={sweeping:3}),
+        KitItem(id="glowstone_dust", item_name="Flash Bomb"),
+        KitItem(id="charcoal", item_name="Pitch Puck"),
+        KitItem(id="glowstone_dust", item_name="Flame Bomb"),
+        Food(count=3)
+    ]
+)
 
 # # Bombardier [id:#14]
 

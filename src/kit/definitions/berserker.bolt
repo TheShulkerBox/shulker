@@ -2,6 +2,7 @@ from kit:base import Kit
 from item:base import KitItem
 from item:definitions/food import Food
 from item:definitions/armor import Armor 
+from item:definitions/weapon import Weapon
 
 from item:definitions/consumable/rage_juice import RageJuice
 
@@ -15,7 +16,7 @@ berserker = Kit(
     },
 
     hotbar=[
-        KitItem(id="iron_sword", item_name="Iron Greatsword"),
+        Weapon(id="iron_sword", item_name="Iron Greatsword"),
         Food(count=2),
         RageJuice
     ]

@@ -1,0 +1,9 @@
+from ../food import Food
+
+class FlashBomb(KitItem):
+    """Throw the Flash Bomb at enemies to blind them (idk if it literally applies blindness)."""
+
+    item_model = "glowstone_dust"
+    item_name = "Flash Bomb"
+    
+# data modify storage kits:temp kit.hotbar append value {Slot:1b, id:'glowstone_dust', name:'Flash Bomb', tip:'Drop to blind nearby players', tag:{CustomModelData:101004, droppable:3b, bomb:{flash:1b}}}

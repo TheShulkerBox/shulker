@@ -1,3 +1,25 @@
+from kit:base import Kit
+from item:base import KitItem
+from item:definitions/food import Food
+from item:definitions/armor import Armor 
+from item:definitions/weapon import Weapon
+
+barbarian = Kit(
+    name="Barbarian",
+    tagline="A ruthless axeman filled with rage",
+    icon="iron_axe",
+
+    armor={
+        "chest": Armor(id="leather_chestplate", value=9 ,dyed_color="#993333"),
+        "legs": Armor(id="chainmail_leggings", value=0),
+        "feet": Armor(id="iron_boots", value=0)
+    },
+    hotbar=[
+        Weapon(id="iron_axe", item_name="Iron Battleaxe"),
+        Weapon(id="wooden_sword", item_name="Wooden Club", enchantments={knockback:1}),
+        Food(count=2)
+    ]
+)
 
 # # Barbarian [id:#2]
 
