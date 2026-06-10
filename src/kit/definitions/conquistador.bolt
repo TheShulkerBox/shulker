@@ -1,3 +1,25 @@
+from kit:base import Kit
+from item:base import KitItem
+from item:definitions/food import Food
+from item:definitions/armor import Armor 
+from item:definitions/weapon import Weapon
+
+conquistador = Kit(
+    name="Conquistador",
+    tagline="Leads the charge to rally its teammates",
+    icon="light_gray_banner",
+
+    armor={
+        "chest": Armor(id="leather_chestplate", dyed_color="#AD0000"),
+        "legs": Armor(id="golden_leggings"),
+        "feet": Armor(id="iron_boots")
+    },
+    hotbar=[
+        Weapon(id="iron_sword", item_name="Iron Cutlass"),
+        Food(count=2)
+    ]
+)
+
 
 # # Conquistador [id:#312]
 
