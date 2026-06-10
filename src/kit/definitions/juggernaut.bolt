@@ -15,7 +15,7 @@ juggernaut = Kit(
         "feet": Armor(id="diamond_boots")
     },
     hotbar=[
-        Weapon(id="netherite_shovel", item_name="Maul", weapon={damage:8, speed:0.6, weight:"heavy",}, enchantments={knockback:1}),
+        Weapon(id="netherite_shovel", item_name="Maul", melee={damage:8, speed:0.6, weight:"heavy"}, enchantments={knockback:1}),
         # TODO: Dash, rx said on shovel
         Food(count=2),
         Food(id="cooked_beef", count=1)
