@@ -12,6 +12,7 @@ class Armor(Component):
     speed: float | None = None
 
     def make_modifiers(self, type: str, value: float) -> Iterable[dict[str, Any]]:
+        # TODO: look up default AND equippable component for correct slot instead of all slots
         for slot in ARMOR_SLOTS:
             yield {
                 "type": type,

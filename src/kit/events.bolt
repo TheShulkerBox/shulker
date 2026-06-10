@@ -1,4 +1,10 @@
+from server:events import ON_JOIN
+
 KIT_RESET = kit:event/reset
 
 function KIT_RESET:
-    clear @s *[custom_data={kit_item: true}]
+    clear @s *[custom_data~{kit_item: true}]
+
+
+append function ON_JOIN:
+    function KIT_RESET
