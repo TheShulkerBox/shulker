@@ -1,0 +1,9 @@
+from ../../base import KitItem
+
+class PitchPuck(KitItem):
+    """..."""
+
+    item_model = "charcoal"
+    item_name = "Pitch Puck"
+
+# data modify storage kits:temp kit.hotbar append value {Slot:2b, id:'charcoal', name:'Pitch Puck', tip:'Drop to damage players', tag:{CustomModelData:101005, droppable:3b, bomb:{pitch:1b}}}

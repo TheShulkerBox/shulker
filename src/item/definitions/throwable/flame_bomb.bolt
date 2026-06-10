@@ -1,0 +1,9 @@
+from ../../base import KitItem
+
+class FlameBomb(KitItem):
+    """..."""
+
+    item_model = "blaze_powder"
+    item_name = "Flame Bomb"
+
+# data modify storage kits:temp kit.hotbar append value {Slot:3b, id:'blaze_powder', name:'Flame Bomb', tip:'Drop to spew hot flames in an area', tag:{droppable:3b, bomb:{flame:1b}}}

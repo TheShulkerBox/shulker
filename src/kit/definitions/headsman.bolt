@@ -1,3 +1,28 @@
+from kit:base import Kit
+from item:base import KitItem
+from item:definitions/food import Food
+from item:definitions/armor import Armor
+from item:definitions/weapon import Weapon
+
+# TODO: Tips
+
+headsman = Kit(
+    name="Headsman",
+    tagline="Chops heads and spills blood",
+    icon="bell",
+
+    armor={
+        "chest": Armor(id="leather_chestplate", dyed_color="#262626", armor={value:8}),
+        "legs": Armor(id="leather_leggings", dyed_color="#7B0E31"),
+        "feet": Armor(id="leather_boots", dyed_color="#262626"),
+    },
+    hotbar=[
+        Weapon(id="iron_axe", item_name="Headsman's Axe"), # tip:'Instakills enemies at low health'
+        Weapon(id="stone_sword", item_name="Serrated Blade"), # tip:'Clears healing and regen on hit'
+        KitItem(id="bell", item_name="Death's Toll"), # tip:'Curse your opponents with this arrow'
+        Food(count=3)
+    ]
+)
 
 # # Headsman [id: #306]
 

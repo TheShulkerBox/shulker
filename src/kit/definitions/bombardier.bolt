@@ -4,6 +4,8 @@ from item:definitions/food import Food
 from item:definitions/armor import Armor 
 from item:definitions/weapon import Weapon
 from item:definitions/throwable/flash_bomb import FlashBomb
+from item:definitions/throwable/pitch_puck import PitchPuck
+from item:definitions/throwable/flame_bomb import FlameBomb
 
 bombardier = Kit(
     name="Bombardier",
@@ -18,8 +20,8 @@ bombardier = Kit(
     hotbar=[
         Weapon(id="stone_sword", item_name="Stone Cutlass", enchantments={sweeping_edge:3}),
         FlashBomb,
-        KitItem(id="charcoal", item_name="Pitch Puck"),
-        KitItem(id="glowstone_dust", item_name="Flame Bomb"),
+        PitchPuck,
+        FlameBomb,
         Food(count=3)
     ]
 )

@@ -1,3 +1,26 @@
+from kit:base import Kit
+from item:base import KitItem
+from item:definitions/food import Food
+from item:definitions/armor import Armor 
+from item:definitions/weapon import Weapon
+
+juggernaut = Kit(
+    name="Juggernaut",
+    tagline="A heavy, tanky brute",
+    icon="netherite_shovel",
+
+    armor={
+        "chest": Armor(id="netherite_chestplate", armor={value:8, toughness:0}),
+        "legs": Armor(id="chainmail_leggings"),
+        "feet": Armor(id="diamond_boots")
+    },
+    hotbar=[
+        Weapon(id="netherite_shovel", item_name="Maul", weapon={damage:8, speed:0.6, weight:"heavy",}, enchantments={knockback:1}),
+        # TODO: Dash, rx said on shovel
+        Food(count=2),
+        Food(id="cooked_beef", count=1)
+    ]
+)
 
 # # Juggernaut [id: #13]
 
