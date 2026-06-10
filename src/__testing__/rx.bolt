@@ -55,6 +55,7 @@ class EngineerPickaxe(KitItem):
         end: tester("using", "end"),
     }
     two_handed = {}
+    kill = {killer: ~/taco}
 
 function ./engineer_pickaxe_tick:
     particle minecraft:witch ~ ~ ~ 0.5 0.5 0.5 0 1 normal

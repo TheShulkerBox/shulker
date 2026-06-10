@@ -1,0 +1,80 @@
+from typing import Any
+
+from server:core import ROOT_ADVANCEMENT
+from lib:errors import CustomComponentError
+from lib:helpers import nbt_dump
+from lib:const import ALL_SLOTS
+
+from ./type import Component
+
+class Kill(Component):
+    """Place this component on a item that kills"""
+    killer: str = ""
+    victim: str = ""
+    strict: Annotated[bool, "Whether you have to get the kill with said item or not"] = False
+    # assistant: str = ""
+
+    def build(self):
+        if not (self.killer or self.victim):
+            raise CustomComponentError(
+                "At least one of `killer` or `victim` must be defined"
+            )
+
+        adv_payload = {
+            "parent": ROOT_ADVANCEMENT,
+            "criteria": {
+                "killer": {
+                    "trigger": "minecraft:player_killed_entity",
+                    "conditions": {
+                        "entity": { "type": "player" }
+                    }
+                },
+                "victim": {
+                    "trigger": "minecraft:entity_killed_player",
+                    "conditions": {
+                        "entity": { "type": "player" }
+                    }
+                }
+            },
+            "requirements": [["killer", "victim"]],
+            "rewards": { "function": self.path }
+        }
+
+        # TODO: benchmark "inventory.*" / code-analysis to determine if it's worth optimizing
+        # TODO: update code in 26.2
+        if self.strict:
+            adv_payload["criteria"]["killer"]["conditions"]["player"]["equipment"] = {}
+            adv_payload["criteria"]["victim"]["conditions"]["entity"]["equipment"] = {}
+            for slot in ALL_SLOTS:
+                adv_payload["criteria"]["killer"]["conditions"]["player"]["equipment"][slot] = {
+                    "predicates": { "minecraft:custom_data": {"item": self.item.name} }
+                }
+                adv_payload["criteria"]["victim"]["conditions"]["entity"]["equipment"][slot] = {
+                    "predicates": { "minecraft:custom_data": {"item": self.item.name} }
+                }
+        else:
+            adv_payload["criteria"]["killer"]["conditions"]["player"] = {
+                "slots": {
+                    "inventory.*": {
+                        "predicates": { "minecraft:custom_data": {"item": self.item.name} }
+                    }
+                }
+            }
+            adv_payload["criteria"]["victim"]["conditions"]["entity"] |= {
+                "slots": {
+                    "inventory.*": {
+                        "predicates": { "minecraft:custom_data": {"item": self.item.name} }
+                    }
+                }
+            }
+
+        advancement self.path adv_payload
+        
+        function self.path:
+            advancement revoke @s only self.path
+
+            execute if entity @s[advancements={self.path={killer=true}}]:
+                function self.killer
+            
+            execute if entity @s[advancements={self.path={victim=true}}]:
+                function self.victim
