@@ -42,7 +42,7 @@ def tester(component: str, phase: str):
 class EngineerPickaxe(KitItem):
     id = "iron_pickaxe"
     item_name = "Engineer's Pickaxe"
-    attack = {damage: 4, speed: 1.6, crit: 3}
+    melee = {damage: 4, speed: 1.6, crit: 3}
     ticking = [{callback: ./engineer_pickaxe_tick}]
     sneaking = {
         start: tester("sneaking", "start"),
