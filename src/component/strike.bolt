@@ -1,0 +1,69 @@
+from typing import Any
+
+from server:core import ROOT_ADVANCEMENT
+from lib:errors import CustomComponentError
+from lib:helpers import nbt_dump
+from lib:const import HAND_SLOTS
+
+from ./type import Component
+
+class Strike(Component):
+    """This component will activate when you strike someone.
+    
+    By default, this component will only activate if this item was used to strike someone.
+    Use `strict` (default=false) to activate the component if the item is anywhere in the inventory.
+    """
+    attacker: FunctionPath | None = None
+    victim: FunctionPath | None = None
+    strict: Annotated[bool, "Whether you have to attack with said item equipped or not"] = False
+    crit: Annotated[bool, "Whether the strike was a critical hit or not"] = False
+    # assistant: str = ""
+
+    def build(self):
+        if not (self.attacker or self.victim):
+            raise CustomComponentError(
+                "One and only one of `attacker` or `victim` must be defined"
+            )
+
+        # TODO: update advancement logic in 26.2 as it's changed syntax
+        
+        # The predicate matching our item, applied to whichever entity holds it.
+        predicate = { "predicates": { "minecraft:custom_data": {"item": self.item.name} } }
+        if self.strict:
+            item_match = { "equipment": {} }
+            for slot in HAND_SLOTS:
+                item_match["equipment"][slot] = predicate
+        else:
+            # TODO: benchmark "inventory.*" / code-analysis to determine if it's worth optimizing
+            item_match = { "slots": { "inventory.*": predicate } }
+
+        criteria = {}
+
+        # attacker: we did the kill, so the item-holder is the `player`
+        if self.attacker:
+            criteria["attacker"] = {
+                "trigger": "minecraft:player_killed_entity",
+                "conditions": { "entity": { "type": "player" }, "player": item_match }
+            }
+
+        # victim: the attacker is the `entity`, so merge the match into it
+        if self.victim:
+            criteria["victim"] = {
+                "trigger": "minecraft:entity_killed_player",
+                "conditions": { "entity": { "type": "player" } | item_match }
+            }
+
+        advancement self.path {
+            "parent": ROOT_ADVANCEMENT,
+            "criteria": criteria,
+            "rewards": { "function": self.path }
+        }
+        
+        function self.path:
+            advancement revoke @s only self.path
+
+            if self.attacker:
+                function self.attacker
+            
+            if self.victim:
+                function self.victim

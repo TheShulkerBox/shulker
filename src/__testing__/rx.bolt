@@ -57,6 +57,9 @@ class EngineerPickaxe(KitItem):
     two_handed = {}
     kill = {killer: ~/taco}
 
+function ~/taco:
+    say "You've been stabbed by the taco!"
+
 function ./engineer_pickaxe_tick:
     particle minecraft:witch ~ ~ ~ 0.5 0.5 0.5 0 1 normal
 

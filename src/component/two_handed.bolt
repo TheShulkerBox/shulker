@@ -9,8 +9,10 @@ class TwoHanded(Component):
         - if so, we swap the item with the mainhand (which is prolly empty)
     b) cannot be held with another item in the offhand
         - if so, we pop the offhand item and give it to the player
+    
+    Optionally define `callback` to run a function when the item is detected to be two-handed (before swapping back)
     """
-    callback: str = ""
+    callback: FunctionPath | None = None
 
     def build(self):
         advancement f"{self.path}" {

@@ -6,10 +6,14 @@ from ./type import Component
 
 
 class ItemEnchant(Component, base_type=dict[str, Any]):
+    """This is mostly an internal component that helps define custom enchantments for items.
+    
+    Primarily used by other components to apply custom effects to items w/o generating an enchantment PER component.
+    """
     _all_effects: ClassVar[dict[str, dict[str, Any]]] = {}
     _built: ClassVar[bool] = False
 
-    def build(self) -> dict[str, Any]:
+    def build(self):
         effects = {}
         for key, value in self.base_type.items():
             if not key.startswith("minecraft:"):

@@ -9,7 +9,7 @@ class Droppable(Component):
     type: Literal["disabled", "team_item"]
     time_alive: str | None = None
     custom_item: str | None = None
-    callback: str | None = None
+    callback: FunctionPath | None = None
 
     def build(self):
         component_data = {"type": self.type}

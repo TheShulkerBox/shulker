@@ -12,3 +12,8 @@ TextComponentLike: Annotated[type, "Works like a text component"] = (
     str | dict[str, "TextComponentLike"] | list["TextComponentLike"] | DataSource
 )
 CompoundLike: Annotated[type, "Works like a nbt compound"] = dict[str, Any] | DataSource
+
+# Path Types
+FunctionPath: Annotated[type, "Path to a function"] = str
+AdvancementPath: Annotated[type, "Path to an advancement"] = str
+PredicatePath: Annotated[type, "Path to a predicate"] = str

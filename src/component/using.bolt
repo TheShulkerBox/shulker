@@ -13,9 +13,9 @@ PREV_USING_SCORE = Scoreboard("component.prev_using", criteria="dummy")
 
 
 class Using(Component):
-    start: str = ""
-    during: str = ""
-    end: str = ""
+    start: FunctionPath | None = None
+    during: FunctionPath | None = None
+    end: FunctionPath | None = None
 
     cooldown: float = 5
     cooldown_group: str = ""

@@ -1,5 +1,7 @@
 ARMOR_SLOTS = ["head", "chest", "legs", "feet"]
-ALL_SLOTS = ["mainhand", "offhand"] + ARMOR_SLOTS + ["saddle", "body"]
+HAND_SLOTS = ["mainhand", "offhand"] 
+MISC_SLOTs = ["saddle", "body"]
+ALL_SLOTS = HAND_SLOTS + ARMOR_SLOTS + MISC_SLOTs
 TEAM_COLORS = [
     "dark_aqua",
     "dark_blue",

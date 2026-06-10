@@ -9,7 +9,7 @@ SlotLiteral = Literal["mainhand", "offhand", "head", "chest", "legs", "feet", "a
 
 @dataclass
 class TickingEntry:
-    callback: str
+    callback: FunctionPath
     period: str = "1t"
 
 

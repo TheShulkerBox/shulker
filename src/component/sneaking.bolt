@@ -15,9 +15,9 @@ class Sneaking(Component):
 
     You can specify a specific slot and also a clock speed for ticking.
     """
-    start: str = ""
-    during: str = ""
-    end: str = ""
+    start: FunctionPath | None = None
+    during: FunctionPath | None = None
+    end: FunctionPath | None = None
 
     def build(self):
         if not (self.start or self.during or self.end):
