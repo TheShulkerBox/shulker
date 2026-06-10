@@ -11,6 +11,7 @@ class Melee(Component):
     speed: float | None = None
     knockback: float | None = None
     crit: float | None = None
+    weight: Literal["light", "medium", "heavy"]
 
     def make_modifier(
         self, type: str, value: float, attribute_id: str, **kwargs
@@ -68,6 +69,11 @@ class Melee(Component):
                 )
             )
             output.setdefault("enchantments", {})[nbt_dump("shulker:negative_sharpness")] = self.crit * 2
+
+        #> TODO:
+        # Implement Weapon Weight
+        if self.weight is not None:
+            ...
 
         if modifiers:
             output["attribute_modifiers"] = modifiers

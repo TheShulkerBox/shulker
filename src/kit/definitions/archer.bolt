@@ -16,7 +16,7 @@ archer = Kit(
     },
     hotbar=[
         Weapon(id="wooden_sword", item_name="Wooden Dagger"),
-        Weapon(id="bow", item_name="Longbow"),
+        KitItem(id="bow", item_name="Longbow"),
         KitItem(id="arrow", count=20),
         Food(count=2)
     ]
