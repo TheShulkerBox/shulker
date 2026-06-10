@@ -11,7 +11,7 @@ class Melee(Component):
     speed: float | None = None
     knockback: float | None = None
     crit: float | None = None
-    weight: Literal["light", "medium", "heavy"]
+    weight: Literal["light", "medium", "heavy"] = "medium"
 
     def make_modifier(
         self, type: str, value: float, attribute_id: str, **kwargs
