@@ -1,0 +1,7 @@
+from item:definitions/weapon import Weapon
+
+class KnockbackClub(Weapon):
+    id = "wooden_sword"
+    item_name = "Wooden Club"
+    enchantments = {knockback:1}
+    enchantment_glint_override = true

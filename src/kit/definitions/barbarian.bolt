@@ -3,6 +3,8 @@ from item:base import KitItem
 from item:definitions/food import Food
 from item:definitions/armor import Armor 
 from item:definitions/weapon import Weapon
+from item:definitions/weapons/rage_battleaxe import RageBattleaxe
+from item:definitions/weapons/knockback_club import KnockbackClub
 
 barbarian = Kit(
     name="Barbarian",
@@ -15,8 +17,8 @@ barbarian = Kit(
         "feet": Armor(id="iron_boots", armor={value:0})
     },
     hotbar=[
-        Weapon(id="iron_axe", item_name="Iron Battleaxe", melee={damage:9, speed:0.7, weight:"heavy"}),
-        Weapon(id="wooden_sword", item_name="Wooden Club", enchantments={knockback:1}),
+        RageBattleaxe,
+        KnockbackClub,
         Food(count=2)
     ]
 )

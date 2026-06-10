@@ -52,18 +52,13 @@ class Kill(Component):
                 "trigger": "minecraft:entity_killed_player",
                 "conditions": { "entity": { "type": "player" } | item_match }
             }
-
-        advancement self.path {
-            "parent": ROOT_ADVANCEMENT,
-            "criteria": criteria,
-            "rewards": { "function": self.path }
-        }
         
-        function self.path:
-            advancement revoke @s only self.path
+        advancement_data = { "parent": ROOT_ADVANCEMENT, "criteria": criteria }
 
-            if self.killer:
-                function self.killer
-            
-            if self.victim:
-                function self.victim
+        if self.killer:
+            advancement_data["reward"] = { "function": self.killer }
+        
+        if self.victim:
+            advancement_data["reward"] = { "function": self.victim }
+
+        advancement self.path advancement_data

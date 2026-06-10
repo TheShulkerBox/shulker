@@ -1,0 +1,79 @@
+from item:definitions/weapon import Weapon
+
+from kit:events import KIT_RESET
+
+RAGE_CHARGES = Scoreboard("item.rage_battleaxe_charges", criteria="dummy")
+RAGE_ACTIVATE = item:rage_battleaxe/activate
+RAGE_ACCUMULATE = item:rage_battleaxe/accumulate
+RAGE_RESET = item:rage_battleaxe/reset
+
+class RageBattleaxeDepleted(Weapon):
+    id = "iron_axe"
+    item_name = "Iron Battleaxe"
+    kill = {killer: RAGE_ACCUMULATE, strict: true}
+    melee = {
+        damage: 9,
+        speed: 0.7,
+        weight: "heavy"
+    }
+
+class RageBattleaxe(RageBattleaxeDepleted):
+    enchantment_glint_override = true
+    use_effects = {can_sprint: true}
+    use_remainder = RageBattleaxeDepleted.as_dict()
+    useable = {
+        delay: 0.25,
+        callback: RAGE_ACTIVATE,
+        animation: "spyglass"
+    }
+
+function RAGE_ACTIVATE:
+    playsound minecraft:entity.ravager.attack master @a ~ ~ ~ 1
+    playsound minecraft:entity.zombie.attack_iron_door master @a ~ ~ ~ 1 1.2
+    
+    if RAGE_CHARGES["@s"] == 1:
+        effect give @s minecraft:resistance 6 2
+        effect give @s minecraft:absorption 6 0
+        effect give @s minecraft:haste 6 2
+        effect give @s minecraft:speed 6 0
+    elif RAGE_CHARGES["@s"] == 2:
+        effect give @s minecraft:resistance 7 2
+        effect give @s minecraft:absorption 7 1
+        effect give @s minecraft:haste 7 2
+        effect give @s minecraft:speed 7 1
+    elif RAGE_CHARGES["@s"] == 3:
+        effect give @s minecraft:resistance 8 2
+        effect give @s minecraft:absorption 8 1
+        effect give @s minecraft:haste 8 2
+        effect give @s minecraft:strength 8 0
+        effect give @s minecraft:speed 8 1
+    elif RAGE_CHARGES["@s"] == 4:
+        effect give @s minecraft:resistance 12 2
+        effect give @s minecraft:absorption 12 4
+        effect give @s minecraft:haste 12 2
+        effect give @s minecraft:strength 12 0
+        effect give @s minecraft:speed 12 1
+    elif RAGE_CHARGES["@s"] >= 5:
+        effect give @s minecraft:resistance 16 3
+        effect give @s minecraft:absorption 16 4
+        effect give @s minecraft:haste 16 2
+        effect give @s minecraft:strength 16 1
+        effect give @s minecraft:speed 16 1
+        effect give @s minecraft:regeneration 16 1
+    else:
+        effect give @s minecraft:resistance 5 1
+        effect give @s minecraft:absorption 5 0
+        effect give @s minecraft:haste 5 1
+
+    RAGE_CHARGES["@s"].reset()
+
+function RAGE_ACCUMULATE:
+    RAGE_CHARGES["@s"] += 1
+    if RAGE_CHARGES["@s"] >= 5:
+        playsound minecraft:entity.arrow.hit_player master @s ~ ~ ~ 1 1.2
+        effect give @s minecraft:saturation 1 4 true
+        effect give @s minecraft:instant_health 1 0 true
+
+append function KIT_RESET:
+    execute function RAGE_RESET:
+        RAGE_CHARGES["@s"].reset()
