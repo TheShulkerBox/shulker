@@ -1,0 +1,5 @@
+from ../../base import KitItem
+
+class ResilienceHorn(KitItem):
+    item_model = "resilience_horn"
+    item_name = "Horn of Resilience"

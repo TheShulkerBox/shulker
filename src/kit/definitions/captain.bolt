@@ -1,13 +1,39 @@
+from kit:base import Kit
+from item:base import KitItem
+from item:definitions/food import Food
+from item:definitions/armor import Armor 
+from item:definitions/weapon import Weapon
+from item:definitions/consumable/courage_horn import CourageHorn
+from item:definitions/consumable/resilience_horn import ResilienceHorn
+
+captain = Kit(
+    name="Captain",
+    tagline="Gathers teammates for a coordinated push",
+    icon="yellow_banner",
+
+    armor={
+        "chest": Armor(id="golden_chestplatee"),
+        "legs": Armor(id="leather_leggings", dyed_color="#795FB3"),
+        "feet": Armor(id="iron_boots")
+    },
+    hotbar=[
+        Weapon(id="stone_sword", item_name="Stone Dagger"),
+        CourageHorn,
+        ResilienceHorn,
+        Food(count=2)
+    ]
+)
 
 # # Captain [id: #25]
-
-# #> Enable rework loadout
-# execute if data storage services:feature_flag flags[{name:'Captain Rewrite', enabled: true}] run return run function kits:logic/captain/loadout_rework
+# #> rename to `loadout` when live
 
 # data modify storage kits:temp kit.hotbar append value {Slot:0b, id:'stone_sword', name:'Stone Sabre', joke_name:'Captain\'s Sabre'}
-# data modify storage kits:temp kit.hotbar append value {Slot:1b, id:'pumpkin_pie', Count:2b}
 
-# data modify storage kits:temp kit.offhand set value {id:'lingering_potion', name:'Ability: War Cry', tip:'Gives extra health to nearby teammates', color:16762896, tag:{ability:1b,custom_potion_effects:[{id:"minecraft:regeneration",amplifier:3,duration:20}]}}
+# data modify storage kits:temp kit.hotbar append value {Slot:1b, id:'goat_horn', name:'Horn of Courage', tip: 'Speed, health ⬆ to nearby teammates', tag:{instrument: "minecraft:call_goat_horn", kit: {item: "horn_of_courage"}}}
+# data modify storage kits:temp kit.hotbar append value {Slot:2b, id:'goat_horn', name:'Horn of Resilience', tip: 'Proj. protection, kb resistance ⬆ to nearby teammates', tag:{instrument: "minecraft:feel_goat_horn", kit: {item: "horn_of_resilience"}}}
+# # data modify storage kits:temp kit.hotbar append value {Slot:3b, id:'goat_horn', name:'Horn of Blind Fury', tip: 'Speed, strength, darkness ⬆ + health ⬇ to nearby teammates', tag:{instrument: "minecraft:dream_goat_horn", kit: {item: "horn_of_blind_fury"}}}
+
+# data modify storage kits:temp kit.offhand set value {id:'pumpkin_pie', Count:2b}
 
 # data modify storage kits:temp kit.armor append value {Slot:2b, id:'golden_chestplate'}
 # data modify storage kits:temp kit.armor append value {Slot:1b, id:'leather_leggings', color:7954355}
@@ -17,9 +43,11 @@
 # data modify storage kits:temp kit.desc.name set value 'Captain'
 # data modify storage kits:temp kit.desc.tagline set value 'Leader of the charge'
 # data modify storage kits:temp kit.desc.armor set value 4.5
+# data modify storage kits:temp kit.desc.health set value 24.0
 # data modify storage kits:temp kit.desc.icon set value {id:'yellow_banner'}
 
 # data modify storage kits:temp kit.desc.abilities append value {name:'Active Speed', desc:['Gains and gives Speed I to nearby teammates'], jdesc:['{"text": "A natural leader", "italic": true}']}
+# data modify storage kits:temp kit.desc.abilities append value {name:'Rally Horns', desc:['Able to rally into battle with the choice of horn'], jdesc:['{"text": "Strategic dominance", "italic": true}']}
 
 # function kits:process/main
 # data modify storage kits:main kit.captain set from storage kits:temp out
