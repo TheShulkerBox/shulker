@@ -1,3 +1,25 @@
+from kit:base import Kit
+from item:base import KitItem
+from item:definitions/food import Food
+from item:definitions/armor import Armor 
+from item:definitions/weapon import Weapon
+from item:definitions/consumable/witch_stew import WitchStew
+
+witch_doctor = Kit(
+    name="Witch Doctor",
+    tagline="A mysterious doctor who provides invulnerability",
+    icon="totem_of_undying",
+
+    armor={
+        "chest": Armor(id="leather_chestplate", dyed_color="#7F29C6"),
+        "legs": Armor(id="leather_leggings", dyed_color="#7F29C6"),
+        "feet": Armor(id="leather_boots", dyed_color="#7F29C6")
+    },
+    hotbar=[
+        Weapon(id="stone_sword", item_name="Sacrificial Knife"),
+        WitchStew
+    ]
+)
 
 # # Witch Doctor [id:#21]
 
