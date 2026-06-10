@@ -15,7 +15,7 @@ barbarian = Kit(
         "feet": Armor(id="iron_boots", armor={value:0})
     },
     hotbar=[
-        Weapon(id="iron_axe", item_name="Iron Battleaxe", weapon={damage:9, speed:0.7, weight:"heavy"}),
+        Weapon(id="iron_axe", item_name="Iron Battleaxe", melee={damage:9, speed:0.7, weight:"heavy"}),
         Weapon(id="wooden_sword", item_name="Wooden Club", enchantments={knockback:1}),
         Food(count=2)
     ]

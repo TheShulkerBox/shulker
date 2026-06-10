@@ -1,4 +1,28 @@
+from kit:base import Kit
+from item:base import KitItem
+from item:definitions/food import Food
+from item:definitions/armor import Armor 
+from item:definitions/weapon import Weapon
+from item:definitions/shield import Shield
 
+warrior = Kit(
+    name="Warrior",
+    tagline="A sturdy and reliable shield-bearer",
+    icon="shield",
+
+    armor = {
+        "chest": Armor(id="iron_chestplate"),
+        "legs": Armor(id="chainmail_leggings"),
+        "feet": Armor(id="iron_boots")
+    },
+    hotbar = [
+        Weapon(id="stone_sword", item_name="Stone Sword"),
+        Weapon(id="stone_axe", item_name="Stone Axe", melee={damage:7.5, speed:0.6, weight:"heavy"}),
+        Food(count=2)
+    ],
+    offhand = Shield
+    
+)
 # # Warrior [id: #1]
 
 # data modify storage kits:temp kit.hotbar append value {Slot:0b, id:'stone_sword', name:'Stone Sword', joke_name:'Blade o\' Rock'}

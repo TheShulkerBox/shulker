@@ -1,0 +1,5 @@
+from item:base import KitItem
+
+class Shield(KitItem):
+    id = "shield"
+    max_damage = 24

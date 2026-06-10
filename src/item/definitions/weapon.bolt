@@ -1,18 +1,4 @@
 from item:base import KitItem
-from ../damage_types import light_damage_type, medium_damage_type, heavy_damage_type
-
 
 class Weapon(KitItem):
     ...
-
-
-class LightWeapon(Weapon):
-    damage_type = light_damage_type
-
-
-class MediumWeapon(Weapon):
-    damage_type = medium_damage_type
-
-
-class HeavyWeapon(Weapon):
-    damage_type = heavy_damage_type

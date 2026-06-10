@@ -6,7 +6,7 @@ from lib:helpers import nbt_dump
 from ./type import Component
 
 
-class Attack(Component):
+class Melee(Component):
     damage: float | None = None
     speed: float | None = None
     knockback: float | None = None
