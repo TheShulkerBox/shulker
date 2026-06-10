@@ -1,5 +1,6 @@
 from item:base import KitItem
 
 class Shield(KitItem):
+    unbreakable = None
     id = "shield"
     max_damage = 24
