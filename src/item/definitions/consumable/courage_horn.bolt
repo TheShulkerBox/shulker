@@ -1,5 +1,0 @@
-from ../../base import KitItem
-
-class CourageHorn(KitItem):
-    item_model = "courage_horn"
-    item_name = "Horn of Courage"

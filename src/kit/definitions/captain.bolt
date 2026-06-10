@@ -3,8 +3,7 @@ from item:base import KitItem
 from item:definitions/food import Food
 from item:definitions/armor import Armor 
 from item:definitions/weapon import Weapon
-from item:definitions/consumable/courage_horn import CourageHorn
-from item:definitions/consumable/resilience_horn import ResilienceHorn
+from item:definitions/consumable/horns import CourageHorn, ResilienceHorn
 
 captain = Kit(
     name="Captain",
@@ -12,7 +11,7 @@ captain = Kit(
     icon="yellow_banner",
 
     armor={
-        "chest": Armor(id="golden_chestplatee"),
+        "chest": Armor(id="golden_chestplate"),
         "legs": Armor(id="leather_leggings", dyed_color="#795FB3"),
         "feet": Armor(id="iron_boots")
     },
