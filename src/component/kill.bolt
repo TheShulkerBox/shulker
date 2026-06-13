@@ -7,6 +7,14 @@ from lib:const import HAND_SLOTS
 
 from ./type import Component
 
+
+def item_match(item_name: str, slot: str | None = None):
+    predicate = { "predicates": { "minecraft:custom_data": {"item": item_name} } }
+    if slot:
+        return { "equipment": { slot: predicate } }
+    return { "slots": { "hotbar.*": predicate } }
+
+
 class Kill(Component):
     """This component will activate when you kill someone.
     
@@ -27,38 +35,63 @@ class Kill(Component):
 
         # TODO: update advancement logic in 26.2 as it's changed syntax
         
-        # The predicate matching our item, applied to whichever entity holds it.
-        predicate = { "predicates": { "minecraft:custom_data": {"item": self.item.name} } }
-        if self.strict:
-            item_match = { "equipment": {} }
-            for slot in HAND_SLOTS:
-                item_match["equipment"][slot] = predicate
-        else:
-            # TODO: benchmark "inventory.*" / code-analysis to determine if it's worth optimizing
-            item_match = { "slots": { "inventory.*": predicate } }
-
         criteria = {}
+        requirements = []
 
         # killer: we did the kill, so the item-holder is the `player`
         if self.killer:
-            criteria["killer"] = {
-                "trigger": "minecraft:player_killed_entity",
-                "conditions": { "entity": { "type": "player" }, "player": item_match }
-            }
+            if self.strict:
+                criteria["killer_mainhand"] = {
+                    "trigger": "minecraft:player_killed_entity",
+                    "conditions": { "entity": { "type": "player" }, "player": item_match(self.item.name, "mainhand") }
+                }
+                criteria["killer_offhand"] = {
+                    "trigger": "minecraft:player_killed_entity",
+                    "conditions": { "entity": { "type": "player" }, "player": item_match(self.item.name, "offhand") }
+                }
+                requirements.extend(["killer_mainhand", "killer_offhand"])
+            else:
+                criteria["killer"] = {
+                    "trigger": "minecraft:player_killed_entity",
+                    "conditions": { "entity": { "type": "player" }, "player": item_match(self.item.name) }
+                }
+                requirements.append("killer")
 
         # victim: the killer is the `entity`, so merge the match into it
         if self.victim:
-            criteria["victim"] = {
-                "trigger": "minecraft:entity_killed_player",
-                "conditions": { "entity": { "type": "player" } | item_match }
-            }
+            if self.strict:
+                criteria["victim_mainhand"] = {
+                    "trigger": "minecraft:entity_killed_player",
+                    "conditions": { "entity": { "type": "player" } | item_match(self.item.name, "mainhand") }
+                }
+                criteria["victim_offhand"] = {
+                    "trigger": "minecraft:entity_killed_player",
+                    "conditions": { "entity": { "type": "player" } | item_match(self.item.name, "offhand") }
+                }
+                requirements.extend(["victim_mainhand", "victim_offhand"])
+            else:
+                criteria["victim"] = {
+                    "trigger": "minecraft:entity_killed_player",
+                    "conditions": { "entity": { "type": "player" } | item_match(self.item.name) }
+                }
+                requirements.append("victim")
         
-        advancement_data = { "parent": ROOT_ADVANCEMENT, "criteria": criteria }
+        advancement_data = {
+            "parent": ROOT_ADVANCEMENT,
+            "criteria": criteria,
+            "rewards": { "function": self.path }
+        }
 
-        if self.killer:
-            advancement_data["reward"] = { "function": self.killer }
-        
-        if self.victim:
-            advancement_data["reward"] = { "function": self.victim }
+        if len(requirements) > 1:
+            advancement_data["requirements"] = [requirements]
 
         advancement self.path advancement_data
+
+        function self.path:
+            advancement revoke @s only self.path
+
+            if self.killer:
+                function self.killer
+            
+            if self.victim:
+                function self.victim

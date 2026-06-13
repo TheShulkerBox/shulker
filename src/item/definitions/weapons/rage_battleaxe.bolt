@@ -10,7 +10,7 @@ RAGE_RESET = item:rage_battleaxe/reset
 class RageBattleaxeDepleted(Weapon):
     id = "iron_axe"
     item_name = "Iron Battleaxe"
-    kill = {killer: RAGE_ACCUMULATE, strict: true}
+    kill = {killer: RAGE_ACCUMULATE}
     melee = {
         damage: 9,
         speed: 0.7,

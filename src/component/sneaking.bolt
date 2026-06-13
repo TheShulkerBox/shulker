@@ -43,6 +43,7 @@ class Sneaking(Component):
                     "terms": [
                         {
                             "condition": "minecraft:entity_scores",
+                            "entity": "this",
                             "scores": { SNEAKING_SCORE.name: {min: 1} }
                         },
                         {
