@@ -1,0 +1,11 @@
+from ../food import Food
+
+class Flounder(Food):
+    """A magical fish."""
+    # TODO make better description
+
+    item_model = "tropical_fish"
+    item_name = "Flounder"
+    # tip = "Pass some to your friends"
+    food = {nutrition:1, saturation:10, can_always_eat:true}
+    enchantment_glint_override = true

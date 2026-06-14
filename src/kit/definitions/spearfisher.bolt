@@ -1,3 +1,28 @@
+from kit:base import Kit
+from item:base import KitItem
+from item:definitions/food import Food
+from item:definitions/armor import Armor 
+from item:definitions/weapon import Weapon
+
+from item:definitions/weapons/fishing_spear import FishingSpear
+
+Spearfisher = Kit(
+    name="Spearfisher",
+    tagline="Fisher of men",
+    icon="trident",
+
+    armor={
+        "chest": Armor(id="leather_chestplate", dyed_color="#1CBA7B"),
+        "legs": Armor(id="leather_leggings"),
+        "feet": Armor(id="golden_boots")
+    },
+    hotbar=[
+        FishingSpear(count=2),
+        # Net TODO
+        # Net TODO
+        Food(count=2)
+    ]
+)
 
 # # Spearfisher [id:#23]
 

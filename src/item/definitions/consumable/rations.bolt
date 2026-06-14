@@ -5,6 +5,7 @@ class Rations(Food):
 
     item_model = "dried_kelp"
     item_name = "Rations"
+    enchantment_glint_override = true
     consumable = {
         consume_seconds: 0.8,
         on_consume_effects: [

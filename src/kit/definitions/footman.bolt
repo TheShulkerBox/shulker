@@ -18,7 +18,7 @@ footman = Kit(
     },
     hotbar=[
         KitItem(id="iron_sword", item_name="Iron Broadsword"),
-        # Net,
+        # Net TODO
         Food(count=3),
         Rations,
     ],

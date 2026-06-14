@@ -1,0 +1,16 @@
+from item:definitions/weapon import Weapon
+from item:definitions/consumable/flounder import Flounder
+
+GIVE_FISH: FunctionPath = item:fishing_spear/give_fish
+
+class FishingSpear(Weapon):
+    id = "trident"
+    item_name = "Fishing Spear"
+    kill = {killer: GIVE_FISH}
+    melee = { damage: 8, weight: "medium" }
+    max_damage = None
+    unbreakable = None
+    max_stack_size = 8
+
+function GIVE_FISH:
+    give @s Flounder(count=2)
