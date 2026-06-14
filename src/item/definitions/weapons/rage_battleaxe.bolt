@@ -3,19 +3,15 @@ from item:definitions/weapon import Weapon
 from kit:events import KIT_RESET
 
 RAGE_CHARGES = Scoreboard("item.rage_battleaxe_charges", criteria="dummy")
-RAGE_ACTIVATE = item:rage_battleaxe/activate
-RAGE_ACCUMULATE = item:rage_battleaxe/accumulate
-RAGE_RESET = item:rage_battleaxe/reset
+RAGE_ACTIVATE: FunctionPath = item:rage_battleaxe/activate
+RAGE_ACCUMULATE: FunctionPath = item:rage_battleaxe/accumulate
+RAGE_RESET: FunctionPath = item:rage_battleaxe/reset
 
 class RageBattleaxeDepleted(Weapon):
     id = "iron_axe"
     item_name = "Iron Battleaxe"
     kill = {killer: RAGE_ACCUMULATE}
-    melee = {
-        damage: 9,
-        speed: 0.7,
-        weight: "heavy"
-    }
+    melee = { damage: 9, speed: 0.7, weight: "heavy" }
 
 class RageBattleaxe(RageBattleaxeDepleted):
     enchantment_glint_override = true
