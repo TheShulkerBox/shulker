@@ -16,6 +16,8 @@ class RageBattleaxeDepleted(Weapon):
         speed: 0.7,
         weight: "heavy"
     }
+    #> TODO:
+    # Add rage attempt use sound (for everyone's benefit)
 
 class RageBattleaxe(RageBattleaxeDepleted):
     enchantment_glint_override = true
