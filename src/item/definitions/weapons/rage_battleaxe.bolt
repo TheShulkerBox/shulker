@@ -27,6 +27,8 @@ class RageBattleaxe(RageBattleaxeDepleted):
         callback: RAGE_ACTIVATE,
         animation: "spyglass"
     }
+    #> TODO:
+    # Add rage attempt use sound (for everyone's benefit)
 
 function RAGE_ACTIVATE:
     playsound minecraft:entity.ravager.attack master @a ~ ~ ~ 1
