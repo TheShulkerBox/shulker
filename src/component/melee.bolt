@@ -68,12 +68,13 @@ class Melee(Component):
                     display={"type": "override", "value": {"text": f" {self.crit} Crit Boost", "color": "dark_green"}}
                 )
             )
-            output.setdefault("enchantments", {})[nbt_dump("shulker:negative_sharpness")] = self.crit * 2
+            enchantments = output.setdefault("enchantments", {})
+            enchantments[nbt_dump("shulker:negative_sharpness")] = self.crit * 2
 
         #> TODO:
         # Implement Weapon Weight
         if self.weight is not None:
-            ...
+            output["custom_data"] = {"weight": self.weight}
 
         if modifiers:
             output["attribute_modifiers"] = modifiers
@@ -82,7 +83,7 @@ class Melee(Component):
             return output
 
         raise CustomComponentError(
-            "Need to define one of ['damage', 'speed', 'knockback', 'crit']",
+            "Need to define one of ['damage', 'speed', 'knockback', 'crit', 'weight']",
             "attack",
             self,
         )

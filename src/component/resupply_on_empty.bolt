@@ -1,0 +1,5 @@
+from ./type import Component, ComponentBuildError
+
+class ResupplyOnEmpty(Component, base_type=bool):
+    def build(self):
+        return {"custom_data": {resupply_on_empty: true}}
