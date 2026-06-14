@@ -1,0 +1,8 @@
+from ../../base import KitItem
+
+class Totem(KitItem):
+    """It's a totem of undying. Stackable to 3."""
+
+    item_model = "totem_of_undying"
+    item_name = "Totem of the Deathless"
+    max_stack_size = 3

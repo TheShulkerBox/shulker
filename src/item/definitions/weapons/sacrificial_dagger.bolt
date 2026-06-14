@@ -1,0 +1,16 @@
+from item:definitions/weapon import Weapon
+
+SACRIFICE_KILL = item:sacrificial_dagger/kill
+
+class SacrificialDagger(Weapon):
+    id = "stone_sword"
+    item_name = "Sacrificial Dagger"
+    kill = {killer: SACRIFICE_KILL}
+    melee = {
+        weight: "light"
+    }
+
+function SACRIFICE_KILL:
+    #> TODO:
+    # Custom Component resupply_on_empty
+    give @s SacrificialDagger
