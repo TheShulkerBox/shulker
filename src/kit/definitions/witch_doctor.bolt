@@ -3,6 +3,7 @@ from item:base import KitItem
 from item:definitions/food import Food
 from item:definitions/armor import Armor 
 from item:definitions/weapon import Weapon
+from item:definitions/weapons/sacrificial_dagger import SacrificialDagger
 from item:definitions/consumable/witch_stew import WitchStew
 
 witch_doctor = Kit(
@@ -16,7 +17,7 @@ witch_doctor = Kit(
         "feet": Armor(id="leather_boots", dyed_color="#7F29C6")
     },
     hotbar=[
-        Weapon(id="stone_sword", item_name="Sacrificial Knife"),
+        SacrificialDagger,
         WitchStew
     ]
 )
