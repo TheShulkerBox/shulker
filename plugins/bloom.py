@@ -12,10 +12,12 @@ SERVER_ID = os.environ.get("BLOOM_SERVER_ID")
 BLOOM_API_KEY = os.environ.get("BLOOM_API_KEY")
 ERROR_PATTERN = re.compile(r"\[\d\d:\d\d:\d\d\] \[Server thread/ERROR\]: (.+)")
 
+
 def create_url() -> str:
     if not SERVER_ID:
         raise ValueError("BLOOM_SERVER_ID environment variable not set")
     return f"https://mc.bloom.host/api/client/servers/{SERVER_ID}/"
+
 
 def create_headers() -> dict[str, str]:
     if not BLOOM_API_KEY:
@@ -24,6 +26,7 @@ def create_headers() -> dict[str, str]:
         "Accept": "application/json",
         "Authorization": "Bearer " + BLOOM_API_KEY,
     }
+
 
 async def make_request(
     route: str,
@@ -47,6 +50,7 @@ async def make_request(
             resp.content if route != "websocket" else "",
         )
         return resp
+
 
 async def watch_for_errors(url: str, token: str) -> list[str]:
     errors = []
@@ -72,5 +76,5 @@ async def watch_for_errors(url: str, token: str) -> list[str]:
 
     except Exception as err:
         print(err)
-    
+
     return errors

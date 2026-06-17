@@ -8,7 +8,7 @@ MCMETA_URL = "https://raw.githubusercontent.com/misode/mcmeta/refs/heads/summary
 type Json = dict[str, Json] | list[Json] | str | int | float | bool | None
 
 # Define the VERSION constant
-VERSION = "26.1"
+VERSION = "26.2"
 
 
 def compare_versions(v1: str, v2: str) -> int:
@@ -292,8 +292,8 @@ def create_schemas(data: dict[str, Any]) -> Iterable[tuple[str, Schema]]:
 
 
 def beet_default(ctx: Context):
-    mcdoc_path = ctx.cache["mcdoc"].download(MCDOC_URL)
-    mcmeta_path = ctx.cache["mcmeta_item_components"].download(MCMETA_URL)
+    mcdoc_path = ctx.cache[f"mcdoc/{VERSION}"].download(MCDOC_URL)
+    mcmeta_path = ctx.cache[f"mcmeta_item_components/{VERSION}"].download(MCMETA_URL)
     mcdoc_file = JsonFile(source_path=mcdoc_path)
     mcmeta_file = JsonFile(source_path=mcmeta_path)
 

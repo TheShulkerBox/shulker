@@ -63,10 +63,10 @@ class ComponentBuildError(ValueError):
     """Raised when a component fails to build properly."""
 
 
-
 @dataclass
 class RecursiveComponent:
     """Marker class to help indicate recursive composition of components within other components."""
+
     component: type[Component]
     data: Any
 
@@ -115,7 +115,7 @@ class Component:
         cls._base_type = base_type
         if base_type is not None:
             cls.__annotations__["base_type"] = cls._base_type
-        
+
         new_cls = dataclass(cls, repr=False)
         new_cls.__module__ = cls.__module__
         new_cls.path = property(Component.path)
@@ -141,7 +141,9 @@ class Component:
         """
         raise NotImplementedError
 
-    def post_build(self, resolved_components: dict[str, Any], item_obj: "ItemType") -> None:
+    def post_build(
+        self, resolved_components: dict[str, Any], item_obj: "ItemType"
+    ) -> None:
         """Optional post-processing after all components are resolved.
 
         Use this to modify resolved_components in-place after rendering.
@@ -151,7 +153,7 @@ class Component:
         Args:
             resolved_components: All resolved components (mutable)
         """
-    
+
     def __repr__(self) -> str:
         field_str = ", ".join(
             f"{field.name}={getattr(self, field.name)!r}"
@@ -159,7 +161,7 @@ class Component:
             if field.name not in {"item", "registered", "resolved_components"}
         )
         return f"{self.__class__.__name__}({field_str})"
-    
+
 
 @dataclass(repr=False)
 class Transformer(Component):
@@ -196,4 +198,5 @@ class Transformer(Component):
         class MyItem(Item):
             dyed_color = "#ff0000"  # Transformed to 16711680
     """
+
     registered: ClassVar[list[Self]] = []  # Separate registry for transformers

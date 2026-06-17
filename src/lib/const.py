@@ -1,5 +1,5 @@
 ARMOR_SLOTS = ["head", "chest", "legs", "feet"]
-HAND_SLOTS = ["mainhand", "offhand"] 
+HAND_SLOTS = ["mainhand", "offhand"]
 MISC_SLOTs = ["saddle", "body"]
 ALL_SLOTS = HAND_SLOTS + ARMOR_SLOTS + MISC_SLOTs
 TEAM_COLORS = [

@@ -32,10 +32,8 @@ class Sneaking(Component):
                     "predicate": { "flags": { "is_sneaking": true } }
                 },
                 "effect": { "type": "minecraft:run_function", "function": self.while_sneaking }
-            }
-        ]
+            },
 
-        effects.append(
             # tick if we are no longer sneaking
             {
                 "requirements": {
@@ -55,7 +53,7 @@ class Sneaking(Component):
                 },
                 "effect": { "type": "minecraft:run_function", "function": self.no_longer_sneaking }
             }
-        )
+        ]
 
         return {item_enchant: RecursiveComponent(ItemEnchant, {"minecraft:tick": effects})}
         
@@ -81,6 +79,7 @@ class Sneaking(Component):
             SNEAKING_SCORE["@s"].reset()
         
         return path
+
 
 append function ON_PLAYER_RESET:
     SNEAKING_SCORE["@s"].reset()

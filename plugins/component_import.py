@@ -11,7 +11,9 @@ def beet_default(ctx: Context):
     for module in ctx.data[Module]:
         if not module.startswith("component:") or "type" in module:
             continue
-        
+
         all_components.add(module)
-    
-    ctx.data[Module]["component:all"] = Module("\n".join(f"import {component} as _" for component in all_components))
+
+    ctx.data[Module]["component:all"] = Module(
+        "\n".join(f"import {component} as _" for component in all_components)
+    )

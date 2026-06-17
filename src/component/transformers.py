@@ -9,6 +9,7 @@ from lib.errors import CustomComponentError
 
 class DyedColor(Transformer, base_type=str | Any):
     """Allows you to write dyed colors using traditional hex formatting"""
+
     def build(self) -> int | None:
         if type(color := self.base_type) is str:
             color = color.removeprefix("#")
@@ -27,6 +28,7 @@ class DyedColor(Transformer, base_type=str | Any):
 
 class PotionContents(Transformer, base_type=dict[str, Any] | Any):
     """Allows you to write dyed colors using traditional hex formatting"""
+
     def build(self) -> int | None:
         if type(color := self.base_type.get("custom_color")) is str:
             color = color.removeprefix("#")
@@ -45,6 +47,7 @@ class PotionContents(Transformer, base_type=dict[str, Any] | Any):
 
 class Lore(Transformer, base_type=str | list[str] | list[dict[str, Any]] | Any):
     """Allows you to write lore using regular strings and auto applies formatting"""
+
     def build(self) -> list[TextComponent]:
         if type(lore := self.base_type) is str:
             lore = [lore]

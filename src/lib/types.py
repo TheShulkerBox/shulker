@@ -17,3 +17,9 @@ CompoundLike: Annotated[type, "Works like a nbt compound"] = dict[str, Any] | Da
 FunctionPath: Annotated[type, "Path to a function"] = str
 AdvancementPath: Annotated[type, "Path to an advancement"] = str
 PredicatePath: Annotated[type, "Path to a predicate"] = str
+
+
+class Remove:
+    """Sentinel class for removal operations. do not instantiate."""
+    def __init__(self):
+        raise NotImplementedError("Do not instantiate `Remove`")

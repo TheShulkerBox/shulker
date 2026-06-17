@@ -43,17 +43,17 @@ class Kill(Component):
             if self.strict:
                 criteria["killer_mainhand"] = {
                     "trigger": "minecraft:player_killed_entity",
-                    "conditions": { "entity": { "type": "player" }, "player": item_match(self.item.name, "mainhand") }
+                    "conditions": { "entity": { "entity_type": "player" }, "player": item_match(self.item.name, "mainhand") }
                 }
                 criteria["killer_offhand"] = {
                     "trigger": "minecraft:player_killed_entity",
-                    "conditions": { "entity": { "type": "player" }, "player": item_match(self.item.name, "offhand") }
+                    "conditions": { "entity": { "entity_type": "player" }, "player": item_match(self.item.name, "offhand") }
                 }
                 requirements.extend(["killer_mainhand", "killer_offhand"])
             else:
                 criteria["killer"] = {
                     "trigger": "minecraft:player_killed_entity",
-                    "conditions": { "entity": { "type": "player" }, "player": item_match(self.item.name) }
+                    "conditions": { "entity": { "entity_type": "player" }, "player": item_match(self.item.name) }
                 }
                 requirements.append("killer")
 
@@ -62,17 +62,17 @@ class Kill(Component):
             if self.strict:
                 criteria["victim_mainhand"] = {
                     "trigger": "minecraft:entity_killed_player",
-                    "conditions": { "entity": { "type": "player" } | item_match(self.item.name, "mainhand") }
+                    "conditions": { "entity": { "entity_type": "player" } | item_match(self.item.name, "mainhand") }
                 }
                 criteria["victim_offhand"] = {
                     "trigger": "minecraft:entity_killed_player",
-                    "conditions": { "entity": { "type": "player" } | item_match(self.item.name, "offhand") }
+                    "conditions": { "entity": { "entity_type": "player" } | item_match(self.item.name, "offhand") }
                 }
                 requirements.extend(["victim_mainhand", "victim_offhand"])
             else:
                 criteria["victim"] = {
                     "trigger": "minecraft:entity_killed_player",
-                    "conditions": { "entity": { "type": "player" } | item_match(self.item.name) }
+                    "conditions": { "entity": { "entity_type": "player" } | item_match(self.item.name) }
                 }
                 requirements.append("victim")
         

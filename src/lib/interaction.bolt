@@ -31,8 +31,10 @@ class Interaction:
                     "trigger": "minecraft:player_interacted_with_entity",
                     "conditions": {
                         "entity": {
-                            "type": "minecraft:interaction",
-                            "nbt": f'{{Tags:["{self.global_tag}", "{self.tag}"]}}'
+                            "entity_type": "minecraft:interaction",
+                            "entity_tags": {
+                                "all_of": [self.global_tag, self.tag]
+                            }
                         }
                     }
                 },
@@ -40,8 +42,10 @@ class Interaction:
                     "trigger": "minecraft:player_hurt_entity",
                     "conditions": {
                         "entity": {
-                            "type": "minecraft:interaction",
-                            "nbt": f'{{Tags:["{self.global_tag}", "{self.tag}"]}}'
+                            "entity_type": "minecraft:interaction",
+                            "entity_tags": {
+                                "all_of": [self.global_tag, self.tag]
+                            }
                         }
                     }
                 }

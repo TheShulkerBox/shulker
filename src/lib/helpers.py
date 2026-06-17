@@ -134,6 +134,7 @@ def id_to_number(id: str) -> int:
     """
     return zlib.crc32(id.encode()) & int("0x7FFFFFFF", 16)
 
+
 def coerce_type(value: Any, t: type) -> Any:
     """Coerces a value to a type if possible, handling special cases like lists and dataclasses."""
     origin, args = get_origin(t), get_args(t)
@@ -144,6 +145,7 @@ def coerce_type(value: Any, t: type) -> Any:
     if dataclasses.is_dataclass(t) and isinstance(t, type) and isinstance(value, dict):
         return dacite.from_dict(t, value, config=dacite.Config(strict=True))
     return value
+
 
 def check_type(value: Any, expected_type: type) -> bool:
     """Wrapper around typeguard's check_type that returns a boolean instead of raising an error."""

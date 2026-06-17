@@ -6,6 +6,7 @@ from lib:helpers import nbt_dump
 from lib:const import HAND_SLOTS
 
 from ./type import Component
+from ./kill import item_match
 
 class Strike(Component):
     """This component will activate when you strike someone.
@@ -27,37 +28,57 @@ class Strike(Component):
 
         # TODO: update advancement logic in 26.2 as it's changed syntax
         
-        # The predicate matching our item, applied to whichever entity holds it.
-        predicate = { "predicates": { "minecraft:custom_data": {"item": self.item.name} } }
-        if self.strict:
-            item_match = { "equipment": {} }
-            for slot in HAND_SLOTS:
-                item_match["equipment"][slot] = predicate
-        else:
-            # TODO: benchmark "inventory.*" / code-analysis to determine if it's worth optimizing
-            item_match = { "slots": { "inventory.*": predicate } }
-
         criteria = {}
+        requirements = []
 
         # attacker: we did the kill, so the item-holder is the `player`
         if self.attacker:
-            criteria["attacker"] = {
-                "trigger": "minecraft:player_killed_entity",
-                "conditions": { "entity": { "type": "player" }, "player": item_match }
-            }
+            if self.strict:
+                criteria["attacker_mainhand"] = {
+                    "trigger": "minecraft:player_killed_entity",
+                    "conditions": { "entity": { "entity_type": "player" }, "player": item_match(self.item.name, "mainhand") }
+                }
+                criteria["attacker_offhand"] = {
+                    "trigger": "minecraft:player_killed_entity",
+                    "conditions": { "entity": { "entity_type": "player" }, "player": item_match(self.item.name, "offhand") }
+                }
+                requirements.extend(["attacker_mainhand", "attacker_offhand"])
+            else:
+                criteria["attacker"] = {
+                    "trigger": "minecraft:player_killed_entity",
+                    "conditions": { "entity": { "entity_type": "player" }, "player": item_match(self.item.name) }
+                }
+                requirements.append("attacker")
 
         # victim: the attacker is the `entity`, so merge the match into it
         if self.victim:
-            criteria["victim"] = {
-                "trigger": "minecraft:entity_killed_player",
-                "conditions": { "entity": { "type": "player" } | item_match }
-            }
+            if self.strict:
+                criteria["victim_mainhand"] = {
+                    "trigger": "minecraft:entity_killed_player",
+                    "conditions": { "entity": { "entity_type": "player" } | item_match(self.item.name, "mainhand") }
+                }
+                criteria["victim_offhand"] = {
+                    "trigger": "minecraft:entity_killed_player",
+                    "conditions": { "entity": { "entity_type": "player" } | item_match(self.item.name, "offhand") }
+                }
+                requirements.extend(["victim_mainhand", "victim_offhand"])
+            else:
+                criteria["victim"] = {
+                    "trigger": "minecraft:entity_killed_player",
+                    "conditions": { "entity": { "entity_type": "player" } | item_match(self.item.name) }
+                }
+                requirements.append("victim")
 
-        advancement self.path {
+        advancement_data = {
             "parent": ROOT_ADVANCEMENT,
             "criteria": criteria,
             "rewards": { "function": self.path }
         }
+
+        if len(requirements) > 1:
+            advancement_data["requirements"] = [requirements]
+
+        advancement self.path advancement_data
         
         function self.path:
             advancement revoke @s only self.path

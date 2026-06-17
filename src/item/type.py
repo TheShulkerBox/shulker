@@ -18,7 +18,12 @@ from bolt import Runtime
 import difflib
 import pprint
 
-from component.type import Component, ComponentBuildError, RecursiveComponent, Transformer
+from component.type import (
+    Component,
+    ComponentBuildError,
+    RecursiveComponent,
+    Transformer,
+)
 from lib.helpers import (
     camel_case_to_snake_case,
     coerce_type,
@@ -40,6 +45,7 @@ from lib.errors import (
 )
 from lib.component_validation import McdocValidator, SchemaFile
 from lib.rich import console, Tree, Syntax, Group, Panel, RenderableType, Text
+from lib.types import Remove
 
 
 class ItemType(type):
@@ -209,11 +215,13 @@ class ItemType(type):
             for key in unexpected_keys:
                 if key not in field_map:
                     field_errors.append(UnexpectedValidationError(key, data[key]))
-        
+
         # Check basetype
         if component._base_type is not None:
             if check_type(data, component._base_type):
-                reconstructed_data["base_type"] = coerce_type(data, component._base_type)
+                reconstructed_data["base_type"] = coerce_type(
+                    data, component._base_type
+                )
             else:
                 field_errors.append(
                     ComponentTypeError(
@@ -234,7 +242,7 @@ class ItemType(type):
 
         Args:
             component_name: Name of the component (e.g., "minecraft:item_name")
-            component: Component value to validate  
+            component: Component value to validate
             base_type: Optional base type to validate against instead of schema
 
         Returns:
@@ -248,32 +256,38 @@ class ItemType(type):
         if base_type is not None:
             if not check_type(component, base_type):
                 return ComponentError(
-                    component_name, 
-                    component, 
-                    [ComponentTypeError("component", component, base_type, type(component))]
+                    component_name,
+                    component,
+                    [
+                        ComponentTypeError(
+                            "component", component, base_type, type(component)
+                        )
+                    ],
                 )
             return
 
         mcdoc_validator = cls.ctx.inject(McdocValidator)
 
+        if component is Remove:
+            return
+
         # we get a cached schema from lib:component_validation
         schemas: SchemaFile = cls.ctx.meta["item_component_schemas"]
         if (schema := schemas.get(component_name)) is not None:
-            if "custom_data" not in component_name:
-                try:
-                    mcdoc_validator.validate_data(
-                        component,
-                        schema,
-                        [component_name],
-                    )
-                except ValidationError as err:
-                    return ComponentError(component_name, component, [err])
-                except ExceptionGroup as err:
-                    return ComponentError(
-                        component_name, component, err.exceptions, msg=err.args[0]
-                    )
+            try:
+                mcdoc_validator.validate_data(
+                    component,
+                    schema,
+                    [component_name],
+                )
+            except ValidationError as err:
+                return ComponentError(component_name, component, [err])
+            except ExceptionGroup as err:
+                return ComponentError(
+                    component_name, component, err.exceptions, msg=err.args[0]
+                )
 
-                return
+            return
 
         # Component doesn't exist, suggest alternatives
         suggestions = difflib.get_close_matches(
@@ -282,7 +296,9 @@ class ItemType(type):
         return NonExistentComponentError(component_name, suggestions=suggestions)
 
     def handle_custom_components(
-        self, custom_components: list[type[Component]], resolved_components: dict[str, Any]
+        self,
+        custom_components: list[type[Component]],
+        resolved_components: dict[str, Any],
     ) -> tuple[list[Component], list[CustomComponentError], dict[str, Component]]:
         """Process custom components and transform them into vanilla components.
 
@@ -325,12 +341,14 @@ class ItemType(type):
                     output = self._component_cache[name]
                 else:
                     # Validate fields and reconstruct data
-                    reconstructed_data, field_errors = self._validate_dataclass_fields(data, component)
+                    reconstructed_data, field_errors = self._validate_dataclass_fields(
+                        data, component
+                    )
 
                     # Raise validation error if fields are invalid
                     if field_errors:
                         raise ComponentError(name, data, field_errors)
-                    
+
                     # Attempt to instantiate and builder the component
                     try:
                         # TODO: convert to pydantic ;_;
@@ -373,11 +391,13 @@ class ItemType(type):
                     resolved_components["custom_data"] = deep_merge_dicts(
                         resolved_components.get("custom_data", {}), metadata
                     )
-                    
+
                     # Track base_type component
                     if constructed_component.__class__._base_type is not None:
-                        output_component_mapping[constructed_component.name] = constructed_component
-                    
+                        output_component_mapping[constructed_component.name] = (
+                            constructed_component
+                        )
+
                     # Merge built vanilla components
                     deep_merge_dicts(resolved_components, output, inplace=True)
 
@@ -421,7 +441,9 @@ class ItemType(type):
                 del resolved_components[name]
 
                 # Validate transformer fields
-                reconstructed_data, field_errors = self._validate_dataclass_fields(data, transformer)
+                reconstructed_data, field_errors = self._validate_dataclass_fields(
+                    data, transformer
+                )
 
                 # Raise validation error if fields are invalid
                 if field_errors:
@@ -484,7 +506,10 @@ class ItemType(type):
                 continue
 
             if (val := getattr(self, member)) is not None:
-                if not callable(val):
+                if val is Remove:
+                    original_components[member] = Remove
+
+                elif not callable(val):
                     # Deep copy to prevent mutations
                     original_components[member] = copy.deepcopy(val)
 
@@ -501,8 +526,8 @@ class ItemType(type):
         )
 
         # Phase 3: Apply custom components and transformers
-        custom_components, component_errors, custom_component_mapping = self.handle_custom_components(
-            Component.registered, output_components
+        custom_components, component_errors, custom_component_mapping = (
+            self.handle_custom_components(Component.registered, output_components)
         )
         custom_transformers, transformer_errors = self.handle_custom_transformers(
             Transformer.registered, output_components
@@ -514,7 +539,7 @@ class ItemType(type):
 
         if "count" in output_components:
             self.count = output_components.pop("count")
-        
+
         # Phase 5: Allow components/transformers to post-process
         for component_or_transformer in chain(custom_components, custom_transformers):
             component_or_transformer.post_build(output_components, self)
@@ -531,9 +556,13 @@ class ItemType(type):
 
         # Phase 7: Cache and return
         self._components = output_components
-        self._custom_components = {component.name: component for component in custom_components}
-        self._custom_transformers = {transformer.name: transformer for transformer in custom_transformers}
-        
+        self._custom_components = {
+            component.name: component for component in custom_components
+        }
+        self._custom_transformers = {
+            transformer.name: transformer for transformer in custom_transformers
+        }
+
         return output_components
 
     def format_error_summary(self, errors: list[ComponentError]) -> str:
@@ -568,12 +597,15 @@ class ItemType(type):
                         1 for e in suberrors if isinstance(e, UnexpectedValidationError)
                     )
                     build_errors = sum(
-                        1
-                        for e in suberrors
-                        if isinstance(e, ComponentBuildError)
+                        1 for e in suberrors if isinstance(e, ComponentBuildError)
                     )
                     other = (
-                        len(suberrors) - missing - wrong_type - unexpected - type_errors - build_errors
+                        len(suberrors)
+                        - missing
+                        - wrong_type
+                        - unexpected
+                        - type_errors
+                        - build_errors
                     )
 
                     parts = []
@@ -676,7 +708,7 @@ class ItemType(type):
                         handle_suberrors(subtree, errors)
                     case err:
                         err_tree = tree.add(f"[x]{pretty_type(type(err))}[/x]: {err}")
-                        tb = '\n'.join(traceback.format_exception(err)).strip()
+                        tb = "\n".join(traceback.format_exception(err)).strip()
                         err_tree.add(f"[dim]{tb}[/dim]")
 
         for name, component in output_components.items():
@@ -795,7 +827,10 @@ class ItemType(type):
         Raises:
             ItemError: If item doesn't have an ID defined
         """
-        components = ",".join(f"{k}={nbt_dump(v)}" for k, v in self.components.items())
+        components = ",".join(
+            (f"!{k}" if v is Remove else f"{k}={nbt_dump(v)}")
+            for k, v in self.components.items()
+        )
         if not self.has_id:
             raise ItemError(
                 f"`{self.name}` item must define an `id` if generating a give or other command!"
@@ -815,7 +850,12 @@ class ItemType(type):
 
     def as_dict(self) -> dict[str, Any]:
         """Convert item to a dictionary suitable for NBT serialization."""
-        return {"id": self.id, "count": self.count, "components": self.components}
+        # we need to convert `Remove` to negative components for use in storage / give commands, etc
+        components = {
+            (f"!{k}" if v is Remove else k): ({} if v is Remove else v)
+            for k, v in self.components.items()
+        }
+        return {"id": self.id, "count": self.count, "components": components}
 
     __neg__ = __invert__ = conditional_string
     __pos__ = __str__ = item_string
@@ -941,6 +981,10 @@ class ItemType(type):
         """
         if not kwargs:
             raise ItemError(f"Cannot instantiate `{self.name}` without changes!")
+        
+        if count := kwargs.get("count"):
+            self.count = count
+            return self
 
         runtime = self.ctx.inject(Runtime)
 

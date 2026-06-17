@@ -8,7 +8,7 @@ class FishingSpear(Weapon):
     item_name = "Fishing Spear"
     kill = {killer: GIVE_FISH}
     melee = { damage: 8, weight: "medium" }
-    max_damage = None
+    max_damage = Remove
     unbreakable = None
     max_stack_size = 8
 
