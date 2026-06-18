@@ -3,19 +3,10 @@ from ../food import Food
 class WitchStew(Food):
     """Quick healing food that can be eaten quickly in battle."""
 
-    item_model = "suspicious_stew"
+    id = "suspicious_stew"
     item_name = "Witch Stew"
-    consumable = {
-        on_consume_effects: [
-            {
-                type: "apply_effects",
-                effects: [
-                    {
-                        id: "saturation",
-                        amplifier: 1,
-                        duration: 4,
-                    }
-                ]
-            }
-        ]
+    always_edible = True
+    food = {
+        nutrition: 8,
+        saturation: 12.8
     }

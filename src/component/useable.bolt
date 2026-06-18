@@ -63,7 +63,7 @@ class Useable(Component):
         function self.path:
             advancement revoke @s only self.path
             
-            # for infinite items, toggling some data will make the item persist
+            # for infinite items, we can toggle an arbitrary piece of top-level data (we've used infinite here, but not strictly necessary) to cause the item to persist when used
             if self.infinite:
                 unless items entity @s weapon.mainhand self.item.conditional_string():
                     item modify entity @s weapon.offhand {function: "set_custom_data", tag: {infinite: false}}

@@ -3,6 +3,37 @@ from ../../base import KitItem
 class Totem(KitItem):
     """It's a totem of undying. Stackable to 3."""
 
+    id = "totem_of_undying"
     item_model = "totem_of_undying"
     item_name = "Totem of the Deathless"
     max_stack_size = 3
+    break_sound = "minecraft:entity.item.break"
+    death_protection = {
+        "death_effects": [
+            {
+                "type": "minecraft:clear_all_effects"
+            },
+            {
+                "type": "minecraft:apply_effects",
+                "effects": [
+                    {
+                        "amplifier": 1,
+                        "duration": 900,
+                        "id": "minecraft:regeneration",
+                        "show_icon": true
+                    },
+                    {
+                        "amplifier": 1,
+                        "duration": 100,
+                        "id": "minecraft:absorption",
+                        "show_icon": true
+                    },
+                    {
+                        "duration": 800,
+                        "id": "minecraft:fire_resistance",
+                        "show_icon": true
+                    }
+                ]
+            }
+        ]
+    }

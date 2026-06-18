@@ -1,4 +1,5 @@
 from item:definitions/weapon import Weapon
+from item:definitions/consumable/totems import Totem
 
 SACRIFICE_KILL = item:sacrificial_dagger/kill
 
@@ -13,4 +14,4 @@ class SacrificialDagger(Weapon):
 function SACRIFICE_KILL:
     #> TODO:
     # Custom Component resupply_on_empty
-    give @s SacrificialDagger
+    give @s Totem
