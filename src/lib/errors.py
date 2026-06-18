@@ -30,6 +30,11 @@ class ValidationError(ItemError):
         super().__init__(msg)
 
 
+class DispatcherNotFound(ValidationError):
+    def __init__(self, name: str, value: Any):
+        super().__init__(name, value, "null", [])
+
+
 class MissingValidationError(ValidationError): ...
 
 

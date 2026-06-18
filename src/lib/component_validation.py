@@ -33,6 +33,7 @@ from plugins.component_caching import (
     DispatcherSchema,
 )
 from lib.errors import (
+    DispatcherNotFound,
     MissingValidationError,
     UnexpectedValidationError,
     ValidationError,
@@ -429,10 +430,14 @@ class McdocValidator:
                             )
                         case StaticIndex(value=value):
                             union_types.append((value, None))
-
+                
                 fallback = False
                 for typ, accessor in union_types:
-                    if found_schema := registry.get(typ):
+                    found_schema = registry.get(typ)
+                    if found_schema is None:
+                        found_schema = registry.get(typ.replace("minecraft:", ""))
+                    
+                    if found_schema:
                         self.validate_data(
                             {k: v for k, v in data.items() if k != accessor},
                             found_schema,
@@ -445,4 +450,4 @@ class McdocValidator:
                         fallback = True
                 else:
                     if not fallback:
-                        raise ValidationError("dispatcher not found")
+                        raise DispatcherNotFound(f"Dispatcher not found for {data}: registry {registry}", data)
