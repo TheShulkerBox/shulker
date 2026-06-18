@@ -23,7 +23,7 @@ class RageBattleaxe(RageBattleaxeDepleted):
     use_effects = {can_sprint: true}
     use_remainder = RageBattleaxeDepleted.as_dict()
     useable = {
-        delay: 0.25,
+        delay: 0.5,
         callback: RAGE_ACTIVATE,
         animation: "spyglass"
     }

@@ -3,3 +3,6 @@ from ../base import KitItem
 
 class Food(KitItem):
     id = "pumpkin_pie"
+
+class Steak(Food):
+    id = "cooked_beef"

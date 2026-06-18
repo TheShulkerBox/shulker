@@ -1,8 +1,10 @@
 from kit:base import Kit
 from item:base import KitItem
 from item:definitions/food import Food
+from item:definitions/food import Steak
 from item:definitions/armor import Armor 
 from item:definitions/weapon import Weapon
+from item:definitions/weapons/maul import Maul
 
 juggernaut = Kit(
     name="Juggernaut",
@@ -15,10 +17,9 @@ juggernaut = Kit(
         "feet": Armor(id="diamond_boots")
     },
     hotbar=[
-        Weapon(id="netherite_shovel", item_name="Maul", melee={damage:8, speed:0.6, weight:"heavy"}, enchantments={knockback:1}),
-        # TODO: Dash, rx said on shovel
+        Maul,
         Food(count=2),
-        Food(id="cooked_beef", count=1)
+        Steak
     ]
 )
 

@@ -1,10 +1,10 @@
 from kit:events import KIT_RESET
 from kit:base import KitItem
 
-JUICE_DRINK = "item:rage_juice/drink"
-JUICE_EXPIRE = "item:rage_juice/expire"
-JUICE_RESET = "item:rage_juice/juice_reset"
-JUICE_TICK = "item:rage_juice/tick"
+JUICE_DRINK: FunctionPath = item:rage_juice/drink
+JUICE_EXPIRE: FunctionPath = item:rage_juice/expire
+JUICE_RESET: FunctionPath = item:rage_juice/juice_reset
+JUICE_TICK: FunctionPath = item:rage_juice/tick
 
 RAGE_JUICE_TIMER = Scoreboard("item.rage_juice_timer", criteria="dummy")
 

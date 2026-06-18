@@ -1,0 +1,93 @@
+from kit:events import KIT_RESET
+from item:definitions/weapon import Weapon
+
+LEAP_ACTIVATE: FunctionPath = item:maul/leap
+LEAP_EXPIRE: FunctionPath = item:maul/leap/expire
+LEAP_RESET: FunctionPath = item:maul/leap/reset
+LEAP_TICK: FunctionPath = item:maul/leap/tick
+
+ARMOR_ATTR = "maul_leap_armor_boost"
+KB_RESIST_ATTR = "maul_leap_kb_resist"
+
+LEAP_TIMER = Scoreboard("item.maul_leap_timer", criteria="dummy")
+
+class MaulDepleted(Weapon):
+    id = "netherite_shovel"
+    item_name = "Maul"
+    enchantments = {knockback:1}
+    melee = {
+        damage: 8,
+        speed: 0.6,
+        weight: "heavy",
+    }
+
+
+class Maul(MaulDepleted):
+    enchantment_glint_override = true
+    use_effects = {can_sprint: true}
+    use_remainder = MaulDepleted.as_dict()
+    useable = {
+        delay: 0.5,
+        callback: LEAP_ACTIVATE,
+        animation: "spyglass"
+    }
+    #> TODO:
+    # Add leap attempt use sound (for everyone's benefit)
+
+def leap_attribute_modifier(armor_amt: int, kb_res_amt: int) -> dict[str, Any]:
+    return {
+        "function": "minecraft:set_attributes",
+        "modifiers": [
+            {
+                "attribute": "minecraft:armor",
+                "id": ARMOR_ATTR,
+                "amount": armor_amt,
+                "operation": "add_value",
+                "slot": "body"
+            },
+            {
+                "attribute": "minecraft:knockback_resistance",
+                "id": KB_RESIST_ATTR,
+                "amount": kb_res_amt,
+                "operation": "add_value",
+                "slot": "body"
+            }
+        ]
+    }
+
+def enchantment_glint_toggle(override_state: bool):
+    return {
+        "function": "minecraft:set_components",
+        "components": {
+            "minecraft:enchantment_glint_override": override_state
+        }
+    }
+
+function LEAP_ACTIVATE:
+    item modify entity @s armor.body leap_attribute_modifier(armor_amt=6, kb_res_amt=1)
+    item modify entity @s armor.chest enchantment_glint_toggle(True)
+    playsound minecraft:item.armor.equip_netherite voice @a ~ ~ ~ 2 0.5
+    LEAP_TIMER["@s"] = (6*20)
+    effect give @s jump_boost 12 0
+    schedule function LEAP_TICK 1t replace
+
+function LEAP_TICK:
+    execute as @a[scores={LEAP_TIMER=1..}] at @s:
+        schedule function LEAP_TICK 1t replace
+
+        # Functions to handle expiry of the leap ability. Run LEAP_RESET to remove attributes without applying termination effects
+        if LEAP_TIMER["@s"] == 1:
+            execute function LEAP_EXPIRE:
+                playsound minecraft:entity.player.burp voice @a ~ ~ ~ 2 0.8
+                execute function LEAP_RESET: 
+                    LEAP_TIMER["@s"].reset()
+                    item modify entity @s armor.body leap_attribute_modifier(armor_amt=0, kb_res_amt=0)
+                    item modify entity @s armor.chest enchantment_glint_toggle(False)
+                    effect clear @s minecraft:jump_boost
+        
+        # Decrement timer
+        if LEAP_TIMER["@s"] > 1:
+            LEAP_TIMER["@s"] -= 1
+
+append function KIT_RESET:
+    function LEAP_RESET
