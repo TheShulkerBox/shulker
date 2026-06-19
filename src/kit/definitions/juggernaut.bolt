@@ -2,7 +2,8 @@ from kit:base import Kit
 from item:base import KitItem
 from item:definitions/food import Food
 from item:definitions/food import Steak
-from item:definitions/armor import Armor 
+from item:definitions/armor import Armor
+from item:definitions/armor import JuggernautBoots
 from item:definitions/weapon import Weapon
 from item:definitions/weapons/maul import Maul
 
@@ -14,7 +15,7 @@ juggernaut = Kit(
     armor={
         "chest": Armor(id="netherite_chestplate", armor={value:8, toughness:0}),
         "legs": Armor(id="chainmail_leggings"),
-        "feet": Armor(id="diamond_boots")
+        "feet": JuggernautBoots
     },
     hotbar=[
         Maul,

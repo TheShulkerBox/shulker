@@ -3,3 +3,19 @@ from ../base import KitItem
 
 class Armor(KitItem):
     enchantments = { "binding_curse": 1 }
+
+class JuggernautBoots(Armor):
+    id = "diamond_boots"
+    armor = {
+        value: 3, 
+        toughness: 2
+    }
+    attribute_modifiers = [
+        {
+            id: "item:juggernaut_slowness",
+            type: "minecraft:movement_speed",
+            slot: "feet",
+            operation: "add_multiplied_base",
+            amount: -0.15
+        }
+    ]
