@@ -13,14 +13,11 @@ PREV_USING_SCORE = Scoreboard("component.prev_using", criteria="dummy")
 
 
 class Using(Component):
-    start: FunctionPath | None = None
-    during: FunctionPath | None = None
-    end: FunctionPath | None = None
-
-    cooldown: float = 5
-    cooldown_group: str = ""
-    animation: AnimationLiteral = "bow"
-    sound: str = ""
+    start: Annotated[FunctionPath | None, "Function to run when using starts"] = None
+    during: Annotated[FunctionPath | None, "Function to run while using"] = None
+    end: Annotated[FunctionPath | None, "Function to run when using ends"] = None
+    animation: Annotated[AnimationLiteral, "Animation to use"] = "bow"
+    sound: Annotated[str, "Sound to play"] = ""
 
     def build(self):
         if not (self.start or self.during or self.end):
@@ -64,7 +61,7 @@ class Using(Component):
                 has_consume_particles: false,
             }
         }
-    
+
     @cached_property
     def no_longer_using(self):
         """Schedule loop to look for players who are currently using an item.

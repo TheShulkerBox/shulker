@@ -1,0 +1,122 @@
+from dataclasses import dataclass
+from functools import cached_property
+
+from lib:errors import CustomComponentError
+from lib:helpers import nbt_dump, ticks
+from server:core import ROOT_ADVANCEMENT
+from server:events import ON_PLAYER_RESET
+
+from ./item_enchant import ItemEnchant
+from ./type import Component, ComponentBuildError, RecursiveComponent
+
+LAST_CHARGING_SCORE = Scoreboard("component.bow_last_charging", criteria="dummy")
+CHARGING_SCORE = Scoreboard("component.bow_charge", criteria="dummy")
+
+
+class Bow(Component):
+    """This component provides bow functionality and custom hooks for ticking various events of the bow.
+
+    For various hooks, you should consider using `execute on` to select the appropriate entity. For example:
+    - `fire` will default to arrow as `@s`. Use `execute on origin` to select the player.
+    - `hit` will default to victim as `@s`. Use `execute on attacker` to select the shooter.
+    """
+    nock: Annotated[FunctionPath | None, "Runs as the player when the bow is nocked"] = None
+    charging: Annotated[FunctionPath | None, "Runs as the player when the bow is charging"] = None
+    charged: Annotated[FunctionPath | None, "Runs as the player when the bow is fully charged"] = None
+    unnock: Annotated[FunctionPath | None, "Runs as the player when the bow is unnocked"] = None
+    fire: Annotated[FunctionPath | None, "Runs on the arrow"] = None
+    hit: Annotated[FunctionPath | None, "Runs as the victim of an arrow shot"] = None
+
+    def build(self):
+        if self.item.id not in ("bow", "minecraft:bow"):
+            raise CustomComponentError("Bow component can only be applied to items with id 'minecraft:bow'")
+
+        if not (self.nock or self.charging or self.charged or self.fire or self.hit):
+            raise CustomComponentError(
+                "At least one of `nock`, `charging`, `charged`, `unnock`, `fire`, or `hit` must be defined"
+            )
+
+        advancement self.path {
+            "parent": ROOT_ADVANCEMENT,
+            "criteria": {
+                "requirement": {
+                    "trigger": "minecraft:using_item",
+                    "conditions": {
+                        "item": {
+                            "predicates": { "minecraft:custom_data": {"item": self.item.name} }
+                        }
+                    }
+                }
+            },
+            "rewards": { "function": self.while_charging }
+        }
+        
+        effects = {
+            "minecraft:projectile_spawned": [
+                { "effect": { "type": "minecraft:run_function", "function": self.on_fire } }
+            ],
+            "minecraft:post_attack": [
+                {
+                    "effect": { "type": "minecraft:run_function", "function": self.hit },
+                    "enchanted": "attacker",
+                    "affected": "victim"
+                }
+            ]
+        }
+
+        return {item_enchant: RecursiveComponent(ItemEnchant, effects)}
+    
+    @cached_property
+    def while_charging(self):
+        path = f"{self.path}/while_charging"
+        detect_charging = f"{self.path}/detect_charging"
+        
+        function path:
+            if self.nock:
+                if not (CHARGING_SCORE["@s"] > 0):
+                    function self.nock
+                
+            CHARGING_SCORE["@s"] += 1
+
+            if self.charged:
+                if CHARGING_SCORE["@s"] == ticks("1s"):
+                    function self.charged
+
+            schedule function detect_charging 1t replace
+            function self.charging
+        
+        function detect_charging:
+            execute as @a[scores={CHARGING_SCORE=1..}]:
+                if LAST_CHARGING_SCORE["@s"] == CHARGING_SCORE["@s"]:
+                    return run function self.no_longer_charging
+                
+                schedule function detect_charging 1t replace
+                LAST_CHARGING_SCORE["@s"] = CHARGING_SCORE["@s"]
+            
+        return path
+    
+    @cached_property
+    def no_longer_charging(self):
+        path = f"{self.path}/no_longer_charging"
+        function path:
+            if self.unnock:
+                function self.unnock
+            function ./on_player_reset
+        
+        return path
+    
+    @cached_property
+    def on_fire(self):
+        path = f"{self.path}/on_fire"
+        function path:
+            if self.fire:
+                function self.fire
+            function ./on_player_reset
+
+        return path
+
+
+append function ON_PLAYER_RESET:
+    execute function ./on_player_reset:
+        CHARGING_SCORE["@s"].reset()
+        LAST_CHARGING_SCORE["@s"].reset()

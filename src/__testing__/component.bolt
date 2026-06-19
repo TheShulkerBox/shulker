@@ -1,0 +1,214 @@
+from item:base import KitItem
+
+
+def component_callback(component: str, phase: str):
+    path = ./callbacks
+    path = f"{path}/{component}/{phase}"
+
+    function path:
+        tellraw @s f"[component test] {component}: {phase}"
+
+    return path
+
+
+class TestingWeapon(KitItem):
+    id = "iron_sword"
+    item_name = "Component Test: Weapon Suite"
+    lore = [
+        "melee, left_click, two_handed, strike, and kill",
+        "Exercises callback and combat subcomponents.",
+    ]
+    melee = {
+        damage: 6,
+        knockback: 1.25,
+        crit: 2,
+        weight: "heavy",
+    }
+    two_handed = {
+        callback: component_callback("two_handed", "callback"),
+    }
+    strike = {
+        attacker: component_callback("strike", "attacker"),
+        victim: component_callback("strike", "victim"),
+        strict: true,
+        crit: true,
+    }
+    kill = {
+        killer: component_callback("kill", "killer"),
+        victim: component_callback("kill", "victim"),
+        strict: true,
+    }
+
+
+class TestingUsing(KitItem):
+    id = "iron_ingot"
+    item_model = "spyglass"
+    item_name = "Component Test: Using"
+    lore = "using start, during, end, cooldown, animation, and sound"
+    using = {
+        start: component_callback("using", "start"),
+        during: component_callback("using", "during"),
+        end: component_callback("using", "end"),
+        animation: "spyglass",
+        # sound: "minecraft:item.spyglass.use",
+    }
+
+
+class TestingSneaking(KitItem):
+    id = "leather_boots"
+    item_name = "Component Test: Sneaking"
+    lore = "sneaking start, during, and end"
+    dyed_color = "#2c8f6b"
+    sneaking = {
+        start: component_callback("sneaking", "start"),
+        during: component_callback("sneaking", "during"),
+        end: component_callback("sneaking", "end"),
+    }
+
+
+class TestingUseable(KitItem):
+    id = "iron_ingot"
+    item_model = "honey_bottle"
+    item_name = "Component Test: Useable"
+    lore = "useable callback, infinite, delay, cooldown, sound, and effects"
+    useable = {
+        callback: component_callback("useable", "callback"),
+        infinite: true,
+        delay: 0.4,
+        cooldown: 2.25,
+        cooldown_group: "component_testing:useable",
+        animation: "drink",
+        sound: "minecraft:item.honey_bottle.drink",
+        on_use_effects: [
+            {
+                type: "apply_effects",
+                effects: [
+                    {
+                        id: "speed",
+                        amplifier: 0,
+                        duration: 3 * 20,
+                    }
+                ],
+            }
+        ],
+    }
+
+
+class TestingBow(KitItem):
+    id = "bow"
+    item_name = "Component Test: Bow"
+    lore = "bow nock, charging, charged, unnock, fire, and hit"
+    bow = {
+        nock: component_callback("bow", "nock"),
+        charging: component_callback("bow", "charging"),
+        charged: component_callback("bow", "charged"),
+        unnock: component_callback("bow", "unnock"),
+        fire: component_callback("bow", "fire"),
+        hit: component_callback("bow", "hit"),
+    }
+
+
+class TestingTicking(KitItem):
+    id = "clock"
+    item_name = "Component Test: Ticking"
+    lore = "ticking callback and period"
+    ticking = [
+        {
+            callback: component_callback("ticking", "5t"),
+            period: "5t",
+        }
+    ]
+
+
+class TestingArmor(KitItem):
+    id = "leather_chestplate"
+    item_name = "Component Test: Armor"
+    lore = "armor value, toughness, knockback resistance, speed, and dyed_color"
+    dyed_color = "#7f29c6"
+    armor = {
+        value: 4,
+        toughness: 1.5,
+        knockback_resistance: 0.1,
+        speed: 0.02,
+    }
+
+
+class TestingFood(KitItem):
+    id = "suspicious_stew"
+    item_name = "Component Test: Always Edible"
+    lore = "always_edible with food nutrition and saturation"
+    always_edible = true
+    food = {
+        nutrition: 4,
+        saturation: 5.6,
+    }
+
+
+class TestingPotion(KitItem):
+    id = "potion"
+    item_name = "Component Test: Potion Transformer"
+    lore = [
+        "potion_contents custom_color transformer",
+        "also validates lore list transformation.",
+    ]
+    potion_contents = {
+        custom_color: "#750303",
+        custom_effects: [
+            {
+                id: "minecraft:glowing",
+                amplifier: 0,
+                duration: 2 * 20,
+                show_particles: false,
+            }
+        ],
+    }
+
+
+# class TestingDroppable(KitItem):
+#     id = "paper"
+#     item_name = "Component Test: Droppable"
+#     lore = "droppable type, time_alive, and callback"
+#     droppable = {
+#         type: "disabled",
+#         time_alive: "20s",
+#         callback: component_callback("droppable", "callback"),
+#     }
+
+
+# class TestingResupply(KitItem):
+#     id = "bundle"
+#     item_name = "Component Test: Resupply On Empty"
+#     lore = "resupply_on_empty boolean base component"
+#     resupply_on_empty = true
+
+
+# class TestingItemEnchant(KitItem):
+#     id = "enchanted_book"
+#     item_name = "Component Test: Item Enchant"
+#     lore = "direct item_enchant effects"
+#     item_enchant = {
+#         "minecraft:tick": [
+#             {
+#                 effect: {
+#                     type: "minecraft:run_function",
+#                     function: component_callback("item_enchant", "tick"),
+#                 }
+#             }
+#         ]
+#     }
+
+
+function ./give_all:
+    give @s TestingWeapon
+    give @s TestingUsing
+    give @s TestingSneaking
+    give @s TestingUseable
+    give @s TestingBow
+    give @s TestingTicking
+    give @s TestingArmor
+    give @s TestingFood
+    give @s TestingPotion
+    # give @s TestingDroppable
+    # give @s TestingResupply
+    # give @s TestingItemEnchant
+    give @s arrow 64

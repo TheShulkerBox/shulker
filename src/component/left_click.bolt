@@ -1,0 +1,41 @@
+from ./type import Component, ComponentBuildError, RecursiveComponent
+from ./item_enchant import ItemEnchant
+
+class LeftClick(Component):
+    """Lets you call a function when you left click.
+    
+    `cooldown` is the attack cooldown specified by attack speed and minimum_attack_charge.
+    """
+    callback: Annotated[FunctionPath, "Called when you left click the item"]
+    cooldown: Annotated[float | None, "Minimum time between clicks"] = None
+    
+    def build(self):
+        output = {
+            item_enchant: RecursiveComponent(
+                ItemEnchant,
+                {
+                    "minecraft:post_piercing_attack": [
+                        {
+                            "effect": {
+                                "type": "run_function",
+                                "function": self.callback
+                            }
+                        }
+                    ]
+                }
+            ),
+            piercing_weapon: {},
+        }
+
+        if self.cooldown:
+            output["attack_range"] = {"max_reach": 0}
+            output["minimum_attack_charge"] = 1
+            output["attribute_modifiers"] = [{
+                "type": "attack_speed",
+                "slot": "mainhand",
+                "id": "minecraft:base_attack_speed",
+                "amount": 1 / self.cooldown,
+                "operation": "add_value",
+            }]
+        
+        return output

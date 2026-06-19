@@ -114,6 +114,11 @@ class ItemType(type):
         # Skip base Item class as it's not designed to be actually in-game
         if name == "item":
             return super().__new__(cls, name, bases, namespace)
+        elif item := cls.registered_items.get(name):
+            raise ValueError(
+                f"Item '{name}' already registered. Cannot have multiple definitions for the same item.\n"
+                f"Defined in both: {item.__module__} and {namespace['__module__']}"
+            )
 
         namespace["_component_cache"] = {}
         namespace["_has_errored"] = False

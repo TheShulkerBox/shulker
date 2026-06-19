@@ -20,7 +20,7 @@ class ItemEnchant(Component, base_type=dict[str, Any]):
                 key = f"minecraft:{key}"
             effects[key] = value
         
-        deep_merge_dicts(self._all_effects, effects, inplace=True)
+        deep_merge_dicts(self._all_effects.setdefault(self.item.name, {}), effects, inplace=True)
 
         return {"enchantments": {nbt_dump(f"item:{self.item.name}"): 1}}
     
@@ -28,7 +28,7 @@ class ItemEnchant(Component, base_type=dict[str, Any]):
         if self._built or not self.base_type:
             return
         
-        enchantment f"item:{item_obj.name}" {
+        enchantment item_obj.path {
             "description": f"{item_obj.name} Effects",
             "supported_items": "#item:all",
             "weight": 1,
@@ -37,5 +37,5 @@ class ItemEnchant(Component, base_type=dict[str, Any]):
             "max_cost": { "base": 0, "per_level_above_first": 0 },
             "anvil_cost": 0,
             "slots": [ "any" ],
-            "effects": self._all_effects
+            "effects": self._all_effects[item_obj.name]
         }

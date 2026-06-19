@@ -41,7 +41,7 @@ class Useable(Component):
     sound: str = ""
     on_use_effects: list[dict[str, Any]] = field(default_factory=list)
 
-    def build(self) -> dict[str, Any]:
+    def build(self):
         """Using consume_item adv."""
         advancement self.path {
             "parent": ROOT_ADVANCEMENT,
@@ -63,7 +63,8 @@ class Useable(Component):
         function self.path:
             advancement revoke @s only self.path
             
-            # for infinite items, we can toggle an arbitrary piece of top-level data (we've used infinite here, but not strictly necessary) to cause the item to persist when used
+            # for infinite items, we can toggle an arbitrary piece of top-level data
+            # (we've used infinite here, but not strictly necessary) to cause the item to persist when used
             if self.infinite:
                 unless items entity @s weapon.mainhand self.item.conditional_string():
                     item modify entity @s weapon.offhand {function: "set_custom_data", tag: {infinite: false}}

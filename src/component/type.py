@@ -109,16 +109,19 @@ class Component:
     def __init_subclass__(cls, cache: bool = True, base_type: type | None = None):
         """Auto-register component and convert to dataclass."""
         if cls.__name__ == "Transformer":
-            # Don't register the base Transformer class
-            return super().__init_subclass__()
+            return super().__init_subclass__()  # Don't register the base Transformer class
+        
         cls._skip_cache = not cache
         cls._base_type = base_type
+        cls.__annotations__  # just access it to catch any Annotated type errors early
+        
         if base_type is not None:
             cls.__annotations__["base_type"] = cls._base_type
 
         new_cls = dataclass(cls, repr=False)
         new_cls.__module__ = cls.__module__
         new_cls.path = property(Component.path)
+
         cls.registered.append(new_cls)
         return new_cls
 

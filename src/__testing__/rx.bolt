@@ -87,3 +87,36 @@ function ./engineer_pickaxe_tick:
 # function ~/potato/release:
 #     say surprise!
 
+class Warbow(KitItem):
+    id = "bow"
+    item_name = "Warbow"
+    bow = {
+        nock: ./nock,
+        charging: ./charging,
+        charged: ./charged,
+        unnock: ./unnock,
+        fire: ./fire,
+        hit: ./hit,
+    }
+    left_click = {
+        callback: ./left_click,
+        cooldown: 4,
+    }
+
+function ./nock:
+    tellraw @s nock
+function ./charging:
+    particle minecraft:witch ~ ~ ~ 0.5 0.5 0.5 0 1 normal
+function ./charged:
+    tellraw @s charged
+function ./unnock:
+    tellraw @s unnock
+function ./fire:
+    execute on owner run tellraw @s hit
+    tellraw @a "i am an arrow"
+function ./hit:
+    tellraw @s "u were hit by a warbow"
+    execute on attacker run tellraw @s "you hit the target"
+
+function ./left_click:
+    tellraw @s "left clicked"

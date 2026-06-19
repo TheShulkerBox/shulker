@@ -8,7 +8,7 @@ from typing import Any, Literal, Protocol, Union, get_args, get_origin, overload
 import zlib
 
 import dacite
-from typeguard import check_type as _check_type, TypeCheckError
+from typeguard import ForwardRefPolicy, check_type as _check_type, TypeCheckError
 
 
 def title_case_to_snake_case(title_case_str: str):
@@ -154,7 +154,7 @@ def check_type(value: Any, expected_type: type) -> bool:
     except dacite.DaciteError:
         return False
     try:
-        _check_type(_coerceed_value, expected_type)
+        _check_type(_coerceed_value, expected_type, forward_ref_policy=ForwardRefPolicy.IGNORE)
     except TypeCheckError:
         return False
 
