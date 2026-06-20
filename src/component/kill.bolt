@@ -8,11 +8,9 @@ from lib:const import HAND_SLOTS
 from ./type import Component
 
 
-def item_match(item_name: str, slot: str | None = None):
+def item_match(item_name: str, slot: str = None):
     predicate = { "predicates": { "minecraft:custom_data": {"item": item_name} } }
-    if slot:
-        return { "equipment": { slot: predicate } }
-    return { "slots": { "hotbar.*": predicate } }
+    return { "slots": { slot: predicate } }
 
 
 class Kill(Component):
@@ -23,12 +21,12 @@ class Kill(Component):
     """
     killer: FunctionPath | None = None
     victim: FunctionPath | None = None
-    strict: Annotated[bool, "Whether you have to get the kill with said item equipped or not"] = False
+    slot: Annotated[str, "Whether you have to get the kill with said item equipped or not"] = "hotbar.*"
     # TODO: assist system needs to be worked out
     # assistant: str = ""
 
     def build(self):
-        if not (self.killer or self.victim):
+        if bool(self.killer) == bool(self.victim):
             raise CustomComponentError(
                 "One and only one of `killer` or `victim` must be defined"
             )
@@ -40,42 +38,20 @@ class Kill(Component):
 
         # killer: we did the kill, so the item-holder is the `player`
         if self.killer:
-            if self.strict:
-                criteria["killer_mainhand"] = {
-                    "trigger": "minecraft:player_killed_entity",
-                    "conditions": { "entity": { "entity_type": "player" }, "player": item_match(self.item.name, "mainhand") }
-                }
-                criteria["killer_offhand"] = {
-                    "trigger": "minecraft:player_killed_entity",
-                    "conditions": { "entity": { "entity_type": "player" }, "player": item_match(self.item.name, "offhand") }
-                }
-                requirements.extend(["killer_mainhand", "killer_offhand"])
-            else:
-                criteria["killer"] = {
-                    "trigger": "minecraft:player_killed_entity",
-                    "conditions": { "entity": { "entity_type": "player" }, "player": item_match(self.item.name) }
-                }
-                requirements.append("killer")
+            criteria["killer"] = {
+                "trigger": "minecraft:player_killed_entity",
+                "conditions": { "entity": { "entity_type": "player" }, "player": item_match(self.item.name, self.slot) }
+            }
+            requirements.append(["killer"])
 
         # victim: the killer is the `entity`, so merge the match into it
         if self.victim:
-            if self.strict:
-                criteria["victim_mainhand"] = {
-                    "trigger": "minecraft:entity_killed_player",
-                    "conditions": { "entity": { "entity_type": "player" } | item_match(self.item.name, "mainhand") }
-                }
-                criteria["victim_offhand"] = {
-                    "trigger": "minecraft:entity_killed_player",
-                    "conditions": { "entity": { "entity_type": "player" } | item_match(self.item.name, "offhand") }
-                }
-                requirements.extend(["victim_mainhand", "victim_offhand"])
-            else:
-                criteria["victim"] = {
-                    "trigger": "minecraft:entity_killed_player",
-                    "conditions": { "entity": { "entity_type": "player" } | item_match(self.item.name) }
-                }
-                requirements.append("victim")
-        
+            criteria["victim"] = {
+                "trigger": "minecraft:entity_killed_player",
+                "conditions": { "entity": { "entity_type": "player" } | item_match(self.item.name, self.slot) }
+            }
+            requirements.append(["victim"])
+
         advancement_data = {
             "parent": ROOT_ADVANCEMENT,
             "criteria": criteria,
@@ -83,7 +59,7 @@ class Kill(Component):
         }
 
         if len(requirements) > 1:
-            advancement_data["requirements"] = [requirements]
+            advancement_data["requirements"] = requirements
 
         advancement self.path advancement_data
 

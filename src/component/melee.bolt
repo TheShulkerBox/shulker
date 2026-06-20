@@ -53,6 +53,7 @@ class Melee(Component):
                     "attack_knockback",
                     self.knockback,
                     attribute_id="shulker:knockback",
+                    display={"type": "override", "value": {"text": f" {self.knockback} Attack Knockback", "color": "dark_green"}}
                 )
             )
 

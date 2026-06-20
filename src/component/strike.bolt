@@ -12,16 +12,15 @@ class Strike(Component):
     """This component will activate when you strike someone.
     
     By default, this component will only activate if this item was used to strike someone.
-    Use `strict` (default=false) to activate the component if the item is anywhere in the inventory.
     """
     attacker: FunctionPath | None = None
     victim: FunctionPath | None = None
-    strict: Annotated[bool, "Whether you have to attack with said item equipped or not"] = False
+    slot: Annotated[str, "Whether you have to get the strike with said item equipped or not"] = "hotbar.*"
     crit: Annotated[bool, "Whether the strike was a critical hit or not"] = False
     # assistant: str = ""
 
     def build(self):
-        if not (self.attacker or self.victim):
+        if bool(self.attacker) == bool(self.victim):
             raise CustomComponentError(
                 "One and only one of `attacker` or `victim` must be defined"
             )
@@ -31,43 +30,21 @@ class Strike(Component):
         criteria = {}
         requirements = []
 
-        # attacker: we did the kill, so the item-holder is the `player`
+        # attacker: we did the strike, so the item-holder is the `player`
         if self.attacker:
-            if self.strict:
-                criteria["attacker_mainhand"] = {
-                    "trigger": "minecraft:player_killed_entity",
-                    "conditions": { "entity": { "entity_type": "player" }, "player": item_match(self.item.name, "mainhand") }
-                }
-                criteria["attacker_offhand"] = {
-                    "trigger": "minecraft:player_killed_entity",
-                    "conditions": { "entity": { "entity_type": "player" }, "player": item_match(self.item.name, "offhand") }
-                }
-                requirements.extend(["attacker_mainhand", "attacker_offhand"])
-            else:
-                criteria["attacker"] = {
-                    "trigger": "minecraft:player_killed_entity",
-                    "conditions": { "entity": { "entity_type": "player" }, "player": item_match(self.item.name) }
-                }
-                requirements.append("attacker")
+            criteria["attacker"] = {
+                "trigger": "minecraft:player_hurt_entity",
+                "conditions": { "entity": { "entity_type": "player" }, "player": item_match(self.item.name, self.slot) }
+            }
+            requirements.append("attacker")
 
         # victim: the attacker is the `entity`, so merge the match into it
         if self.victim:
-            if self.strict:
-                criteria["victim_mainhand"] = {
-                    "trigger": "minecraft:entity_killed_player",
-                    "conditions": { "entity": { "entity_type": "player" } | item_match(self.item.name, "mainhand") }
-                }
-                criteria["victim_offhand"] = {
-                    "trigger": "minecraft:entity_killed_player",
-                    "conditions": { "entity": { "entity_type": "player" } | item_match(self.item.name, "offhand") }
-                }
-                requirements.extend(["victim_mainhand", "victim_offhand"])
-            else:
-                criteria["victim"] = {
-                    "trigger": "minecraft:entity_killed_player",
-                    "conditions": { "entity": { "entity_type": "player" } | item_match(self.item.name) }
-                }
-                requirements.append("victim")
+            criteria["victim"] = {
+                "trigger": "minecraft:entity_hurt_player",
+                "conditions": { "damage": {"source_entity": { "entity_type": "player" } | item_match(self.item.name, self.slot)} }
+            }
+            requirements.append("victim")
 
         advancement_data = {
             "parent": ROOT_ADVANCEMENT,

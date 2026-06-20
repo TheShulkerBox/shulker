@@ -4,13 +4,12 @@ from lib:helpers import ticks, nbt_dump, coerce_type
 from ./item_enchant import ItemEnchant
 from ./type import Component, ComponentBuildError, RecursiveComponent
 
-SlotLiteral = Literal["mainhand", "offhand", "head", "chest", "legs", "feet", "any"]
-
 
 @dataclass
 class TickingEntry:
-    callback: FunctionPath
-    period: str = "1t"
+    callback: Annotated[FunctionPath, "Function to run when ticking"]
+    period: Annotated[str, "Period for ticking"] = "1t"
+    slot: Annotated[str | None, "Slot to check for the item"] = None
 
 
 class Ticking(Component, base_type=list[TickingEntry]):
@@ -26,16 +25,33 @@ class Ticking(Component, base_type=list[TickingEntry]):
         effects = {}
         for entry in self.base_type:
             effects["minecraft:tick"] = [{
-                "requirements": {
-                    "condition": "minecraft:time_check",
-                    "clock": "minecraft:overworld",
-                    "value": 0,
-                    "period": (ticks(entry.period))
-                },
+                "requirements": [
+                    {
+                        "condition": "minecraft:time_check",
+                        "clock": "minecraft:overworld",
+                        "value": 0,
+                        "period": (ticks(entry.period))
+                    }
+                ],
                 "effect": {
                     "type": "minecraft:run_function",
                     "function": entry.callback
                 }
             }]
-        
+
+            if entry.slot:
+                effects["minecraft:tick"]["requirements"].prepend({
+                    "condition": "minecraft:entity_properties",
+                    "entity": "this",
+                    "predicate": {
+                        "minecraft:slots": {
+                            entry.slot: {
+                                "predicates": {
+                                   "minecraft:custom_data": { "item": self.item.name }
+                                }
+                            }
+                        }
+                    }
+                })
+                
         return {item_enchant: RecursiveComponent(ItemEnchant, effects)}

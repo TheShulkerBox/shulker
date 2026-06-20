@@ -1,4 +1,4 @@
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 from bolt_expressions import ScoreSource, DataSource
 
 IntLike: Annotated[type, "Works like an int for runtime math"] = (
@@ -18,6 +18,9 @@ FunctionPath: Annotated[type, "Path to a function"] = str
 AdvancementPath: Annotated[type, "Path to an advancement"] = str
 PredicatePath: Annotated[type, "Path to a predicate"] = str
 
+SlotLiteral: Annotated[type, "A slot in the player's inventory"] = Literal[
+    "mainhand", "offhand", "head", "chest", "legs", "feet", "any"
+]
 
 class Remove:
     """Sentinel class for removal operations. do not instantiate."""

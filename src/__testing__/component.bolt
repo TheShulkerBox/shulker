@@ -29,14 +29,9 @@ class TestingWeapon(KitItem):
     }
     strike = {
         attacker: component_callback("strike", "attacker"),
-        victim: component_callback("strike", "victim"),
-        strict: true,
-        crit: true,
     }
     kill = {
-        killer: component_callback("kill", "killer"),
         victim: component_callback("kill", "victim"),
-        strict: true,
     }
 
 
@@ -50,7 +45,10 @@ class TestingUsing(KitItem):
         during: component_callback("using", "during"),
         end: component_callback("using", "end"),
         animation: "spyglass",
-        # sound: "minecraft:item.spyglass.use",
+        sound: "minecraft:item.spyglass.use",
+    }
+    left_click = {
+        callback: component_callback("using", "left_click")
     }
 
 
@@ -63,6 +61,7 @@ class TestingSneaking(KitItem):
         start: component_callback("sneaking", "start"),
         during: component_callback("sneaking", "during"),
         end: component_callback("sneaking", "end"),
+        slot: "armor.feet"
     }
 
 
@@ -103,9 +102,18 @@ class TestingBow(KitItem):
         charging: component_callback("bow", "charging"),
         charged: component_callback("bow", "charged"),
         unnock: component_callback("bow", "unnock"),
-        fire: component_callback("bow", "fire"),
-        hit: component_callback("bow", "hit"),
+        fire: ./fire,
+        hit: ./hit,
     }
+
+
+function ./fire:
+    execute on owner run tellraw @s hit
+    tellraw @a "i am an arrow"
+
+function ./hit:
+    tellraw @s "u were hit by a warbow"
+    execute on attacker run tellraw @s "you hit the target"
 
 
 class TestingTicking(KitItem):
@@ -114,8 +122,12 @@ class TestingTicking(KitItem):
     lore = "ticking callback and period"
     ticking = [
         {
-            callback: component_callback("ticking", "5t"),
-            period: "5t",
+            callback: component_callback("ticking", "2s"),
+            period: "2s",
+        },
+        {
+            callback: component_callback("ticking", "5s"),
+            period: "5s",
         }
     ]
 
