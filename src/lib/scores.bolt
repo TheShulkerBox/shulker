@@ -1,0 +1,2 @@
+FOOD = Scoreboard("shulker.food", criteria="food")
+HEALTH = Scoreboard("shulker.health", criteria="health")

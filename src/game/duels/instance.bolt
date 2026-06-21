@@ -13,6 +13,7 @@ from ../player import TEAM_SCORE
 from ../events import ON_LEAVE_GAME
 from ../instance import INSTANCE_META, INSTANCE_ID, remove_instance, select_instance_players
 from ../models import Gamemode
+from ../player import TEAM_MATCHER
 from ./models import DuelsMap
 
 GAME_TIMER = Scoreboard("duels.game_timer", criteria="dummy")
@@ -29,9 +30,6 @@ START_GAME_TRIGGER = Scoreboard("start_match", criteria="trigger")
 TEAM_1 = "duels.team_1"
 TEAM_2 = "duels.team_2"
 PREGAME_MARKER = "duels.pregame_marker"
-
-TEAM_MATCHER = matching(TEAM_SCORE, TEAM_SCORE["@s"])
-
 
 def leave_duels():
     """Call when duels is done for a player."""

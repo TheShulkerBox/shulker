@@ -1,1 +1,4 @@
+from lib:utils import matching
+
 TEAM_SCORE = Scoreboard("game.team", criteria="dummy")
+TEAM_MATCHER = matching(TEAM_SCORE, TEAM_SCORE["@s"])

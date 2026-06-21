@@ -1,0 +1,65 @@
+from item:definitions/weapon import Weapon
+from lib:scores import HEALTH
+from game:player import TEAM_MATCHER
+
+ATTEMPT_BEHEAD: FunctionPath = item:headsman_axe/attempt_behead
+SUCCEED_BEHEAD: FunctionPath = item:headsman_axe/succeed_behead
+TICK_HEADSMAN: FunctionPath = item:headsman_axe/tick_headsman
+TICK_LOW_HEALTH: FunctionPath = item:headsman_axe/tick_low_health
+VALIDATE_HEALTH_THRESHOLD: FunctionPath = item:headsman_axe/validate_health_threshold
+
+BEHEADABLE = "shulker.beheadable"
+HEADSMAN = "shulker.headsman"
+
+BEHEAD_DAMAGE_TYPE = item:weapon/behead
+
+damage_type BEHEAD_DAMAGE_TYPE {
+    "message_id": "player_behead",
+    "exhaustion": 0.0,
+    "scaling": "when_caused_by_living_non_player",
+    "effects": "poking"
+}
+
+class HeadsmanAxe(Weapon):
+    id = "netherite_axe"
+    item_name = "Headsman Axe"
+    melee = {damage: 3, speed: 1.0}
+    minimum_attack_charge = 1.0
+    strike = {slot: "weapon.mainhand", victim: ATTEMPT_BEHEAD}
+    ticking = [
+        {
+            callback: TICK_HEADSMAN,
+            period: "5t",
+        }
+    ]
+
+function VALIDATE_HEALTH_THRESHOLD:
+    execute store result score var SCORE.temp["#max_health"] run attribute @s minecraft:max_health get 10
+    SCORE.temp["#max_health"] *= 4
+    SCORE.temp["#max_health"] /= 100
+
+function ATTEMPT_BEHEAD:
+    function VALIDATE_HEALTH_THRESHOLD
+    if HEALTH["@s"] <= SCORE.temp["#max_health"]:
+        execute at @s run function SUCCEED_BEHEAD:
+            playsound minecraft:entity.iron_golem.death master @a ~ ~ ~ 0.5 1
+            playsound minecraft:entity.player.attack.crit master @a
+            #> TODO:
+            # Re-enable player head drops such that they can't be picked up.
+            #loot spawn ~ ~1.5 ~ loot lib:player_head
+            #execute as @e[type=item,distance=..2,limit=1,nbt={Item:{tag:{blood:1b}}}] run tag @s add blood.head
+            #execute as @e[type=item,tag=blood.head,distance=..2,limit=1,sort=nearest] run data modify entity @s Motion[1] set value 0.72d
+            damage @s 1000 BEHEAD_DAMAGE_TYPE
+
+function TICK_HEADSMAN:
+    schedule function TICK_LOW_HEALTH 1t replace
+
+function TICK_LOW_HEALTH:
+    tag @a remove BEHEADABLE
+    tag @a remove HEADSMAN
+    execute as @a[team=!lobby]:
+        function VALIDATE_HEALTH_THRESHOLD
+        if HEALTH["@s"] <= SCORE.temp["#max_health"]:
+            tag @s add BEHEADABLE
+        execute if items entity @s weapon.mainhand (-HeadsmanAxe) run tag @s add HEADSMAN
+    execute as @a[tag=BEHEADABLE] at @s run particle dust{color:[0.5,0.0,0.0],scale:1} ~ ~1 ~ 0.25 0.5 0.25 0 5 force @a[tag=HEADSMAN,predicate=!TEAM_MATCHER(),distance=..15]
