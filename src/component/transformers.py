@@ -43,6 +43,7 @@ class PotionContents(Transformer, base_type=dict[str, Any] | Any):
                 )
 
             return self.base_type | {"custom_color": int(color, 16)}
+        return self.base_type
 
 
 class Lore(Transformer, base_type=str | list[str] | list[dict[str, Any]] | Any):

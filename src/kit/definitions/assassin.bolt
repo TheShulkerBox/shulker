@@ -1,7 +1,11 @@
 from kit:base import Kit
 from item:base import KitItem
+from item:definitions/weapons/iron_dagger import IronDaggerWhack
+from item:definitions/weapons/blowgun import Blowgun
 from item:definitions/food import Food
 from item:definitions/armor import Armor 
+from item:definitions/armor/sneaky_boots import SneakyBoots
+from item:definitions/consumable/blindness_dart import BlindnessDart
 
 assassin = Kit(
     name="Assassin",
@@ -11,13 +15,13 @@ assassin = Kit(
     armor={
         "chest": Armor(id="leather_chestplate", dyed_color="#191919"),
         "legs": Armor(id="leather_leggings", dyed_color="#191919"),
-        "feet": Armor(id="leather_boots", dyed_color="#191919"),
+        "feet": SneakyBoots,
     },
     hotbar=[
-        KitItem(id="iron_sword", item_name="Iron Dagger"),
-        KitItem(id="bow", item_name="Dart Caster"),
+        IronDaggerWhack,
+        Blowgun,
         Food(count=2),
-        KitItem(id="tipped_arrow", item_name="Blindness Dart")
+        BlindnessDart,
     ]
 )
 

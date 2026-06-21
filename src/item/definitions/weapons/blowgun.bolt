@@ -1,0 +1,12 @@
+from item:definitions/weapon import Bow
+from item:definitions/consumable/blindness_dart import BlindnessDart
+
+ON_KILL: FunctionPath = item:iron_dagger/on_kill
+
+class Blowgun(Bow):
+    id = "bow"
+    item_name = "Dart Caster"
+    kill = {killer: ON_KILL}
+
+function ON_KILL:
+    give @s BlindnessDart

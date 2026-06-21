@@ -1,0 +1,52 @@
+from ../armor import Armor
+from item:definitions/weapons/iron_dagger import IronDaggerBase
+
+SNEAK_HANDLER: FunctionPath = item:iron_dagger/sneak
+END_SNEAK: FunctionPath = item:iron_dagger/end_sneak
+ATTEMPT_DASH: FunctionPath = item:iron_dagger/attempt_dash
+
+from component:sneaking import SNEAKING_SCORE
+
+JUMP_STRENGTH_ATTR = "assassin_jump_boost"
+SAFE_FALL_ATTR = "assassin_safe_fall_distance"
+
+def jump_boost_attribute_modifier(extra_jump_height: float, safe_fall_distance: float) -> dict[str, Any]:
+    return {
+        "function": "minecraft:set_attributes",
+        "modifiers": [
+            {
+                "attribute": "minecraft:jump_strength",
+                "id": JUMP_STRENGTH_ATTR,
+                "amount": (extra_jump_height*0.4),
+                "operation": "add_multiplied_base",
+                "slot": "body"
+            },
+            {
+                "attribute": "minecraft:safe_fall_distance",
+                "id": SAFE_FALL_ATTR,
+                "amount": safe_fall_distance,
+                "operation": "add_value",
+                "slot": "body"
+            }
+        ]
+    }
+
+class SneakyBoots(Armor):
+    id = "leather_boots"
+    dyed_color = "#191919"
+    sneaking = {during: SNEAK_HANDLER, end: END_SNEAK}
+
+function SNEAK_HANDLER:
+    function ATTEMPT_DASH
+    # Test whether sword is in hand, cancel jump boost if so and return.
+    execute 
+        if items entity @s weapon.mainhand (-IronDaggerBase)
+        return run item modify entity @s armor.body jump_boost_attribute_modifier(extra_jump_height=0, safe_fall_distance=0)
+    # If sword is not in hand, no early return causes jump boost to apply
+    item modify entity @s armor.body jump_boost_attribute_modifier(extra_jump_height=1, safe_fall_distance=1)
+
+function END_SNEAK:
+    item modify entity @s armor.body jump_boost_attribute_modifier(extra_jump_height=0, safe_fall_distance=0)
+
+function ATTEMPT_DASH:
+    effect give @s[scores={SNEAKING_SCORE=30..}] speed 2 1 true

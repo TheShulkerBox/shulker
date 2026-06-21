@@ -1,0 +1,14 @@
+from lib:helpers import ticks
+from item:base import KitItem
+
+class BlindnessDart(KitItem):
+    id = "tipped_arrow"
+    item_name = "Blindness Dart"
+    potion_contents = {
+        custom_effects:[
+            {
+                id: "blindness", 
+                duration: 40
+            }
+        ]
+    }

@@ -2,3 +2,6 @@ from item:base import KitItem
 
 class Weapon(KitItem):
     ...
+
+class Bow(KitItem):
+    id = "bow"

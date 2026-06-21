@@ -1,0 +1,95 @@
+from item:definitions/weapon import Weapon
+from lib:player import tag_self
+
+ATTEMPT_ASSASSINATE: FunctionPath = item:iron_dagger/attempt_assassinate
+SWAP_STAB: FunctionPath = item:iron_dagger/swap_to_stab
+SWAP_WHACK: FunctionPath = item:iron_dagger/swap_to_whack
+SUCCEED_ASSASSINATE: FunctionPath = item:iron_dagger/succeed_assassinate
+
+BACKSTAB_DAMAGE_TYPE = item:weapon/backstab
+
+damage_type BACKSTAB_DAMAGE_TYPE {
+    "message_id": "player_backstab",
+    "exhaustion": 0.0,
+    "scaling": "when_caused_by_living_non_player",
+    "effects": "poking"
+}
+
+class IronDaggerBase(Weapon):
+    id = "iron_sword"
+    item_name = "Iron Dagger"
+
+class IronDaggerStab(IronDaggerBase):
+    id = "iron_ingot"
+    item_model = "iron_sword"
+    melee = {
+        damage: 6, 
+        speed: 1.6, 
+        weight: "medium"
+    }
+    swing_animation = {type: "stab", duration: 10}
+    strike = {slot: "weapon.mainhand", victim: ATTEMPT_ASSASSINATE}
+    enchantment_glint_override = True
+    useable = {
+        delay: 0.25,
+        cooldown: 1,
+        cooldown_group: "item:iron_dagger",
+        animation: "spear",
+        callback: SWAP_WHACK
+    }
+    minimum_attack_charge = 1.0
+    max_stack_size = 1
+
+
+class IronDaggerWhack(IronDaggerBase):
+    useable = {
+        delay: 0.25,
+        cooldown: 1,
+        cooldown_group: "item:iron_dagger",
+        animation: "spear",
+        callback: SWAP_STAB
+    }
+
+# We're checking the specific slot because we need to match the slot when replacing the item.
+function SWAP_WHACK:
+    execute if items entity @s weapon.mainhand (-IronDaggerStab) run item replace entity @s weapon.mainhand with IronDaggerWhack
+    execute if items entity @s weapon.offhand (-IronDaggerStab) run item replace entity @s weapon.offhand with IronDaggerWhack
+
+function SWAP_STAB:
+    execute if items entity @s weapon.mainhand (-IronDaggerWhack) run item replace entity @s weapon.mainhand with IronDaggerStab
+    execute if items entity @s weapon.offhand (-IronDaggerWhack) run item replace entity @s weapon.offhand with IronDaggerStab
+
+function ATTEMPT_ASSASSINATE:
+    # Verify whether sneaking
+    execute 
+        on attacker 
+        unless predicate {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+                "minecraft:flags": {
+                    "is_sneaking": true
+                }
+            }
+        } run return fail
+
+    # Store rotation on fakeplayers
+    execute store result score var SCORE.temp["#backstab_victim"] run data get entity @s Rotation[0] 1
+    execute on attacker store result score var SCORE.temp["#backstab_attacker"] run data get entity @s Rotation[0] 1
+
+    # Compare rotation of victim and attacker
+    SCORE.temp["#backstab_attacker"] -= SCORE.temp["#backstab_victim"]
+
+    # If Rotation is valid, success!
+    valid_look_direction_offset = (
+        (-60 <= SCORE.temp["#backstab_attacker"] <= 60)
+        or (-360 <= SCORE.temp["#backstab_attacker"] <= -300)
+        or (300 <= SCORE.temp["#backstab_attacker"] <= 360)
+    )
+
+    if valid_look_direction_offset:
+        function SUCCEED_ASSASSINATE
+
+function SUCCEED_ASSASSINATE:
+    execute at @s run playsound minecraft:item.axe.wax_off voice @a ~ ~ ~ 0.5 2
+    damage @s 1000 BACKSTAB_DAMAGE_TYPE

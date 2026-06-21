@@ -1,6 +1,5 @@
 from ../base import KitItem
 
-
 class Armor(KitItem):
     enchantments = { "binding_curse": 1 }
 

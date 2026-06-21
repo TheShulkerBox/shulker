@@ -26,7 +26,7 @@ class RageJuice(KitItem):
     use_remainder = KitItem(id="glass_bottle").as_dict()
 
 
-def rage_attribute_modifier(atk_amt: int, spd_amt: int) -> dict[str, Any]:
+def rage_attribute_modifier(atk_amt: float, spd_amt: float) -> dict[str, Any]:
     return {
         "function": "minecraft:set_attributes",
         "modifiers": [
