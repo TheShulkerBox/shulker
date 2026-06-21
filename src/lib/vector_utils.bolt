@@ -1,45 +1,160 @@
 from typing import Sequence
 
-kill_self = ~/kill_self
-function kill_self:
-    kill @s
 
-def get_unit_vector():
-    execute
-        rotated as @s
-        positioned 0.0 0.0 0.0
-        positioned ^ ^ ^1
-        summon marker
-        if function kill_self:
-            STORAGE.temp.unit_vector = SELF.Pos
+class Vector:
+    """A tiny compile-time vector expression for generated mcfunction math.
 
-    return STORAGE.temp.unit_vector
+    `Vector` is meant to make runtime vector writes read like normal Python
+    expressions while still compiling into mcfunction-friendly operations.
 
+    Examples:
+    ```bolt
+    # Store a unit vector from the current executor rotation.
+    look = Vector.unit().apply_to(STORAGE.temp.look)
 
-def apply_vector(vector: DataSource | Sequence[float] = (0.0, 0.0, 0.0)):
-    if isinstance(vector, tuple):
-        if len(vector) != 3:
-            raise ValueError(f"Vector {vector!r} expected to contain 3 values")
-        
-        for elem in vector:
-            if type(elem) is not float:
-                raise ValueError(f"Vector {vector!r} expected to have float elements")
-        
-        execute
-            positioned vector
-            positioned ^ ^ ^1
-            summon marker
-            if function kill_self:
-                STORAGE.temp.unit_vector = SELF.Pos
+    # Store the same direction with throw power baked in.
+    motion = Vector.unit(0.3).apply_to(STORAGE.temp.throwable.motion)
 
-    elif isinstance(vector, DataSource):
-        execute summon marker:
-            SELF.Pos = vector
-            tp ^ ^ ^1
-            STORAGE.temp.unit_vector = SELF.Pos
-            kill @s
-    
-    else:
-        raise ValueError("Expected either a `tuple[float, float, float]` OR `DataSource`")
+    # Equivalent scaling syntax for compile-time numeric amplifiers.
+    motion = (Vector.unit() * 0.3).apply_to(STORAGE.temp.throwable.motion)
 
-    return STORAGE.temp.unit_vector
+    # Apply a vector from a specific origin.
+    end_pos = Vector.unit(2.0).apply_from(SELF.Pos, STORAGE.temp.raycast.end)
+
+    # Load vectors from entity NBT.
+    current_motion = Vector.from_storage(SELF.Motion).store(STORAGE.temp.current_motion)
+    current_pos = Vector.from_storage(SELF.Pos).store(STORAGE.temp.current_pos)
+
+    # Use a stored vector as a direction from a specific position.
+    next_pos = Vector.from_storage(SELF.Motion).apply_from(SELF.Pos, STORAGE.temp.next_pos)
+    ```
+
+    In-repo examples:
+    - `src/component/throwable.bolt` computes an item throw motion from the
+      player rotation before handing control to the user callback.
+    """
+
+    def __init__(self, source: DataSource | Sequence[float] | None = None, amplifier: float = 1.0):
+        self.source = source
+        self.amplifier = amplifier
+
+        self._validate_amplifier(self.amplifier)
+        if self.source is not None:
+            self._validate_source(self.source)
+
+    @classmethod
+    def unit(cls, amplifier: float = 1.0):
+        """Create a vector from the current executor rotation."""
+        return cls(amplifier=amplifier)
+
+    @classmethod
+    def of(cls, source: DataSource | Sequence[float], amplifier: float = 1.0):
+        """Create a vector from a literal xyz sequence or runtime storage."""
+        return cls(source, amplifier)
+
+    @classmethod
+    def from_storage(cls, source: DataSource, amplifier: float = 1.0):
+        """Create a vector from runtime storage containing three coordinates."""
+        return cls(source, amplifier)
+
+    def __mul__(self, amplifier: float):
+        """Return a copy of this vector scaled by a compile-time number."""
+        self._validate_amplifier(amplifier)
+        return Vector(self.source, self.amplifier * amplifier)
+
+    def __rmul__(self, amplifier: float):
+        """Return a copy of this vector scaled by a compile-time number."""
+        return self * amplifier
+
+    def __neg__(self):
+        """Return a copy of this vector with its direction inverted."""
+        return self * -1.0
+
+    def with_amplifier(self, amplifier: float):
+        """Return a copy of this vector with a replacement amplifier."""
+        self._validate_amplifier(amplifier)
+        return Vector(self.source, amplifier)
+
+    def store(self, output: DataSource | None = None) -> DataSource:
+        """Store this vector's xyz value and return the storage location."""
+        if output is None:
+            output = STORAGE.temp.vector
+
+        if self.source is None:
+            return self.apply(origin=(0.0, 0.0, 0.0), output=output)
+
+        if isinstance(self.source, DataSource):
+            output = self.source
+            if self.amplifier != 1.0:
+                for index in range(3):
+                    output[index] = output[index] * self.amplifier
+        else:
+            output = [
+                self.source[0] * self.amplifier,
+                self.source[1] * self.amplifier,
+                self.source[2] * self.amplifier,
+            ]
+
+        return output
+
+    def apply(self, origin: DataSource | Sequence[float] = (0.0, 0.0, 0.0), output: DataSource | None = None) -> DataSource:
+        """Store `origin + vector` and return the output location."""
+        if output is None:
+            output = STORAGE.temp.vector
+
+        self._validate_source(origin)
+
+        if self.source is None:
+            if isinstance(origin, DataSource):
+                execute
+                    rotated as @s
+                    summon marker:
+                        SELF.Pos = origin
+                        tp @s f"^ ^ ^{self.amplifier}"
+                        output = SELF.Pos
+                        kill @s
+            else:
+                execute
+                    rotated as @s
+                    positioned origin
+                    positioned f"^ ^ ^{self.amplifier}"
+                    summon marker:
+                        output = SELF.Pos
+                        kill @s
+        else:
+            direction = self.store(STORAGE.temp.vector.direction)
+            if isinstance(origin, DataSource):
+                output = origin
+            else:
+                output = [origin[0], origin[1], origin[2]]
+
+            for index in range(3):
+                output[index] = output[index] + direction[index]
+
+        return output
+
+    def apply_from(self, origin: DataSource | Sequence[float], output: DataSource | None = None) -> DataSource:
+        """Store this vector applied from `origin` and return the output."""
+        return self.apply(origin=origin, output=output)
+
+    def apply_to(self, output: DataSource, origin: DataSource | Sequence[float] = (0.0, 0.0, 0.0)) -> DataSource:
+        """Store this vector in `output`, optionally applied from `origin`."""
+        return self.apply(origin=origin, output=output)
+
+    def _validate_source(self, source: DataSource | Sequence[float]):
+        if isinstance(source, DataSource):
+            return
+
+        if not isinstance(source, (tuple, list)):
+            raise TypeError(f"Vector source must be a tuple, list, or DataSource: {source!r}")
+
+        if len(source) != 3:
+            raise ValueError(f"Vector {source!r} expected to contain 3 values")
+
+        for elem in source:
+            if type(elem) not in (float, int):
+                raise ValueError(f"Vector {source!r} expected to have numeric elements")
+
+    def _validate_amplifier(self, amplifier: float):
+        if type(amplifier) not in (float, int):
+            raise TypeError(f"Vector amplifier must be a number: {amplifier!r}")

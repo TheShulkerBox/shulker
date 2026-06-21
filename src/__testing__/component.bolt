@@ -1,5 +1,7 @@
 from item:base import KitItem
-
+from component:throwable import CHARGE_METER
+from lib:player import tag_self
+from lib:helpers import ticks
 
 def component_callback(component: str, phase: str):
     path = ./callbacks
@@ -176,6 +178,32 @@ class TestingPotion(KitItem):
     }
 
 
+
+THROWABLE_CHARGE_TIME = 1.0
+THROWABLE_CHARGE_TICKS = ticks("1s")
+THROWABLE_CHARGE_SCALE = 100
+
+
+class TestingThrowable(KitItem):
+    id = "cobweb"
+    item_name = "Component Test: Throwable"
+    lore = "throwable item with charge and throw mechanics"
+    throwable = {
+        start: component_callback("throwable", "start"),
+        during: component_callback("throwable", "during"),
+        end: ./on_throw,
+        charge_time: THROWABLE_CHARGE_TIME,
+        minimum_charge_time: 0.5,
+        charge_curve: "Linear"
+    }
+
+
+function ./on_throw:
+    with tag_self() as thrown_item:
+        execute on origin:
+            SELF.Motion *= ((CHARGE_METER["@s"] * THROWABLE_CHARGE_SCALE) / THROWABLE_CHARGE_TICKS) / THROWABLE_CHARGE_SCALE
+
+
 # class TestingDroppable(KitItem):
 #     id = "paper"
 #     item_name = "Component Test: Droppable"
@@ -224,3 +252,4 @@ function ./give_all:
     # give @s TestingResupply
     # give @s TestingItemEnchant
     give @s arrow 64
+    give @s TestingThrowable

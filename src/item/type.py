@@ -527,7 +527,7 @@ class ItemType(type):
 
         # Phase 2: Initialize with item metadata
         output_components = deep_merge_dicts(
-            original_components, {"custom_data": {"item": self.name}}, inplace=False
+            original_components, {"custom_data": self.item_custom_data}, inplace=False
         )
 
         # Phase 3: Apply custom components and transformers
@@ -814,6 +814,33 @@ class ItemType(type):
         return f"item:{self.name}"
 
     @property
+    def mro_data(self) -> dict[str, Any]:
+        """Get this item's data-oriented MRO path."""
+        names = [
+            item_type.name
+            for item_type in reversed(self.__mro__)
+            if type(item_type) is ItemType and item_type.name not in ("item", "kit_item")
+        ]
+
+        output: dict[str, Any] = {}
+        current = output
+        for name in names:
+            current[name] = {}
+            current = current[name]
+
+        return output
+
+    @property
+    def item_custom_data(self) -> dict[str, Any]:
+        """Get the custom data that identifies this item."""
+        return {"item": self.name, "item_type": self.mro_data}
+
+    @property
+    def conditional_data(self) -> dict[str, Any]:
+        """Get the custom data used for item predicate matching."""
+        return {"item_type": self.mro_data}
+
+    @property
     def custom_components(self) -> dict[str, Component]:
         """Return the custom components on an item"""
         return self._custom_components.copy()
@@ -850,8 +877,11 @@ class ItemType(type):
         Returns:
             String like "*[custom_data~{item:'dart'}]"
         """
-        id = self.id or "*"
-        return f"{id}[custom_data~{{item:'{self.name}'}}]"
+        return f"*[custom_data~{nbt_dump(self.conditional_data)}]"
+
+    def conditional_dict(self) -> dict[str, Any]:
+        """Generate an item predicate dictionary for conditional checks."""
+        return {"predicates": {"minecraft:custom_data": self.conditional_data}}
 
     def as_dict(self) -> dict[str, Any]:
         """Convert item to a dictionary suitable for NBT serialization."""

@@ -29,9 +29,7 @@ class Using(Component):
                 "requirement": {
                     "trigger": "minecraft:using_item",
                     "conditions": {
-                        "item": {
-                            "predicates": { "minecraft:custom_data": {"item": self.item.name} }
-                        }
+                        "item": self.item.conditional_dict()
                     }
                 }
             },
@@ -70,7 +68,7 @@ class Using(Component):
         """
         path = f"{self.path}/no_longer_using"
         function path:
-            execute as @a[scores={USING_SCORE=1..}]:
+            execute as @a[scores={USING_SCORE=1..}] at @s:
                 # only schedule loop if there's atleast one person using
                 schedule function path 1t replace
                 

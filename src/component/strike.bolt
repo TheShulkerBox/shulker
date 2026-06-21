@@ -34,7 +34,7 @@ class Strike(Component):
         if self.attacker:
             criteria["attacker"] = {
                 "trigger": "minecraft:player_hurt_entity",
-                "conditions": { "entity": { "entity_type": "player" }, "player": item_match(self.item.name, self.slot) }
+                "conditions": { "entity": { "entity_type": "player" }, "player": item_match(self.item, self.slot) }
             }
             requirements.append("attacker")
 
@@ -42,7 +42,7 @@ class Strike(Component):
         if self.victim:
             criteria["victim"] = {
                 "trigger": "minecraft:entity_hurt_player",
-                "conditions": { "damage": {"source_entity": { "entity_type": "player" } | item_match(self.item.name, self.slot)} }
+                "conditions": { "damage": {"source_entity": { "entity_type": "player" } | item_match(self.item, self.slot)} }
             }
             requirements.append("victim")
 

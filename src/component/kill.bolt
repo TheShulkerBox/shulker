@@ -5,12 +5,12 @@ from lib:errors import CustomComponentError
 from lib:helpers import nbt_dump
 from lib:const import HAND_SLOTS
 
+from item:type import ItemType
 from ./type import Component
 
 
-def item_match(item_name: str, slot: str = None):
-    predicate = { "predicates": { "minecraft:custom_data": {"item": item_name} } }
-    return { "slots": { slot: predicate } }
+def item_match(item: ItemType, slot: str = None):
+    return { "slots": { slot: item.conditional_dict() } }
 
 
 class Kill(Component):
@@ -40,7 +40,7 @@ class Kill(Component):
         if self.killer:
             criteria["killer"] = {
                 "trigger": "minecraft:player_killed_entity",
-                "conditions": { "entity": { "entity_type": "player" }, "player": item_match(self.item.name, self.slot) }
+                "conditions": { "entity": { "entity_type": "player" }, "player": item_match(self.item, self.slot) }
             }
             requirements.append(["killer"])
 
@@ -48,7 +48,7 @@ class Kill(Component):
         if self.victim:
             criteria["victim"] = {
                 "trigger": "minecraft:entity_killed_player",
-                "conditions": { "entity": { "entity_type": "player" } | item_match(self.item.name, self.slot) }
+                "conditions": { "entity": { "entity_type": "player" } | item_match(self.item, self.slot) }
             }
             requirements.append(["victim"])
 

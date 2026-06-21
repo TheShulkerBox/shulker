@@ -42,9 +42,7 @@ class Bow(Component):
                 "requirement": {
                     "trigger": "minecraft:using_item",
                     "conditions": {
-                        "item": {
-                            "predicates": { "minecraft:custom_data": {"item": self.item.name} }
-                        }
+                        "item": self.item.conditional_dict()
                     }
                 }
             },

@@ -45,11 +45,7 @@ class Ticking(Component, base_type=list[TickingEntry]):
                     "entity": "this",
                     "predicate": {
                         "minecraft:slots": {
-                            entry.slot: {
-                                "predicates": {
-                                   "minecraft:custom_data": { "item": self.item.name }
-                                }
-                            }
+                            entry.slot: self.item.conditional_dict()
                         }
                     }
                 })

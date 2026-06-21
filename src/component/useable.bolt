@@ -32,7 +32,7 @@ class Useable(Component):
 
     The main trick for infinite items is toggling some data to trick MC into not consuming the item.
     """
-    callback: Annotated[FunctionPath, "Function path that gets called when you use the item"]
+    callback: Annotated[FunctionPath | None, "Function path that gets called when you use the item"] = None
     infinite: Annotated[bool, "Whether the item should be infinite or not"] = False
     delay: Annotated[float, "How long you hold right-click before using the item"] = 0.05
     cooldown: Annotated[float, "How much you have to wait before you can use the item again"] = 0.25
@@ -49,11 +49,7 @@ class Useable(Component):
                 "on_use": {
                     "trigger": "minecraft:consume_item",
                     "conditions": {
-                        "item": {
-                            "predicates": {
-                                "minecraft:custom_data": { "item": self.item.name }
-                            }
-                        }
+                        "item": self.item.conditional_dict()
                     }
                 }
             },
@@ -73,8 +69,9 @@ class Useable(Component):
                 if items entity @s weapon.mainhand self.item.conditional_string():
                     item modify entity @s weapon.mainhand {function: "set_custom_data", tag: {infinite: false}}
                     item modify entity @s weapon.mainhand {function: "set_custom_data", tag: {infinite: true}}
-                    
-            function self.callback
+            
+            if self.callback:
+                function self.callback
 
         # setup base vanilla components
         output = {

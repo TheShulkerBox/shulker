@@ -60,11 +60,7 @@ class Sneaking(Component):
 
         if self.slot:
             effects[0]["requirements"]["predicate"]["slots"] = {
-                self.slot: {
-                    "predicates": {
-                        "minecraft:custom_data": { "item": self.item.name }
-                    }
-                }
+                self.slot: self.item.conditional_dict()
             }
 
         return {item_enchant: RecursiveComponent(ItemEnchant, {"minecraft:tick": effects})}

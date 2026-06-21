@@ -1,12 +1,127 @@
-# from ./using import Using
-# from ./type import Component, ComponentBuildError
+from dataclasses import field
+from functools import cached_property
 
-# CHARGE_METER = Scoreboard("component.throwable_charge", criteria="dummy")
+from item:type import ItemType
+from lib:xp import XP
+from lib:helpers import deep_merge_dicts, ticks
+from lib:player import tag_self
+from lib:vector_utils import Vector
+from server:services/item_dropping import ITEM_PROCESSED_TAG
+
+from ./using import Using
+from ./type import ComponentBuildError, RecursiveComponent
+from ./droppable import Droppable
+
+CHARGE_METER = Scoreboard("component.throwable_charge", criteria="dummy")
+THROWABLE_ITEM_TAG = "component.throwable.item"
+THROWABLE_ITEM_TAG_INIT = "component.throwable.item_init"
 
 
-# class Throwable(Component):
-#     charge_time: int
-#     keep_item: 
+class Throwable(Using):
+    """Defines items you can throw using right click.
+    
+    If `charge_time` is defined, you can hold right click to charge the throw. Letting
+    go would release the throw (invoking the callback).
+    """
+    item_data: Annotated[dict[str, Any], "Extra data to be merged into the summoned item"] = field(default_factory=dict)
+    charge_time: Annotated[float, "The time (in seconds) to charge the throw"] = 0.0
+    minimum_charge_time: Annotated[float, "The minimum time (in seconds) to charge the throw"] = 0.0
+    charge_curve: Annotated[Literal["Linear", "Exponential"], "The easing function for the charge"] = "Linear"
 
-#     def build(self):
-#         ...
+    def build(self):
+        if self.minimum_charge_time > self.charge_time:
+            raise ComponentBuildError(
+                f"Minimum charge time ({self.minimum_charge_time}) cannot be greater than charge time ({self.charge_time})"
+            )
+        
+        self.start = self.on_start
+        self.during = self.on_during
+        self._user_end = self.end
+        self.end = self.on_throw
+
+        return super().build()
+        
+    
+    def post_build(self, output_components: dict[str, Any], item_obj: ItemType):
+        function self.on_throw:
+            if CHARGE_METER["@s"] >= self.minimum_charge_ticks:
+                item_data = {
+                    Item: {id: item_obj.id, components: {}},
+                    Tags: [THROWABLE_ITEM_TAG, THROWABLE_ITEM_TAG_INIT, ITEM_PROCESSED_TAG],
+                    Owner: [0,0,0,0],
+                    PickupDelay: 32767,
+                    Age: ticks("5m") - (ticks("4m30s"))
+                }
+
+                # we need to maintain the other visual components to ensure it matches
+                item_model = output_components.get("item_model")
+                if item_model:
+                    item_data["components"]["item_model"] = item_model
+                
+                enchantment_glint_override = output_components.get("enchantment_glint_override")
+                if enchantment_glint_override:
+                    item_data["components"]["enchantment_glint_override"] = enchantment_glint_override
+                
+                # configured item data can merge into this (can override some of the above ^)
+                if self.item_data:
+                    deep_merge_dicts(item_data, self.item_data, inplace=True)
+                
+                # As per code, summon item relative position as if the player threw it
+                # https://mcsrc.dev/1/26.2/net/minecraft/world/entity/LivingEntity#L3436
+                execute anchored eyes run summon item ^ ^-0.3 ^ item_data
+                
+                # if self.charge_time:
+
+                item_motion_vector = Vector.unit(0.3).apply_to(STORAGE.temp.throwable.motion)
+                STORAGE.temp.uuid = SELF.UUID
+
+                with tag_self():
+                    # we have to select the item
+                    execute as @n[type=item, tag=THROWABLE_ITEM_TAG_INIT] at @s run function ~/as_item:
+                        tag @s remove THROWABLE_ITEM_TAG_INIT
+                        SELF.Thrower = STORAGE.temp.uuid
+
+                        # https://mcsrc.dev/1/26.2/net/minecraft/world/entity/LivingEntity#L3488
+                        SELF.Motion = item_motion_vector
+                        if self._user_end:
+                            function self._user_end
+
+            CHARGE_METER["@s"].reset()
+
+    @property
+    def charge_ticks(self):
+        return int(self.charge_time * 20)
+
+    @property
+    def minimum_charge_ticks(self):
+        return int(self.minimum_charge_time * 20)
+
+    @cached_property
+    def on_start(self):
+        path = f"{self.path}/start"
+        function path:
+            CHARGE_METER["@s"].reset()
+            XP.set_points(0)
+
+            if self.start:
+                function self.start
+
+        return path
+
+    @cached_property
+    def on_during(self):
+        path = f"{self.path}/during"
+        function path:
+            if CHARGE_METER["@s"] < self.charge_ticks:
+                CHARGE_METER["@s"] += 1
+
+            XP.set_points((CHARGE_METER["@s"] * 100) / self.charge_ticks)
+
+            if self.during:
+                function self.during
+
+        return path
+
+    @cached_property
+    def on_throw(self):
+        return f"{self.path}/throw"

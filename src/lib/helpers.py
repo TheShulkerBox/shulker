@@ -186,28 +186,36 @@ def camel_case_to_snake_case(s: str) -> str:
 
 
 def ticks(period: str | int) -> int:
-    """Converts a period string (e.g., "1s", "50t") to ticks (1s = 20t)."""
+    """Converts a period string (e.g., "1s", "50t", "5m20s") to ticks (1s = 20t)."""
     if type(period) is int:
         return period
 
-    match = re.match(r"(\d+)(t|s|m|d)", period)
-    if not match:
+    matches = re.findall(r"(\d+)(t|s|m|h|d)", period)
+    if not matches:
         raise ValueError(f"Invalid period format: {period}")
 
-    value, unit = match.groups()
-    value = int(value)
+    # ensure the whole string was consumed (no garbage between/around matches)
+    if re.sub(r"(\d+)(t|s|m|h|d)", "", period) != "":
+        raise ValueError(f"Invalid period format: {period}")
 
-    match unit:
-        case "t":
-            return value
-        case "s":
-            return value * 20
-        case "m":
-            return value * 20 * 60
-        case "d":
-            return value * 24000
+    total = 0
+    for value, unit in matches:
+        value = int(value)
+        match unit:
+            case "t":
+                total += value
+            case "s":
+                total += value * 20
+            case "m":
+                total += value * 20 * 60
+            case "h":
+                total += value * 20 * 3600
+            case "d":
+                total += value * 24000
+            case _:
+                raise ValueError(f"Unknown time unit: {unit}")
 
-    raise ValueError(f"Unknown time unit: {unit}")
+    return total
 
 
 def path_to_string(path: str) -> str:

@@ -32,7 +32,7 @@ class Droppable(Component):
     
     @classmethod
     def process_item_entity(cls, item_entity: DataSource):
-        component_data = item_entity.item."minecraft:custom_data"."component".droppable
+        component_data = item_entity.Item."minecraft:custom_data"."component".droppable
         
         if component_data.type == "disabled":
             item_entity.merge({

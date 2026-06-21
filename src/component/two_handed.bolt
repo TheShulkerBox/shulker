@@ -23,11 +23,7 @@ class TwoHanded(Component):
                         "player": {
                             "slots": {
                                 # are we holding a two-handed function
-                                "weapon.mainhand": {
-                                    "predicates": {
-                                        "minecraft:custom_data": { "item": self.item.name }
-                                    }
-                                },
+                                "weapon.mainhand": self.item.conditional_dict(),
                                 # and do we have something in the offhand
                                 "weapon.offhand": { "count": { "min": 1 } }
                             }
@@ -40,11 +36,7 @@ class TwoHanded(Component):
                         "player": {
                             "slots": {
                                 # is this in the offhand
-                                "weapon.offhand": {
-                                    "predicates": {
-                                        "minecraft:custom_data": { "item": self.item.name }
-                                    }
-                                }
+                                "weapon.offhand": self.item.conditional_dict()
                             }
                         }
                     }
