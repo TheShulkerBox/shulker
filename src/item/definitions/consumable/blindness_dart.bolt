@@ -8,7 +8,7 @@ class BlindnessDart(KitItem):
         custom_effects:[
             {
                 id: "blindness", 
-                duration: 40
+                duration: ticks("2s")
             }
         ]
     }
