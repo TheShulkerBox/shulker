@@ -1,6 +1,5 @@
 from item:base import KitItem
 from lib:motion import apply_motion_vector
-
 from server:core import SERVER_TICK
 
 class Dart(KitItem):
@@ -120,3 +119,17 @@ function ./hit:
 
 function ./left_click:
     tellraw @s "left clicked"
+
+
+
+# class BoostJump(TempAttributes):
+#     jump_height = {"value": 1, "op": "add_multiplied_base"}
+#     safe_fall_distance = {"value": 1, "op": "add_value"}
+
+# # ...
+# function ./apply:
+#     BoostJump.apply()
+        
+
+# function ./reset:
+#     BoostJump.reset()

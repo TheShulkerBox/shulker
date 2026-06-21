@@ -1,0 +1,110 @@
+# from lib.helpers import camel_case_to_snake_case
+
+# from kit:events import KIT_RESET
+
+# TEMP_ATTRIBUTE_RESET = ./temp_reset
+# AttributeOp = Literal["add_value", "add_multiplied_base", "add_multiplied_total"]
+# AttributeSpec = dict[str, Any]
+
+
+# def _reset_attribute(type: str, id: str):
+#     attribute @s type modifier remove id
+
+
+# class TempAttributes:
+#     """Helps manage temporary attributes that should reset naturally (death, etc).
+
+#     For example, assassin gets temporary jump boost attributes when shifting. These
+#     should be reset if a) assassin stops shifting or b) assassin dies.
+
+#         class BoostJump(TempAttributes):
+#             jump_height = {"value": 1, "op": "add_multiplied_base"}
+#             safe_fall_distance = {"value": 1, "op": "add_value"}
+        
+#         # ...
+
+#         function ./apply:
+#             BoostJump.apply()
+        
+#         function ./reset:
+#             BoostJump.reset()
+#     """
+#     attributes: list[AttributeSpec] = []
+
+#     def __init_subclass__(cls):
+#         if cls.__name__ == "TempAttributes":
+#             return super().__init_subclass__()  # Don't register the base class
+
+#         super().__init_subclass__()
+
+#         cls.attributes = []
+#         cls._attribute_group = camel_case_to_snake_case(cls.__name__)
+        
+#         for name, spec in cls.__dict__.items():
+#             if name.startswith("_"):
+#                 continue
+
+#             spec = cls._normalize_spec(spec)
+#             if spec is None:
+#                 continue
+
+#             attr_type = spec.get("type", name)
+#             attr_id = spec.get("id", f"temp_attribute.{cls._attribute_group}")
+            
+#             attr = {
+#                 "type": attr_type,
+#                 "value": spec["value"],
+#                 "op": spec["op"],
+#                 "id": attr_id,
+#             }
+#             cls.attributes.append(attr)
+        
+#             append function TEMP_ATTRIBUTE_RESET:
+#                 _reset_attribute(attr_type, attr_id)
+        
+#     @classmethod
+#     def _normalize_spec(cls, spec: Any) -> AttributeSpec | None:
+#         if isinstance(spec, tuple) and len(spec) == 1:
+#             spec = spec[0]
+
+#         if not isinstance(spec, dict):
+#             return None
+
+#         return spec
+
+#     @classmethod
+#     def attr(cls, type: str, value: float, op: AttributeOp, id: str = ""):
+#         if not id:
+#             id = f"temp_attribute.{cls._attribute_group}.{type}"
+
+#         attr = {"type": type, "value": value, "op": op, "id": id}
+#         cls.attributes.append(attr)
+        
+#         append function TEMP_ATTRIBUTE_RESET:
+#             _reset_attribute(type, id)
+        
+#         return cls
+    
+#     @classmethod
+#     def apply(cls):
+#         for attr in cls.attributes:
+#             attr_type = attr["type"]
+#             attr_id = attr["id"]
+#             attr_value = attr["value"]
+#             attr_op = attr["op"]
+
+#             if attr_op == "add_value":
+#                 attribute @s attr_type modifier add attr_id attr_value add_value
+#             elif attr_op == "add_multiplied_base":
+#                 attribute @s attr_type modifier add attr_id attr_value add_multiplied_base
+#             elif attr_op == "add_multiplied_total":
+#                 attribute @s attr_type modifier add attr_id attr_value add_multiplied_total
+    
+#     @classmethod
+#     def reset(cls):
+#         for attr in cls.attributes:
+#             _reset_attribute(attr["type"], attr["id"])
+
+
+# append function KIT_RESET:
+#     function TEMP_ATTRIBUTE_RESET

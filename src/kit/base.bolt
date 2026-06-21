@@ -3,6 +3,7 @@ from typing import ClassVar, NamedTuple
 
 from item:base import Item, KitItem
 from item:type import ItemType
+from item:definitions/armor import Armor
 from lib:helpers import id_to_number
 from lib:db import Database
 from lib:const import ARMOR_SLOTS
@@ -34,11 +35,11 @@ class Kit:
 
     def __post_init__(self):
         if "body" not in self.armor:
-            self.armor["body"] = KitItem(
+            self.armor["body"] = Armor(
                 id="barrier",
                 item_name="Hidden Body Slot",
                 lore=["You should never see this!"],
-                equippable={slot: "body"},
+                equippable={slot: "body", equip_sound: {sound_id: ""}},
             )
 
         self._all_kits.append(self)
