@@ -1,5 +1,5 @@
 from item:definitions/weapon import Bow
-from item:definitions/consumable/blindness_dart import BlindnessDart
+from item:definitions/consumables/blindness_dart import BlindnessDart
 
 ON_KILL: FunctionPath = item:iron_dagger/on_kill
 

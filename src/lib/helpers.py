@@ -185,8 +185,8 @@ def camel_case_to_snake_case(s: str) -> str:
     return _CAMEL_TO_SNAKE_PAT2.sub(r"\1_\2", step1).lower()
 
 
-def ticks(period: str | int) -> int:
-    """Converts a period string (e.g., "1s", "50t", "5m20s") to ticks (1s = 20t)."""
+def _parse_to_ticks(period: str | int) -> int:
+    """Shared parser: converts a period string or int (assumed ticks) to total ticks."""
     if type(period) is int:
         return period
 
@@ -216,6 +216,16 @@ def ticks(period: str | int) -> int:
                 raise ValueError(f"Unknown time unit: {unit}")
 
     return total
+
+
+def ticks(period: str | int) -> int:
+    """Converts a period string (e.g., "1s", "50t", "5m20s") to ticks (1s = 20t)."""
+    return _parse_to_ticks(period)
+
+
+def seconds(period: str | int) -> int:
+    """Converts a period string (e.g., "1s", "50t", "5m20s") to whole seconds (floored)."""
+    return _parse_to_ticks(period) // 20
 
 
 def path_to_string(path: str) -> str:

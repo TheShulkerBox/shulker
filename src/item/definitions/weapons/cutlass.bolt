@@ -1,0 +1,66 @@
+from item:definitions/weapon import Weapon
+
+
+class Cutlass:
+    class Base(Weapon):
+        lore = ["This sword can only handle a limited number of strikes!"]
+        melee = {
+            damage: 4.5,
+            speed: 1.6,
+            weight: "medium"
+        }
+
+
+    class Golden(Base):
+        id = "golden_sword"
+        item_name = "Golden Cutlass"
+
+
+    class Tin(Base):
+        id = "stone_sword"
+        item_name = "Tin Cutlass"
+        melee = {
+            damage: 5,
+            speed: 1.6,
+            weight: "medium"
+        }
+
+
+    class Silver(Base):
+        id = "iron_sword"
+        item_name = "Silver Cutlass"
+        melee = {
+            damage: 6,
+            speed: 1.6,
+            weight: "medium"
+        }
+
+
+    class Platinum(Base):
+        id = "diamond_sword"
+        item_name = {text: "Platinum Cutlass", color: "#F3EDFF"}
+        melee = {
+            damage: 7,
+            speed: 1.6,
+            weight: "medium"
+        }
+
+
+    class Titanium(Base):
+        id = "netherite_sword"
+        item_name = {text: "Titanium Cutlass", color: "#D0BAFE"}
+        melee = {
+            damage: 8,
+            speed: 1.6,
+            weight: "medium"
+        }
+
+
+    class TitaniumPlus(Titanium):
+        item_name = {text: "Titanium+ Cutlass", color: "#D0BAFE"}
+        enchantment_glint_override = true
+
+
+    class TitaniumPlusPlus(Titanium):
+        item_name = {text: "Titanium++ Cutlass", color: "#D0BAFE"}
+        enchantment_glint_override = true

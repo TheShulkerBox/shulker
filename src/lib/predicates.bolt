@@ -1,0 +1,2 @@
+ON_GROUND_PREDICATE = {condition: "minecraft:entity_properties", entity: "this", predicate: {"minecraft:flags": {is_on_ground: true}}}
+SNEAKING_PREDICATE = {condition: "minecraft:entity_properties", entity: "this", predicate: {flags: {is_sneaking: true}}}

@@ -1,9 +1,8 @@
 from kit:base import Kit
 from item:base import KitItem
-from item:definitions/food import Food
 from item:definitions/armor import Armor 
-from item:definitions/weapon import Weapon
-
+from item:definitions/consumables/net import Net
+from item:definitions/food import Food
 from item:definitions/weapons/fishing_spear import FishingSpear
 
 Spearfisher = Kit(
@@ -18,9 +17,8 @@ Spearfisher = Kit(
     },
     hotbar=[
         FishingSpear(count=2),
-        # Net TODO
-        # Net TODO
-        Food(count=2)
+        Net(count=3),
+        Food(count=2),
     ]
 )
 

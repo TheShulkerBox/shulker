@@ -3,7 +3,7 @@ from item:base import KitItem
 from item:definitions/food import Food
 from item:definitions/armor import Armor 
 from item:definitions/weapon import Weapon
-from item:definitions/consumable/horns import CourageHorn, ResilienceHorn
+from item:definitions/consumables/horns import CourageHorn, ResilienceHorn
 
 captain = Kit(
     name="Captain",

@@ -2,7 +2,9 @@ from dataclasses import dataclass, field
 from functools import cached_property
 
 from lib:helpers import ticks, nbt_dump, coerce_type
+from lib:predicates import SNEAKING_PREDICATE
 from server:events import ON_PLAYER_RESET
+
 from ./item_enchant import ItemEnchant
 from ./type import Component, ComponentBuildError, RecursiveComponent
 
@@ -26,13 +28,7 @@ class Sneaking(Component):
         effects = [
             # tick if we are sneaking
             {
-                "requirements": {
-                    "condition": "minecraft:entity_properties",
-                    "entity": "this",
-                    "predicate": {
-                        "flags": { "is_sneaking": true },
-                    }
-                },
+                "requirements": SNEAKING_PREDICATE,
                 "effect": { "type": "minecraft:run_function", "function": self.while_sneaking }
             },
 

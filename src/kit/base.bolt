@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from typing import ClassVar, NamedTuple
 
 from item:base import Item, KitItem
-from item:type import ItemType
+from item:type import ItemStack, ItemType
 from item:definitions/armor import Armor
 from lib:helpers import id_to_number
 from lib:db import Database
@@ -17,7 +17,7 @@ KITS_ROM = Database(Data.storage("rom:main").root.kits)
 KIT_ID_REQUEST = Scoreboard("kit.request_id", criteria="dummy")
 KIT_ID = Scoreboard("kit.id", criteria="dummy")
 
-item_type = KitItem | tuple[KitItem, int]
+item_type = KitItem | ItemStack
 
 @dataclass
 class Kit:
@@ -29,7 +29,7 @@ class Kit:
     hotbar: list[item_type] = field(default_factory=list)
     offhand: item_type | None = None
 
-    _all_items: list[ItemType] = field(init=False, default_factory=list)
+    _all_items: list[item_type] = field(init=False, default_factory=list)
     _all_kits: ClassVar[list["Kit"]] = []
     _storage: ClassVar[Database] = Database(STORAGE.rom.kits)
 
@@ -104,7 +104,10 @@ class Kit:
         function ./loadout:
             function ~/{self.id}/apply:
                 for slot, item in self:
-                    item replace entity @s slot with item item.count
+                    if isinstance(item, ItemStack):
+                        item replace entity @s slot with item item.count
+                    else:
+                        item replace entity @s slot with item
                 hotbar_with_slots_modify {function: "set_custom_data", tag: {taco: bell}}
 
             function ~/{self.id}/mannequin:

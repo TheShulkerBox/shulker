@@ -1,0 +1,58 @@
+from dataclasses import field
+from functools import cached_property
+
+from item:type import ItemType
+from lib:xp import XP
+from lib:helpers import deep_merge_dicts, ticks, seconds
+from lib:player import tag_self
+from server:core import SPAWN_ENTITIES_LOADED
+
+from ./using import Using
+from ./type import ComponentBuildError, RecursiveComponent
+
+
+# SHIELD_BREAK_STAND_TAG = "component.shield.shield_breaker_stand"
+SHIELD_DISABLE_DAMAGE_TYPE = component:shield_disable
+
+append function SPAWN_ENTITIES_LOADED:
+    execute positioned 0.0 0.0 0.0 run function ./init_stand:
+        execute unless entity @e[type=armor_stand, tag=SHIELD_BREAK_STAND_TAG, limit=1]:
+            summon armor_stand ~ ~ ~ {
+                Tags: [SHIELD_BREAK_STAND_TAG],
+                Marker: true,
+                Health: 1000.0f,
+                Silent: true,
+                NoGravity: true,
+                DeathLootTable: "minecraft:empty",
+                Invulnerable: true,
+                ShowArms: true,
+                equipment: {mainhand: {id: "iron_sword", components: {weapon: {disable_blocking_for_seconds: 1.0}}}}
+            }
+# damage_type SHIELD_DISABLE_DAMAGE_TYPE {
+#     "message_id": "player_shield_disable",
+#     "exhaustion": 0.0,
+#     "scaling": "when_caused_by_living_non_player",
+#     "effects": "hurt"
+# }
+
+
+class ShieldHit(Using):
+    blocked: Annotated[FunctionPath | None, "Function path for when you block an attack"] = None
+    disabled: Annotated[FunctionPath | None, "Function path for when you disable the shield"] = None
+
+    def build(self):
+        ...
+
+    @classmethod
+    def disable(cls, period: str):
+        """Only call this if the player is currently shielding, there's no protections.
+        
+        ```bolt
+        function ~/while_shielding:
+            Shield.disable("10s")
+        ```
+        """
+        with tag_self() as PLAYER_TAG:
+            execute as @e[type=armor_stand, tag=SHIELD_BREAK_STAND_TAG, limit=1]:
+                SELF.equipment.mainhand.components."minecraft:weapon".disable_blocking_for_seconds = seconds(period)
+                damage @p[tag=PLAYER_TAG] 1.0 minecraft:player_attack by @s

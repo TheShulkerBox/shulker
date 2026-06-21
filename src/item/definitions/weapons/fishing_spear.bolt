@@ -1,5 +1,5 @@
 from item:definitions/weapon import Weapon
-from item:definitions/consumable/flounder import Flounder
+from item:definitions/consumables/flounder import Flounder
 
 GIVE_FISH: FunctionPath = item:fishing_spear/give_fish
 

@@ -1,10 +1,21 @@
 from server:events import ON_JOIN
+from item:base import KitItem
+from kit:base import KIT_ID, KITS_ROM
 
 KIT_RESET = kit:event/reset
+KIT_RESTOCK = kit:restock
 
 function KIT_RESET:
-    clear @s *[custom_data~{kit_item: true}]
+    clear @s (-KitItem)
     effect clear @s
+
+function KIT_RESTOCK:
+    execute unless score @s KIT_ID matches 1.. return fail
+
+    function KIT_RESET
+    STORAGE.macro = {"kit_id": KITS_ROM.get(hashed_id=KIT_ID["@s"]).id}
+    with var STORAGE.macro:
+        $function kit:loadout/$(kit_id)/apply
 
 
 append function ON_JOIN:

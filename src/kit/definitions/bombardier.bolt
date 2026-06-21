@@ -3,9 +3,9 @@ from item:base import KitItem
 from item:definitions/food import Food
 from item:definitions/armor import Armor 
 from item:definitions/weapon import Weapon
-from item:definitions/throwable/flash_bomb import FlashBomb
-from item:definitions/throwable/pitch_puck import PitchPuck
-from item:definitions/throwable/flame_bomb import FlameBomb
+from item:definitions/consumables/flash_bomb import FlashBomb
+from item:definitions/consumables/pitch_puck import PitchPuck
+from item:definitions/consumables/flame_bomb import FlameBomb
 
 bombardier = Kit(
     name="Bombardier",

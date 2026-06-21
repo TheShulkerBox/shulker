@@ -66,7 +66,6 @@ class Item(metaclass=ItemType):
     """
 
     id = "paper"
-    count = 1
     tool = { "can_destroy_blocks_in_creative": false, "rules": [] }
     unbreakable = {}
     tooltip_display = { "hidden_components": [ "unbreakable", "enchantments" ] }
@@ -89,8 +88,8 @@ class Item(metaclass=ItemType):
                 }
 
             function f"item:give/{self.name}":
-                give @s self self.count
+                give @s self
 
 
 class KitItem(Item):
-    custom_data = { kit_item: true }
+    """Base for all kit items"""

@@ -48,6 +48,39 @@ from lib.rich import console, Tree, Syntax, Group, Panel, RenderableType, Text
 from lib.types import Remove
 
 
+@dataclasses.dataclass(frozen=True)
+class ItemStack:
+    """Runtime stack metadata for an item without changing item identity.
+
+    Item classes represent the actual item definition and predicate identity.
+    ItemStack wraps one of those definitions with a count for places like give
+    commands, kit loadouts, or storage serialization.
+    """
+
+    item: "ItemType"
+    count: int
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self.item, name)
+
+    def item_string(self) -> str:
+        return self.item.item_string()
+
+    def conditional_string(self) -> str:
+        return self.item.conditional_string()
+
+    def conditional_dict(self) -> dict[str, Any]:
+        return self.item.conditional_dict()
+
+    def as_dict(self) -> dict[str, Any]:
+        data = self.item.as_dict()
+        data["count"] = self.count
+        return data
+
+    __neg__ = __invert__ = conditional_string
+    __pos__ = __str__ = item_string
+
+
 class ItemType(type):
     """Item system metaclass and component resolution logic.
 
@@ -538,12 +571,9 @@ class ItemType(type):
             Transformer.registered, output_components
         )
 
-        # Phase 4: Extract special fields (id and count aren't component data)
+        # Phase 4: Extract special fields (id isn't component data)
         if "id" in output_components:
             self.id = output_components.pop("id")
-
-        if "count" in output_components:
-            self.count = output_components.pop("count")
 
         # Phase 5: Allow components/transformers to post-process
         for component_or_transformer in chain(custom_components, custom_transformers):
@@ -819,7 +849,7 @@ class ItemType(type):
         names = [
             item_type.name
             for item_type in reversed(self.__mro__)
-            if type(item_type) is ItemType and item_type.name not in ("item", "kit_item")
+            if type(item_type) is ItemType and item_type.name != "item"
         ]
 
         output: dict[str, Any] = {}
@@ -890,7 +920,7 @@ class ItemType(type):
             (f"!{k}" if v is Remove else k): ({} if v is Remove else v)
             for k, v in self.components.items()
         }
-        return {"id": self.id, "count": self.count, "components": components}
+        return {"id": self.id, "count": 1, "components": components}
 
     __neg__ = __invert__ = conditional_string
     __pos__ = __str__ = item_string
@@ -983,18 +1013,19 @@ class ItemType(type):
         )
         return f"{self.name}[{fields}]"
 
-    def __call__(self, /, **kwargs) -> Self:
-        """Create an anonymous variant of this item with modified components.
+    def __call__(self, /, **kwargs) -> Self | ItemStack:
+        """Create an anonymous variant or stack of this item.
 
         This allows you to create item variations without defining new classes.
         The variant inherits all components from the parent item and overrides
-        only the specified ones.
+        only the specified ones. Passing count creates an ItemStack wrapper
+        instead of changing the item identity.
 
         Args:
-            **kwargs: Component overrides (e.g., item_name="Variant", count=5)
+            **kwargs: Component overrides (e.g., item_name="Variant") and/or count
 
         Returns:
-            A new anonymous item class with the specified changes
+            A new anonymous item class or ItemStack with the specified changes
 
         Raises:
             ItemError: If called without any component changes
@@ -1007,19 +1038,19 @@ class ItemType(type):
                 damage = 10
 
             # Create variants
-            fire_sword = Sword(item_name="Fire Sword", damage=15)
+            fire_sword = Sword(item_name="Fire Sword", damage=15, count=2)
             ice_sword = Sword(item_name="Ice Sword", damage=12)
 
         Note:
             Each variant gets a unique generated name to avoid collisions.
             The name is based on the calling location and a counter.
         """
+        count = kwargs.pop("count", None)
+
         if not kwargs:
+            if count is not None:
+                return ItemStack(self, count)
             raise ItemError(f"Cannot instantiate `{self.name}` without changes!")
-        
-        if count := kwargs.get("count"):
-            self.count = count
-            return self
 
         runtime = self.ctx.inject(Runtime)
 
@@ -1032,4 +1063,7 @@ class ItemType(type):
         )
 
         # Create anonymous subclass with overrides
-        return type(name, (self,), kwargs)
+        item = type(name, (self,), kwargs)
+        if count is not None:
+            return ItemStack(item, count)
+        return item

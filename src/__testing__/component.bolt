@@ -1,9 +1,6 @@
 from item:base import KitItem
-from component:throwable import CHARGE_METER
-from lib:player import tag_self
-from lib:helpers import ticks
 
-def component_callback(component: str, phase: str):
+def _component_callback(component: str, phase: str):
     path = ./callbacks
     path = f"{path}/{component}/{phase}"
 
@@ -27,13 +24,13 @@ class TestingWeapon(KitItem):
         weight: "heavy",
     }
     two_handed = {
-        callback: component_callback("two_handed", "callback"),
+        callback: _component_callback("two_handed", "callback"),
     }
     strike = {
-        attacker: component_callback("strike", "attacker"),
+        attacker: _component_callback("strike", "attacker"),
     }
     kill = {
-        victim: component_callback("kill", "victim"),
+        victim: _component_callback("kill", "victim"),
     }
 
 
@@ -43,14 +40,14 @@ class TestingUsing(KitItem):
     item_name = "Component Test: Using"
     lore = "using start, during, end, cooldown, animation, and sound"
     using = {
-        start: component_callback("using", "start"),
-        during: component_callback("using", "during"),
-        end: component_callback("using", "end"),
+        start: _component_callback("using", "start"),
+        during: _component_callback("using", "during"),
+        end: _component_callback("using", "end"),
         animation: "spyglass",
         sound: "minecraft:item.spyglass.use",
     }
     left_click = {
-        callback: component_callback("using", "left_click")
+        callback: _component_callback("using", "left_click")
     }
 
 
@@ -60,9 +57,9 @@ class TestingSneaking(KitItem):
     lore = "sneaking start, during, and end"
     dyed_color = "#2c8f6b"
     sneaking = {
-        start: component_callback("sneaking", "start"),
-        during: component_callback("sneaking", "during"),
-        end: component_callback("sneaking", "end"),
+        start: _component_callback("sneaking", "start"),
+        during: _component_callback("sneaking", "during"),
+        end: _component_callback("sneaking", "end"),
         slot: "armor.feet"
     }
 
@@ -73,7 +70,7 @@ class TestingUseable(KitItem):
     item_name = "Component Test: Useable"
     lore = "useable callback, infinite, delay, cooldown, sound, and effects"
     useable = {
-        callback: component_callback("useable", "callback"),
+        callback: _component_callback("useable", "callback"),
         infinite: true,
         delay: 0.4,
         cooldown: 2.25,
@@ -100,10 +97,10 @@ class TestingBow(KitItem):
     item_name = "Component Test: Bow"
     lore = "bow nock, charging, charged, unnock, fire, and hit"
     bow = {
-        nock: component_callback("bow", "nock"),
-        charging: component_callback("bow", "charging"),
-        charged: component_callback("bow", "charged"),
-        unnock: component_callback("bow", "unnock"),
+        nock: _component_callback("bow", "nock"),
+        charging: _component_callback("bow", "charging"),
+        charged: _component_callback("bow", "charged"),
+        unnock: _component_callback("bow", "unnock"),
         fire: ./fire,
         hit: ./hit,
     }
@@ -124,11 +121,11 @@ class TestingTicking(KitItem):
     lore = "ticking callback and period"
     ticking = [
         {
-            callback: component_callback("ticking", "2s"),
+            callback: _component_callback("ticking", "2s"),
             period: "2s",
         },
         {
-            callback: component_callback("ticking", "5s"),
+            callback: _component_callback("ticking", "5s"),
             period: "5s",
         }
     ]
@@ -180,8 +177,6 @@ class TestingPotion(KitItem):
 
 
 THROWABLE_CHARGE_TIME = 1.0
-THROWABLE_CHARGE_TICKS = ticks("1s")
-THROWABLE_CHARGE_SCALE = 100
 
 
 class TestingThrowable(KitItem):
@@ -189,19 +184,19 @@ class TestingThrowable(KitItem):
     item_name = "Component Test: Throwable"
     lore = "throwable item with charge and throw mechanics"
     throwable = {
-        start: component_callback("throwable", "start"),
-        during: component_callback("throwable", "during"),
+        start: _component_callback("throwable", "start"),
+        during: _component_callback("throwable", "during"),
         end: ./on_throw,
         charge_time: THROWABLE_CHARGE_TIME,
         minimum_charge_time: 0.5,
-        charge_curve: "Linear"
+        charge_curve: "Linear",
+        throw_power: 0.3,
+        charge_power_ratio: 1.0,
     }
 
 
 function ./on_throw:
-    with tag_self() as thrown_item:
-        execute on origin:
-            SELF.Motion *= ((CHARGE_METER["@s"] * THROWABLE_CHARGE_SCALE) / THROWABLE_CHARGE_TICKS) / THROWABLE_CHARGE_SCALE
+    execute on origin run tellraw @s "[component test] throwable: end"
 
 
 # class TestingDroppable(KitItem):
@@ -211,7 +206,7 @@ function ./on_throw:
 #     droppable = {
 #         type: "disabled",
 #         time_alive: "20s",
-#         callback: component_callback("droppable", "callback"),
+#         callback: _component_callback("droppable", "callback"),
 #     }
 
 
@@ -231,7 +226,7 @@ function ./on_throw:
 #             {
 #                 effect: {
 #                     type: "minecraft:run_function",
-#                     function: component_callback("item_enchant", "tick"),
+#                     function: _component_callback("item_enchant", "tick"),
 #                 }
 #             }
 #         ]

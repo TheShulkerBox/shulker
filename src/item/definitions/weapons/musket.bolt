@@ -1,0 +1,6 @@
+from item:definitions/weapon import Bow
+
+
+class Musket(Bow):
+    id = "crossbow"
+    item_name = "Musket"

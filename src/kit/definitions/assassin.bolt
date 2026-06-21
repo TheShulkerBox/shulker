@@ -5,7 +5,7 @@ from item:definitions/weapons/blowgun import Blowgun
 from item:definitions/food import Food
 from item:definitions/armor import Armor 
 from item:definitions/armor/sneaky_boots import SneakyBoots
-from item:definitions/consumable/blindness_dart import BlindnessDart
+from item:definitions/consumables/blindness_dart import BlindnessDart
 
 assassin = Kit(
     name="Assassin",

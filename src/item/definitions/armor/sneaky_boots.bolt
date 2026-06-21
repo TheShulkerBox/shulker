@@ -1,11 +1,11 @@
+from component:sneaking import SNEAKING_SCORE
+
 from ../armor import Armor
-from item:definitions/weapons/iron_dagger import IronDaggerBase
+from ../weapons/iron_dagger import IronDaggerBase
 
 SNEAK_HANDLER: FunctionPath = item:iron_dagger/sneak
 END_SNEAK: FunctionPath = item:iron_dagger/end_sneak
 ATTEMPT_DASH: FunctionPath = item:iron_dagger/attempt_dash
-
-from component:sneaking import SNEAKING_SCORE
 
 JUMP_STRENGTH_ATTR = "assassin_jump_boost"
 SAFE_FALL_ATTR = "assassin_safe_fall_distance"

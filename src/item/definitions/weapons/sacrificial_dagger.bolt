@@ -1,5 +1,5 @@
 from item:definitions/weapon import Weapon
-from item:definitions/consumable/totems import Totem
+from item:definitions/consumables/totems import Totem
 
 SACRIFICE_KILL = item:sacrificial_dagger/kill
 

@@ -4,7 +4,7 @@ from item:definitions/food import Food
 from item:definitions/armor import Armor 
 from item:definitions/weapon import Weapon
 from item:definitions/weapons/sacrificial_dagger import SacrificialDagger
-from item:definitions/consumable/witch_stew import WitchStew
+from item:definitions/consumables/witch_stew import WitchStew
 
 witch_doctor = Kit(
     name="Witch Doctor",

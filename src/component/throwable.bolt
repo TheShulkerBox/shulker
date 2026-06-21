@@ -15,24 +15,86 @@ from ./droppable import Droppable
 CHARGE_METER = Scoreboard("component.throwable_charge", criteria="dummy")
 THROWABLE_ITEM_TAG = "component.throwable.item"
 THROWABLE_ITEM_TAG_INIT = "component.throwable.item_init"
+THROWABLE_CHARGE_SCALE = 1000
+
+REDUCE_COUNT_MODIFIER = {function: "minecraft:set_count", count: -1, add: true}
 
 
 class Throwable(Using):
     """Defines items you can throw using right click.
     
+    This extends `Using`, so it inherits the usual use-item lifecycle:
+    - `start` runs once when the player starts holding right click
+    - `during` runs each tick while the player keeps using the item
+    - `end` runs after the item is thrown
+    - `animation` and `sound` configure the underlying consumable use behavior
+
     If `charge_time` is defined, you can hold right click to charge the throw. Letting
-    go would release the throw (invoking the callback).
+    go releases the throw.
+
+    By default, the item is thrown forward with `throw_power`. Charged throwables
+    scale that motion by charge progress and `charge_power_ratio`. Define `motion`
+    to fully replace the default motion behavior.
+
+    Examples:
+    ```bolt
+    # Simple toss at the default 0.3 motion.
+    throwable = {
+        end: ./on_throw,
+    }
+
+    # Faster baseline toss.
+    throwable = {
+        end: ./on_throw,
+        throw_power: 0.5,
+    }
+
+    # Charge over 1.5s. At full charge, motion is 2x `throw_power`.
+    throwable = {
+        start: ./on_charge_start,
+        during: ./while_charging,
+        end: ./on_throw,
+        charge_time: 1.5,
+        minimum_charge_time: 0.25,
+        throw_power: 0.35,
+        charge_power_ratio: 2.0,
+    }
+
+    # Fully custom item motion. This runs as the thrown item after `Thrower` is set.
+    throwable = {
+        end: ./on_throw,
+        motion: ./apply_motion,
+    }
+
+    function ./apply_motion:
+        execute on origin:
+            SELF.Motion = Vector.unit(0.2).apply_to(STORAGE.temp.throwable.motion)
+        SELF.Motion[1] = SELF.Motion[1] + 0.6
+    ```
+
+    `motion` and `end` both run as the thrown item. Use `execute on origin` when
+    you need the throwing player as the executor.
     """
     item_data: Annotated[dict[str, Any], "Extra data to be merged into the summoned item"] = field(default_factory=dict)
     charge_time: Annotated[float, "The time (in seconds) to charge the throw"] = 0.0
     minimum_charge_time: Annotated[float, "The minimum time (in seconds) to charge the throw"] = 0.0
     charge_curve: Annotated[Literal["Linear", "Exponential"], "The easing function for the charge"] = "Linear"
+    throw_power: Annotated[float, "The default forward motion speed of the thrown item"] = 0.3
+    charge_power_ratio: Annotated[float, "The full-charge multiplier applied to default throw motion"] = 1.0
+    motion: Annotated[FunctionPath | None, "Function to fully customize item motion. Runs as the thrown item after Thrower is set."] = None
 
     def build(self):
+        if "item_data" in self.item_data:
+            self.item_data = self.item_data["item_data"]
+
         if self.minimum_charge_time > self.charge_time:
             raise ComponentBuildError(
                 f"Minimum charge time ({self.minimum_charge_time}) cannot be greater than charge time ({self.charge_time})"
             )
+        if self.throw_power < 0:
+            raise ComponentBuildError(f"Throw power ({self.throw_power}) cannot be negative")
+        if self.charge_power_ratio < 0:
+            raise ComponentBuildError(f"Charge power ratio ({self.charge_power_ratio}) cannot be negative")
         
         self.start = self.on_start
         self.during = self.on_during
@@ -44,7 +106,16 @@ class Throwable(Using):
     
     def post_build(self, output_components: dict[str, Any], item_obj: ItemType):
         function self.on_throw:
+            CHARGE_METER["@s"] += 0
             if CHARGE_METER["@s"] >= self.minimum_charge_ticks:
+                execute function ~/reduce_count:
+                    # mainhand is prioritized over offhand when using
+                    execute
+                        if items entity @s weapon.mainhand (-item_obj)
+                        return run item modify entity @s weapon.mainhand REDUCE_COUNT_MODIFIER
+                    item modify entity @s weapon.offhand REDUCE_COUNT_MODIFIER
+
+                # default thrown item data
                 item_data = {
                     Item: {id: item_obj.id, components: {}},
                     Tags: [THROWABLE_ITEM_TAG, THROWABLE_ITEM_TAG_INIT, ITEM_PROCESSED_TAG],
@@ -69,10 +140,7 @@ class Throwable(Using):
                 # As per code, summon item relative position as if the player threw it
                 # https://mcsrc.dev/1/26.2/net/minecraft/world/entity/LivingEntity#L3436
                 execute anchored eyes run summon item ^ ^-0.3 ^ item_data
-                
-                # if self.charge_time:
 
-                item_motion_vector = Vector.unit(0.3).apply_to(STORAGE.temp.throwable.motion)
                 STORAGE.temp.uuid = SELF.UUID
 
                 with tag_self():
@@ -81,8 +149,12 @@ class Throwable(Using):
                         tag @s remove THROWABLE_ITEM_TAG_INIT
                         SELF.Thrower = STORAGE.temp.uuid
 
-                        # https://mcsrc.dev/1/26.2/net/minecraft/world/entity/LivingEntity#L3488
-                        SELF.Motion = item_motion_vector
+                        if self.motion:
+                            function self.motion
+                        else:
+                            execute on origin run function self.default_motion
+                            SELF.Motion = STORAGE.temp.throwable.motion
+
                         if self._user_end:
                             function self._user_end
 
@@ -96,11 +168,38 @@ class Throwable(Using):
     def minimum_charge_ticks(self):
         return int(self.minimum_charge_time * 20)
 
+    @property
+    def charge_power_scale(self):
+        return int(self.charge_power_ratio * THROWABLE_CHARGE_SCALE)
+
+    @cached_property
+    def default_motion(self):
+        path = f"{self.path}/default_motion"
+        function path:
+            item_motion_vector = Vector.unit(self.throw_power).apply_to(STORAGE.temp.throwable.motion)
+
+            if self.charge_ticks:
+                # Preserve fractional motion while applying charge through integer scoreboard math.
+                charge_factor = SCORE.temp["#throwable_charge_factor"]
+                if self.charge_curve == "Linear":
+                    charge_factor = (CHARGE_METER["@s"] * self.charge_power_scale) / self.charge_ticks
+                elif self.charge_curve == "Exponential":
+                    charge_factor = ((CHARGE_METER["@s"] * CHARGE_METER["@s"]) * self.charge_power_scale) / (self.charge_ticks * self.charge_ticks)
+
+                motion_component = SCORE.temp["#throwable_motion_component"]
+                for index in range(3):
+                    motion_component = item_motion_vector[index] * THROWABLE_CHARGE_SCALE
+                    motion_component *= charge_factor
+                    motion_component /= THROWABLE_CHARGE_SCALE
+                    execute store result var item_motion_vector[index] double (1 / THROWABLE_CHARGE_SCALE) run scoreboard players get var motion_component
+
+        return path
+
     @cached_property
     def on_start(self):
         path = f"{self.path}/start"
         function path:
-            CHARGE_METER["@s"].reset()
+            CHARGE_METER["@s"] = 0
             XP.set_points(0)
 
             if self.start:
@@ -115,7 +214,8 @@ class Throwable(Using):
             if CHARGE_METER["@s"] < self.charge_ticks:
                 CHARGE_METER["@s"] += 1
 
-            XP.set_points((CHARGE_METER["@s"] * 100) / self.charge_ticks)
+            if self.charge_ticks:
+                XP.set_points((CHARGE_METER["@s"] * 100) / self.charge_ticks)
 
             if self.during:
                 function self.during

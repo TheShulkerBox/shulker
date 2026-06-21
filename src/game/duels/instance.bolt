@@ -6,8 +6,8 @@ from server:admin import error_debug
 from player:events import ON_DEATH, DEATH_SCORE
 from lib:utils import matching
 from lib:player import tag_self
-from kit:base import KIT_ID, KIT_ID_REQUEST, KITS_ROM
-from kit:events import KIT_RESET
+from kit:base import KIT_ID, KIT_ID_REQUEST
+from kit:events import KIT_RESET, KIT_RESTOCK
 
 from ../player import TEAM_SCORE
 from ../events import ON_LEAVE_GAME
@@ -129,9 +129,7 @@ function ./pregame:
         if GAME_TIMER["@s"] == 60:
             playsound minecraft:entity.experience_orb.pickup master @s ~ ~ ~ 1 1
             title @s title {text: "3"}
-            STORAGE.temp.kit_id = KITS_ROM.get(hashed_id=KIT_ID["@s"]).id
-            execute function kit:attempt_resupply with storage shulker:temp:
-                $function kit:loadout/$(kit_id)/apply
+            function KIT_RESTOCK
 
         if GAME_TIMER["@s"] == 40:
             playsound minecraft:entity.experience_orb.pickup master @s ~ ~ ~ 1 1
@@ -216,10 +214,7 @@ function ./during_death:
                 execute function ./respawn:
                     # Resupply
                     execute as @a[tag=instance_tag]:
-                        function KIT_RESET
-                        STORAGE.macro = {"kit_id": KITS_ROM.get(hashed_id=KIT_ID["@s"]).id}
-                        with var STORAGE.macro:
-                            $function kit:loadout/$(kit_id)/apply
+                        function KIT_RESTOCK
                     gamemode adventure @a[tag=instance_tag]
                     DURING_DEATH_TIMER[f"@a[tag={instance_tag}]"].reset()
                     kill @a[tag=instance_tag]

@@ -1,0 +1,8 @@
+from item:base import KitItem
+
+
+class Parry(KitItem):
+    id = "lingering_potion"
+    item_name = "Ability: Parry"
+    lore = ["Parrying your enemy will upgrade your cutlass"]
+    potion_contents = {custom_color: 16769876}

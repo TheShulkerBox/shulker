@@ -1,4 +1,30 @@
 
+from kit:base import Kit
+from item:base import KitItem
+from item:definitions/armor import Armor
+from item:definitions/weapons/cutlass import Cutlass
+
+from item:definitions/weapons/musket import Musket
+from item:definitions/consumables/parry import Parry
+
+swashbuckler = Kit(
+    name="Swashbuckler",
+    tagline="A rum drinkin' pirate",
+    icon="golden_sword",
+
+    armor={
+        "chest": Armor(id="leather_chestplate", dyed_color="#826464", armor={value:5.5}),
+        "legs": Armor(id="leather_leggings", dyed_color="#CFA37E"),
+        "feet": Armor(id="golden_boots")
+    },
+    hotbar=[
+        Cutlass.Golden,
+        Musket,
+        KitItem(id="cooked_chicken", count=3)
+    ],
+    offhand=Parry
+)
+
 # # Swashbuckler [id:#316]
 
 # data modify storage kits:temp kit.extra append value {tin:1b, id:'stone_sword', name:'Tin Cutlass', desc:{ignore:1b}, attack:{damage:5, speed:1.6}, tag:{Damage:0, spawn:1b, cutlass:1b, replace: 1b}}

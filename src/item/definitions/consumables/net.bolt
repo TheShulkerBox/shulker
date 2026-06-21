@@ -1,0 +1,151 @@
+from kit:events import KIT_RESET
+from item:base import KitItem
+from lib:predicates import ON_GROUND_PREDICATE
+from lib:helpers import ticks, seconds
+from lib:player import tag_self
+
+NET_THROW: FunctionPath = item:net/throw
+NET_TICK: FunctionPath = item:net/tick
+NET_DISPLAY_TICK: FunctionPath = item:net/tick/display
+NET_CATCH: FunctionPath = item:net/catch
+NET_DESPAWN: FunctionPath = item:net/despawn
+NET_PLAYER_TICK: FunctionPath = item:net/player_tick
+NET_RESET: FunctionPath = item:net/reset
+
+NET_ITEM_TAG = "item.net"
+NET_ACTIVE_TAG = "item.net.active"
+NET_DISPLAY_TAG = "item.net.display"
+NET_THROWER_TAG = "item.net.thrower"
+
+TIME_IN_NET = "5s"
+SLOWNESS_AMPLIFIER = 3
+NET_TIMER = Scoreboard("item.net_timer", criteria="dummy")
+NET_DAMAGE_TAKEN = Scoreboard("item.net_damage_taken", criteria="minecraft.custom:minecraft.damage_taken")
+NET_WEAKNESS_ATTR = "item.net_weakness"
+
+def weakness_modifier(value: int) -> dict[str, Any]:
+    return {
+        "function": "minecraft:set_attributes",
+        "modifiers": [
+            {
+                "attribute": "minecraft:attack_damage",
+                "id": NET_WEAKNESS_ATTR,
+                "amount": value,
+                "operation": "add_value",
+                "slot": "body"
+            }
+        ]
+    }
+
+
+class Net(KitItem):
+    """Toss at your enemy to ensnare them."""
+
+    id = "cobweb"
+    item_name = "Net"
+    lore = ["Capture your foes", "You dishonorable retiarius!"]
+    throwable = {
+        end: NET_THROW,
+        charge_time: 0.4,
+        throw_power: 0.6,
+        item_data: {
+            Tags: [NET_ITEM_TAG],
+            Item: {
+                components: {
+                    item_model: "minecraft:air",
+                },
+            },
+            Age: ticks("4m55s")
+        },
+    }
+    use_effects = {can_sprint: true, speed_multiplier: 0.9}
+
+
+function NET_THROW:
+    # Keep the thrown item selectable while mounting the cobweb visual to it.
+    with tag_self() as SELF_NET_ITEM:
+        execute summon block_display:
+            SELF.merge({
+                Tags: [NET_DISPLAY_TAG],
+                block_state: {Name: "minecraft:cobweb"},
+                transformation: {
+                    translation: [-0.5, -0.5, -0.5],
+                    scale: [1.0, 1.0, 1.0],
+                },
+            })
+            ride @s mount @n[type=item, tag=SELF_NET_ITEM]
+    
+    schedule function NET_TICK 1t replace
+    schedule function NET_DISPLAY_TICK 5t replace
+
+
+function NET_TICK:
+    execute as @e[type=item, tag=NET_ITEM_TAG] at @s:
+        schedule function NET_TICK 1t replace
+
+        execute if predicate {condition: "minecraft:random_chance", chance: 0.35}:
+            particle minecraft:cloud ~ ~.125 ~ 0.2 0.1 0.2 0.025 1 normal
+
+        # Once the projectile lands, the grounded net can catch nearby players.
+        execute if predicate ON_GROUND_PREDICATE:
+            tag @s add NET_ACTIVE_TAG
+            execute on origin run tag @s add NET_THROWER_TAG
+
+            # TODO: Replace this with a team-safe selector once shulker2 has kit/game team helpers.
+            execute as @a[distance=..1, tag=!NET_THROWER_TAG, limit=1, sort=nearest] at @s run function NET_CATCH
+
+            tag @a[tag=NET_THROWER_TAG] remove NET_THROWER_TAG
+            tag @s remove NET_ACTIVE_TAG
+            
+    
+function NET_DISPLAY_TICK:
+    # Displays should vanish if their item vehicle disappears unexpectedly.
+    execute as @e[type=block_display, tag=NET_DISPLAY_TAG] at @s:
+        execute on vehicle run return run schedule function NET_DISPLAY_TICK 5t replace
+        particle minecraft:poof ~ ~ ~ 0.25 0.25 0.25 0 6 force
+        kill @s
+
+
+function NET_CATCH:
+    # The debuff is timer-driven so damage can break the net early.
+    schedule function NET_PLAYER_TICK 1t replace
+
+    tellraw @s {text: "You are caught in a net!", color: Theme.Failure}
+    effect give @s slowness seconds(TIME_IN_NET) SLOWNESS_AMPLIFIER
+    item modify entity @s armor.body weakness_modifier(value=-100)
+    
+    NET_TIMER["@s"] = ticks(TIME_IN_NET)
+    NET_DAMAGE_TAKEN["@s"].reset()
+    
+    playsound minecraft:entity.sheep.shear master @a ~ ~ ~ 1 2
+    
+    execute as @n[type=item, tag=NET_ACTIVE_TAG, distance=..2] at @s run function NET_DESPAWN
+
+
+function NET_DESPAWN:
+    # Kill the mounted cobweb display first, then the invisible item vehicle.
+    execute on passengers run kill @s
+    kill @s
+
+
+function NET_PLAYER_TICK:
+    execute as @a[scores={NET_TIMER=1..}] at @s:
+        schedule function NET_PLAYER_TICK 1t replace
+
+        # Any damage immediately moves the net to its final cleanup tick.
+        if (NET_DAMAGE_TAKEN["@s"] >= 1) or (NET_TIMER["@s"] <= 1):
+            tellraw @s {text: "The net untangles!", color: Theme.Success}
+            function NET_RESET
+
+        if NET_TIMER["@s"] >= 1:
+            particle minecraft:poof ~ ~1 ~ 0.3 0.4 0.3 0 1 normal
+            NET_TIMER["@s"] -= 1
+
+
+append function KIT_RESET:
+    execute function NET_RESET:
+        # Kit resets must clear lingering effects even if the timer loop stops.
+        effect clear @s minecraft:slowness
+        item modify entity @s armor.body weakness_modifier(value=0)
+        NET_TIMER["@s"].reset()
+        NET_DAMAGE_TAKEN["@s"].reset()

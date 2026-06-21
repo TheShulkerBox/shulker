@@ -17,6 +17,7 @@ from lib:text import Theme, boxed_text
 #> Function Paths
 SERVER_LOAD = ./load
 SERVER_TICK = ./tick
+SPAWN_ENTITIES_LOADED = ./load/spawn_entities
 
 #> Adv Paths
 ROOT_ADVANCEMENT = ./root
@@ -66,6 +67,12 @@ function SERVER_LOAD:
         box_color=Theme.Secondary,
     )
     Expression.init()
+    schedule function ./wait_for_spawn_loaded 5t replace
+
+
+function ./wait_for_spawn_loaded:
+    execute if loaded ~ ~ ~ run return run function SPAWN_ENTITIES_LOADED
+    schedule function ./wait_for_spawn_loaded 5t replace
 
 
 # needs to be after server_load
