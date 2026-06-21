@@ -4,8 +4,10 @@ class Rations(Food):
     """Quick healing food that can be eaten quickly in battle."""
 
     item_model = "dried_kelp"
+    id = "dried_kelp"
     item_name = "Rations"
     always_edible = true
+    food = {nutrition: 1, saturation: 0.2}
     consumable = {
         consume_seconds: 0.8,
         on_consume_effects: [
