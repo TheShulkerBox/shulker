@@ -1,0 +1,71 @@
+from item:definitions/weapon import Weapon
+from lib:helpers import ticks
+from lib:predicates import has_item_predicate
+from lib:xp import XP
+from player:events import ON_HURT_BY_PLAYER
+from player:services import PLAYER_TICK
+
+
+RANGER_READY_SWORD_STRIKE: FunctionPath = item:ranger/ready_sword_strike
+RANGER_LOSE_SWORD_EDGE: FunctionPath = item:ranger/lose_sword_edge
+RANGER_TICK: FunctionPath = item:ranger/tick
+RANGER_RESTORE_SWORD_EDGE: FunctionPath = item:ranger/restore_sword_edge
+
+RANGER_SWORD_RELOAD = Scoreboard("item.ranger_sword_reload", criteria="dummy")
+RANGER_SWORD_RELOAD_TICKS = ticks("75t")
+
+
+class SharpenedSword(Weapon):
+    id = "wooden_sword"
+    item_name = "Sharpened Shortsword"
+    lore = "Strike cleanly to spend its honed edge."
+    melee = {damage: 7, speed: 1.6}
+    enchantment_glint_override = true
+    strike = {slot: "weapon.mainhand", victim: RANGER_READY_SWORD_STRIKE}
+    max_stack_size = 1
+
+
+class SpentSword(SharpenedSword):
+    item_name = "Spent Shortsword"
+    lore = "Its edge will return after a short recovery."
+    melee = {damage: 4, speed: 1.6}
+    enchantment_glint_override = false
+    strike = None
+
+
+function RANGER_READY_SWORD_STRIKE:
+    execute on attacker run function RANGER_LOSE_SWORD_EDGE
+
+
+function RANGER_LOSE_SWORD_EDGE:
+    execute unless items entity @s weapon.mainhand (-SharpenedSword) run return fail
+    item replace entity @s weapon.mainhand with SpentSword
+    RANGER_SWORD_RELOAD["@s"] = RANGER_SWORD_RELOAD_TICKS
+    XP.set_points(0)
+    playsound minecraft:item.trident.throw master @s ~ ~ ~ 1 1.4
+    playsound minecraft:block.grindstone.use master @s ~ ~ ~ 0.7 1.7
+
+
+function RANGER_RESTORE_SWORD_EDGE:
+    clear @s (-SpentSword) 1
+    give @s SharpenedSword
+    RANGER_SWORD_RELOAD["@s"].reset()
+    XP.set_points(0)
+    playsound minecraft:item.trident.throw master @s ~ ~ ~ 1 2
+    title @s actionbar {text: "Shortsword edge restored", color: Theme.Success}
+
+
+append function PLAYER_TICK:
+    execute if predicate has_item_predicate(SpentSword) run function RANGER_TICK
+
+
+append function ON_HURT_BY_PLAYER:
+    execute if items entity @s weapon.mainhand (-SharpenedSword) run function RANGER_LOSE_SWORD_EDGE
+
+
+function RANGER_TICK:
+    RANGER_SWORD_RELOAD["@s"] -= 1
+    XP.set_points(((RANGER_SWORD_RELOAD_TICKS - RANGER_SWORD_RELOAD["@s"]) * 100) / RANGER_SWORD_RELOAD_TICKS)
+
+    if RANGER_SWORD_RELOAD["@s"] <= 0:
+        function RANGER_RESTORE_SWORD_EDGE

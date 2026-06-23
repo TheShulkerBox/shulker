@@ -1,66 +1,211 @@
 from item:definitions/weapon import Weapon
+from component:shield_hit import SHIELD_BLOCKED_DAMAGE
+from kit:events import KIT_RESET, KIT_RESTOCK
+
+
+CUTLASS_BLOCKED: FunctionPath = item:cutlass/on_blocked
+CUTLASS_REPAIR: FunctionPath = item:cutlass/repair
+CUTLASS_RESET: FunctionPath = item:cutlass/reset
+
+CUTLASS_PARRY_TIER = Scoreboard("item.cutlass_parry_tier", criteria="dummy")
+CUTLASS_PREVIOUS_TIER = Scoreboard("item.cutlass_previous_tier", criteria="dummy")
+
+CUTLASS_SPEED = 1.6
+CUTLASS_WEIGHT = "medium"
+
+CUTLASS_TIERS = {
+    "copper": {
+        "class_name": "_Copper",
+        "id": "copper_sword",
+        "item_name": "Copper Cutlass",
+        "damage": 4.5,
+    },
+    "tin": {
+        "class_name": "Tin",
+        "id": "stone_sword",
+        "item_name": "Tin Cutlass",
+        "damage": 5,
+        "max_damage": 8,
+        "min_parry_tier": 1,
+        "max_parry_tier": 1,
+    },
+    "silver": {
+        "class_name": "Silver",
+        "id": "iron_sword",
+        "item_name": "Silver Cutlass",
+        "damage": 6,
+        "max_damage": 8,
+        "min_parry_tier": 2,
+        "max_parry_tier": 2,
+    },
+    "platinum": {
+        "class_name": "Platinum",
+        "id": "diamond_sword",
+        "item_name": {text: "Platinum Cutlass", color: "#F3EDFF"},
+        "damage": 7,
+        "max_damage": 8,
+        "min_parry_tier": 3,
+        "max_parry_tier": 3,
+    },
+    "titanium": {
+        "class_name": "Titanium",
+        "id": "netherite_sword",
+        "item_name": {text: "Titanium Cutlass", color: "#D0BAFE"},
+        "damage": 8,
+        "max_damage": 8,
+        "min_parry_tier": 4,
+        "max_parry_tier": 5,
+    },
+    "titanium_plus": {
+        "class_name": "TitaniumPlus",
+        "parent_tier": "titanium",
+        "id": "netherite_sword",
+        "item_name": {text: "Titanium+ Cutlass", color: "#D0BAFE"},
+        "damage": 8,
+        "max_damage": 12,
+        "min_parry_tier": 6,
+        "max_parry_tier": 7,
+        "enchantment_glint_override": true,
+    },
+    "titanium_plus_plus": {
+        "class_name": "TitaniumPlusPlus",
+        "parent_tier": "titanium_plus",
+        "id": "netherite_sword",
+        "item_name": {text: "Titanium++ Cutlass", color: "#D0BAFE"},
+        "damage": 8,
+        "max_damage": 16,
+        "min_parry_tier": 8,
+        "max_parry_tier": 2147483647,
+        "enchantment_glint_override": true,
+    },
+}
+
+
+class _Copper(Weapon):
+    id = CUTLASS_TIERS["copper"]["id"]
+    item_name = CUTLASS_TIERS["copper"]["item_name"]
+    lore = ["This sword can only handle a limited number of strikes!"]
+    blocks_attacks = {
+        block_delay_seconds: 0.0,
+        disable_cooldown_scale: 1.0,
+        damage_reductions: [
+            {
+                base: 0.0,
+                factor: 1.0,
+                horizontal_blocking_angle: 180.0,
+            }
+        ],
+    }
+    shield_hit = {
+        blocked: CUTLASS_BLOCKED,
+    }
+    melee = {
+        damage: CUTLASS_TIERS["copper"]["damage"],
+        speed: CUTLASS_SPEED,
+        weight: CUTLASS_WEIGHT,
+    }
+
+
+class _Upgraded(_Copper):
+    unbreakable = None
+    use_remainder = _Copper.as_dict()
 
 
 class Cutlass:
-    class Base(Weapon):
-        lore = ["This sword can only handle a limited number of strikes!"]
-        melee = {
-            damage: 4.5,
-            speed: 1.6,
-            weight: "medium"
-        }
+    Copper = _Copper
 
 
-    class Golden(Base):
-        id = "golden_sword"
-        item_name = "Golden Cutlass"
+for tier_name, cutlass in CUTLASS_TIERS.items():
+    if tier_name == "copper":
+        cutlass["item"] = Cutlass.Copper
+        continue
+
+    parent = _Upgraded
+    if "parent_tier" in cutlass:
+        parent = CUTLASS_TIERS[cutlass["parent_tier"]]["item"]
+
+    args = {
+        "id": cutlass["id"],
+        "item_name": cutlass["item_name"],
+        "max_damage": cutlass["max_damage"],
+        "melee": {
+            damage: cutlass["damage"],
+            speed: CUTLASS_SPEED,
+            weight: CUTLASS_WEIGHT,
+        },
+    }
+
+    if "enchantment_glint_override" in cutlass:
+        args["enchantment_glint_override"] = cutlass["enchantment_glint_override"]
+
+    cutlass["item"] = parent(name=cutlass["class_name"], **args)
+
+    if tier_name == "tin":
+        Cutlass.Tin = cutlass["item"]
+    elif tier_name == "silver":
+        Cutlass.Silver = cutlass["item"]
+    elif tier_name == "platinum":
+        Cutlass.Platinum = cutlass["item"]
+    elif tier_name == "titanium":
+        Cutlass.Titanium = cutlass["item"]
+    elif tier_name == "titanium_plus":
+        Cutlass.TitaniumPlus = cutlass["item"]
+    elif tier_name == "titanium_plus_plus":
+        Cutlass.TitaniumPlusPlus = cutlass["item"]
 
 
-    class Tin(Base):
-        id = "stone_sword"
-        item_name = "Tin Cutlass"
-        melee = {
-            damage: 5,
-            speed: 1.6,
-            weight: "medium"
-        }
+function CUTLASS_BLOCKED:
+    CUTLASS_PARRY_TIER["@s"] = SHIELD_BLOCKED_DAMAGE["@s"] / 10
+
+    if CUTLASS_PARRY_TIER["@s"] <= 0:
+        return run title @s actionbar {text: "Parried, but the hit was too weak to improve your cutlass.", color: Theme.Failure}
+
+    if CUTLASS_PARRY_TIER["@s"] > CUTLASS_PREVIOUS_TIER["@s"]:
+        CUTLASS_PREVIOUS_TIER["@s"] = CUTLASS_PARRY_TIER["@s"]
+
+    function CUTLASS_REPAIR
+
+    playsound minecraft:item.trident.hit_ground master @a ~ ~ ~ 1 0.8
+
+    title @s[scores={CUTLASS_PARRY_TIER=1..4}] actionbar [
+        {text: "Parried attack for ", color: "gold"},
+        {text: "+", color: "red"},
+        {score: {name: "@s", objective: "item.cutlass_parry_tier"}, color: "red"},
+        {text: " damage!", color: "gold"}
+    ]
+    title @s[scores={CUTLASS_PARRY_TIER=5}] actionbar [
+        {text: "Parried attack for ", color: "gold"},
+        {text: "+4", color: "red"},
+        {text: " damage!", color: "gold"}
+    ]
+    title @s[scores={CUTLASS_PARRY_TIER=6..7}] actionbar [
+        {text: "Parried attack for ", color: "gold"},
+        {text: "+5", color: "dark_red"},
+        {text: " damage!", color: "gold"}
+    ]
+    title @s[scores={CUTLASS_PARRY_TIER=8..}] actionbar [
+        {text: "Parried attack for ", color: "gold"},
+        {text: "+6 (max)", color: "dark_red"},
+        {text: " damage!", color: "gold"}
+    ]
 
 
-    class Silver(Base):
-        id = "iron_sword"
-        item_name = "Silver Cutlass"
-        melee = {
-            damage: 6,
-            speed: 1.6,
-            weight: "medium"
-        }
+function CUTLASS_REPAIR:
+    for cutlass in CUTLASS_TIERS.values():
+        if "min_parry_tier" not in cutlass:
+            continue
+
+        if cutlass["min_parry_tier"] <= CUTLASS_PREVIOUS_TIER["@s"] <= cutlass["max_parry_tier"]:
+            item replace entity @s weapon.mainhand with cutlass["item"]
 
 
-    class Platinum(Base):
-        id = "diamond_sword"
-        item_name = {text: "Platinum Cutlass", color: "#F3EDFF"}
-        melee = {
-            damage: 7,
-            speed: 1.6,
-            weight: "medium"
-        }
+function CUTLASS_RESET:
+    CUTLASS_PARRY_TIER["@s"].reset()
 
 
-    class Titanium(Base):
-        id = "netherite_sword"
-        item_name = {text: "Titanium Cutlass", color: "#D0BAFE"}
-        melee = {
-            damage: 8,
-            speed: 1.6,
-            weight: "medium"
-        }
+append function KIT_RESET:
+    function CUTLASS_RESET
 
 
-    class TitaniumPlus(Titanium):
-        item_name = {text: "Titanium+ Cutlass", color: "#D0BAFE"}
-        enchantment_glint_override = true
-
-
-    class TitaniumPlusPlus(Titanium):
-        item_name = {text: "Titanium++ Cutlass", color: "#D0BAFE"}
-        enchantment_glint_override = true
+append function KIT_RESTOCK:
+    function CUTLASS_REPAIR

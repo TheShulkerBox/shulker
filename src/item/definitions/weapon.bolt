@@ -5,3 +5,6 @@ class Weapon(KitItem):
 
 class Bow(KitItem):
     id = "bow"
+
+class Crossbow(KitItem):
+    id = "crossbow"

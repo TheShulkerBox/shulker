@@ -5,24 +5,22 @@ from item:definitions/armor import Armor
 from item:definitions/weapons/cutlass import Cutlass
 
 from item:definitions/weapons/musket import Musket
-from item:definitions/consumables/parry import Parry
 
 swashbuckler = Kit(
     name="Swashbuckler",
     tagline="A rum drinkin' pirate",
-    icon="golden_sword",
+    icon="copper_sword",
 
     armor={
         "chest": Armor(id="leather_chestplate", dyed_color="#826464", armor={value:5.5}),
         "legs": Armor(id="leather_leggings", dyed_color="#CFA37E"),
-        "feet": Armor(id="golden_boots")
+        "feet": Armor(id="copper_boots")
     },
     hotbar=[
-        Cutlass.Golden,
+        Cutlass.Copper,
         Musket,
         KitItem(id="cooked_chicken", count=3)
-    ],
-    offhand=Parry
+    ]
 )
 
 # # Swashbuckler [id:#316]

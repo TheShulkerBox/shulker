@@ -54,6 +54,7 @@ class Crossbow(Component):
     charge: Annotated[FunctionPath | None, "Runs as the player when crossbow charging starts"] = None
     charging: Annotated[FunctionPath | None, "Runs as the player while the crossbow is charging"] = None
     load: Annotated[FunctionPath | None, "Runs as the player when the crossbow finishes loading"] = None
+    # TODO: fix cancel not working (says load instead)
     cancel: Annotated[FunctionPath | None, "Runs as the player when charging stops without loading"] = None
     fire: Annotated[FunctionPath | None, "Runs on the fired projectile"] = None
     hit: Annotated[FunctionPath | None, "Runs as the victim of a crossbow projectile"] = None

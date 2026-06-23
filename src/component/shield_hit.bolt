@@ -1,24 +1,29 @@
-from dataclasses import field
 from functools import cached_property
 
-from item:type import ItemType
-from lib:xp import XP
-from lib:helpers import deep_merge_dicts, ticks, seconds
+from lib:helpers import ticks
 from lib:player import tag_self
 from server:core import SPAWN_ENTITIES_LOADED
+from server:events import ON_PLAYER_RESET
 
 from ./using import Using
-from ./type import ComponentBuildError, RecursiveComponent
+from ./useable import AnimationLiteral
+from ./type import ComponentBuildError
 
 
-# SHIELD_BREAK_STAND_TAG = "component.shield.shield_breaker_stand"
-SHIELD_DISABLE_DAMAGE_TYPE = component:shield_disable
+SHIELD_BLOCKED_DAMAGE = Scoreboard(
+    "component.shield_hit.blocked",
+    criteria="minecraft.custom:minecraft.damage_blocked_by_shield",
+)
+SHIELD_BLOCK_HAND = Scoreboard("component.shield_hit.hand", criteria="dummy")
+
+SHIELD_DISABLE_STAND_TAG = "component.shield_hit.disable_stand"
+SHIELD_DISABLED_TAG = "component.shield_hit.disabled"
 
 append function SPAWN_ENTITIES_LOADED:
     execute positioned 0.0 0.0 0.0 run function ./init_stand:
-        execute unless entity @e[type=armor_stand, tag=SHIELD_BREAK_STAND_TAG, limit=1]:
+        execute unless entity @e[type=armor_stand, tag=SHIELD_DISABLE_STAND_TAG, limit=1]:
             summon armor_stand ~ ~ ~ {
-                Tags: [SHIELD_BREAK_STAND_TAG],
+                Tags: [SHIELD_DISABLE_STAND_TAG],
                 Marker: true,
                 Health: 1000.0f,
                 Silent: true,
@@ -26,22 +31,115 @@ append function SPAWN_ENTITIES_LOADED:
                 DeathLootTable: "minecraft:empty",
                 Invulnerable: true,
                 ShowArms: true,
-                equipment: {mainhand: {id: "iron_sword", components: {weapon: {disable_blocking_for_seconds: 1.0}}}}
+                equipment: {mainhand: {id: "iron_sword", components: {"minecraft:weapon": {disable_blocking_for_seconds: 1.0}}}}
             }
-# damage_type SHIELD_DISABLE_DAMAGE_TYPE {
-#     "message_id": "player_shield_disable",
-#     "exhaustion": 0.0,
-#     "scaling": "when_caused_by_living_non_player",
-#     "effects": "hurt"
-# }
+
+
+function ./clear_disabled_tags:
+    tag @a[tag=SHIELD_DISABLED_TAG] remove SHIELD_DISABLED_TAG
 
 
 class ShieldHit(Using):
     blocked: Annotated[FunctionPath | None, "Function path for when you block an attack"] = None
-    disabled: Annotated[FunctionPath | None, "Function path for when you disable the shield"] = None
+    disabled: Annotated[FunctionPath | None, "Function path for when this shield is disabled by ShieldHit.disable()"] = None
+    broken: Annotated[FunctionPath | None, "Function path for when this shield appears to break while blocking"] = None
+    animation: Annotated[AnimationLiteral, "Animation to use"] = "block"
 
     def build(self):
-        ...
+        if "blocks_attacks" not in self.resolved_components:
+            raise ComponentBuildError("ShieldHit requires the item to also define `blocks_attacks`")
+
+        if not (self.blocked or self.disabled or self.broken or self.start or self.during or self.end):
+            raise ComponentBuildError(
+                "At least one of `blocked`, `disabled`, `broken`, `start`, `during`, or `end` must be defined"
+            )
+
+        self._user_start = self.start
+        self._user_during = self.during
+        self._user_end = self.end
+
+        self.start = self.on_start
+        self.during = self.on_during
+        self.end = self.on_end
+
+        return super().build()
+
+    @cached_property
+    def on_start(self):
+        path = f"{self.path}/start"
+        function path:
+            SHIELD_BLOCKED_DAMAGE["@s"].reset()
+            SHIELD_BLOCK_HAND["@s"] = 0
+
+            if items entity @s weapon.mainhand self.item.conditional_string():
+                SHIELD_BLOCK_HAND["@s"] = 1
+            if items entity @s weapon.offhand self.item.conditional_string():
+                SHIELD_BLOCK_HAND["@s"] = 2
+
+            if self._user_start:
+                function self._user_start
+
+        return path
+
+    @cached_property
+    def on_during(self):
+        path = f"{self.path}/during"
+        function path:
+            if SHIELD_BLOCKED_DAMAGE["@s"] > 0:
+                function self.on_blocked
+
+            if self._user_during:
+                function self._user_during
+
+        return path
+
+    @cached_property
+    def on_end(self):
+        path = f"{self.path}/end"
+        function path:
+            if SHIELD_BLOCKED_DAMAGE["@s"] > 0:
+                function self.on_blocked
+
+            if self._user_end:
+                function self._user_end
+
+            function self.reset
+
+        return path
+
+    @cached_property
+    def on_blocked(self):
+        path = f"{self.path}/blocked"
+        function path:
+            if self.broken:
+                if SHIELD_BLOCK_HAND["@s"] == 1:
+                    unless items entity @s weapon.mainhand self.item.conditional_string():
+                        function self.broken
+                if SHIELD_BLOCK_HAND["@s"] == 2:
+                    unless items entity @s weapon.offhand self.item.conditional_string():
+                        function self.broken
+
+            if self.disabled:
+                if entity @s[tag=SHIELD_DISABLED_TAG]:
+                    function self.disabled
+
+            if self.blocked:
+                function self.blocked
+
+            SHIELD_BLOCKED_DAMAGE["@s"].reset()
+            tag @s remove SHIELD_DISABLED_TAG
+
+        return path
+
+    @cached_property
+    def reset(self):
+        path = f"{self.path}/reset"
+        function path:
+            SHIELD_BLOCKED_DAMAGE["@s"].reset()
+            SHIELD_BLOCK_HAND["@s"].reset()
+            tag @s remove SHIELD_DISABLED_TAG
+
+        return path
 
     @classmethod
     def disable(cls, period: str):
@@ -53,6 +151,14 @@ class ShieldHit(Using):
         ```
         """
         with tag_self() as PLAYER_TAG:
-            execute as @e[type=armor_stand, tag=SHIELD_BREAK_STAND_TAG, limit=1]:
-                SELF.equipment.mainhand.components."minecraft:weapon".disable_blocking_for_seconds = seconds(period)
+            tag @s add SHIELD_DISABLED_TAG
+            execute as @e[type=armor_stand, tag=SHIELD_DISABLE_STAND_TAG, limit=1]:
+                SELF.equipment.mainhand.components."minecraft:weapon".disable_blocking_for_seconds = ticks(period) / 20
                 damage @p[tag=PLAYER_TAG] 1.0 minecraft:player_attack by @s
+            schedule function ./clear_disabled_tags 2t replace
+
+
+append function ON_PLAYER_RESET:
+    SHIELD_BLOCKED_DAMAGE["@s"].reset()
+    SHIELD_BLOCK_HAND["@s"].reset()
+    tag @s remove SHIELD_DISABLED_TAG

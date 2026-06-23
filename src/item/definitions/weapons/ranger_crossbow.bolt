@@ -1,0 +1,182 @@
+from item:definitions/weapon import Crossbow
+from player:services import PLAYER_TICK
+
+
+RANGER_SWAP_MODE: FunctionPath = item:ranger/swap_mode
+RANGER_TRIPLE_FIRE: FunctionPath = item:ranger/triple_fire
+RANGER_RAPID_FIRE: FunctionPath = item:ranger/rapid_fire
+RANGER_RAPID_LOAD: FunctionPath = item:ranger/rapid_load
+RANGER_RAPID_ACTIONBAR: FunctionPath = item:ranger/rapid_actionbar
+
+RANGER_RAPID_SHOTS = Scoreboard("item.ranger_rapid_shots", criteria="dummy")
+
+RANGER_RAPID_SHOT_TAG = "ranger_rapid_shot"
+RANGER_TRIPLE_SHOT_TAG = "ranger_triple_shot"
+
+
+class RangerCrossbow(Crossbow):
+    item_name = "Ranger Crossbow"
+    two_handed = {callback: RANGER_SWAP_MODE}
+    left_click = {
+        callback: RANGER_SWAP_MODE,
+        cooldown: 0.5,
+    }
+    charged_projectiles = [
+        {
+            id: "minecraft:arrow",
+            count: 1,
+        }
+    ]
+    max_stack_size = 1
+
+
+class RangerTripleCrossbow(RangerCrossbow):
+    lore = "Triple mode"
+    enchantment_glint_override = true
+    charged_projectiles = [
+        {
+            id: "minecraft:arrow",
+            count: 1,
+        },
+        {
+            id: "minecraft:arrow",
+            count: 1,
+        },
+        {
+            id: "minecraft:arrow",
+            count: 1,
+        }
+    ]
+    item_enchant = {
+        "minecraft:projectile_count": [
+            {
+                "effect": {
+                    "type": "minecraft:add",
+                    "value": 2.0,
+                }
+            }
+        ],
+        "minecraft:projectile_spread": [
+            {
+                "effect": {
+                    "type": "minecraft:add",
+                    "value": 10.0,
+                }
+            }
+        ],
+        "minecraft:ammo_use": [
+            {
+                "effect": {
+                    "type": "minecraft:add",
+                    "value": 2
+                }
+            }
+        ]
+    }
+    crossbow = {
+        fire: RANGER_TRIPLE_FIRE,
+    }
+
+
+class RangerRapidCrossbow(RangerCrossbow):
+    lore = "Rapid mode"
+    crossbow = {
+        load: RANGER_RAPID_LOAD,
+        fire: RANGER_RAPID_FIRE,
+    }
+    item_enchant = {
+        "minecraft:ammo_use": [
+            {
+                "effect": {
+                    "type": "minecraft:add",
+                    "value": 1
+                }
+            }
+        ]
+    }
+
+# TODO: remove arrows from crossbow if crossbow was unloaded .or keep unloaded varients of items
+function RANGER_SWAP_MODE:
+    execute if items entity @s weapon.* (-RangerTripleCrossbow) run return run function ~/swap_to_rapid
+    execute if items entity @s weapon.* (-RangerRapidCrossbow) run return run function ~/swap_to_triple
+
+    function ~/swap_to_rapid:
+        execute if items entity @s weapon.mainhand (-RangerTripleCrossbow) run item replace entity @s weapon.mainhand with RangerRapidCrossbow
+        execute if items entity @s weapon.offhand (-RangerTripleCrossbow) run item replace entity @s weapon.offhand with RangerRapidCrossbow
+        RANGER_RAPID_SHOTS["@s"] = 3
+        title @s actionbar {text: "Rapid Mode", color: Theme.Failure, bold: true}
+        playsound minecraft:block.iron_trapdoor.open master @s ~ ~ ~ 1 1.2
+
+    function ~/swap_to_triple:
+        execute if items entity @s weapon.mainhand (-RangerRapidCrossbow) run item replace entity @s weapon.mainhand with RangerTripleCrossbow
+        execute if items entity @s weapon.offhand (-RangerRapidCrossbow) run item replace entity @s weapon.offhand with RangerTripleCrossbow
+        RANGER_RAPID_SHOTS["@s"].reset()
+        title @s actionbar {text: "Triple Mode", color: Theme.Success, bold: true}
+        playsound minecraft:item.crossbow.loading_end master @s ~ ~ ~ 1 1.2
+        playsound minecraft:item.crossbow.loading_end master @s ~ ~ ~ 1 0.8
+
+
+# TODO: arrow counting should be global. if u shoot triple, it shoots everything in the chamber.
+#    if u shoot rapid, then switch to triple, u only shoot 2 or 1 based on whats in the chamber
+# TODO: add triple green arrows to actionbar when triple
+# TODO: rapid fire doesn't reload. consider item modifier for reloading tbh 
+#    {function:"minecraft:set_components",components:{"minecraft:charged_projectiles":[{id:"arrow",count:3}]}}
+
+function RANGER_TRIPLE_FIRE:
+    tag @s add RANGER_TRIPLE_SHOT_TAG
+    SELF.merge({crit: false, pickup: 2})
+    execute on owner run playsound minecraft:item.crossbow.shoot master @a ~ ~ ~ 0.6 1.2
+
+
+function RANGER_RAPID_LOAD:
+    RANGER_RAPID_SHOTS["@s"] = 3
+
+
+function RANGER_RAPID_FIRE:
+    tag @s add RANGER_RAPID_SHOT_TAG
+    SELF.merge({damage: 1.2, crit: false, pickup: 2})
+    execute on origin run function ~/rapid_owner_fire
+
+
+function ~/rapid_owner_fire:
+    if RANGER_RAPID_SHOTS["@s"] <= 0:
+        RANGER_RAPID_SHOTS["@s"] = 3
+
+    RANGER_RAPID_SHOTS["@s"] -= 1
+
+    if RANGER_RAPID_SHOTS["@s"] > 0:
+        execute if items entity @s weapon.mainhand (-RangerRapidCrossbow) run item replace entity @s weapon.mainhand with RangerRapidCrossbow
+        playsound minecraft:block.iron_trapdoor.open master @s ~ ~ ~ 0.8 1.4
+    else:
+        title @s actionbar {text: "Rapid spent", color: Theme.Failure}
+
+
+append function PLAYER_TICK:
+    execute if items entity @s weapon.mainhand (-RangerTripleCrossbow) run title @s actionbar [
+        {text: "Triple Mode", color: Theme.Success, bold: true},
+        {text: " | Left-click to switch", color: "gray", bold: false}
+    ]
+    execute if items entity @s weapon.mainhand (-RangerRapidCrossbow) run function RANGER_RAPID_ACTIONBAR
+
+
+function RANGER_RAPID_ACTIONBAR:
+    if RANGER_RAPID_SHOTS["@s"] <= 0:
+        RANGER_RAPID_SHOTS["@s"] = 3
+
+    if RANGER_RAPID_SHOTS["@s"] >= 3:
+        title @s actionbar [
+            {text: "↑↑↑", color: Theme.Failure},
+            {text: " | Left-click to switch", color: "gray"}
+        ]
+    elif RANGER_RAPID_SHOTS["@s"] == 2:
+        title @s actionbar [
+            {text: "↑↑", color: Theme.Failure},
+            {text: "↑", color: "dark_gray"},
+            {text: " | Left-click to switch", color: "gray"}
+        ]
+    elif RANGER_RAPID_SHOTS["@s"] == 1:
+        title @s actionbar [
+            {text: "↑", color: Theme.Failure},
+            {text: "↑↑", color: "dark_gray"},
+            {text: " | Left-click to switch", color: "gray"}
+        ]

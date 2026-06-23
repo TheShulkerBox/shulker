@@ -1103,19 +1103,21 @@ class ItemType(type):
         )
         return f"{self.name}[{fields}]"
 
-    def __call__(self, /, **kwargs) -> Self | ItemStack:
-        """Create an anonymous variant or stack of this item.
+    def __call__(self, /, name: str | None = None, **kwargs) -> Self | ItemStack:
+        """Create a named or anonymous variant, or stack, of this item.
 
         This allows you to create item variations without defining new classes.
         The variant inherits all components from the parent item and overrides
         only the specified ones. Passing count creates an ItemStack wrapper
         instead of changing the item identity.
+        Passing name creates a regular named item instead of an anonymous one.
 
         Args:
+            name: Optional class name for the generated item variant.
             **kwargs: Component overrides (e.g., item_name="Variant") and/or count
 
         Returns:
-            A new anonymous item class or ItemStack with the specified changes
+            A new named or anonymous item class, or ItemStack with the specified changes
 
         Raises:
             ItemError: If called without any component changes
@@ -1132,7 +1134,7 @@ class ItemType(type):
             ice_sword = Sword(item_name="Ice Sword", damage=12)
 
         Note:
-            Each variant gets a unique generated name to avoid collisions.
+            Anonymous variants get a unique generated name to avoid collisions.
             The name is based on the calling location and a counter.
         """
         count = kwargs.pop("count", None)
@@ -1142,17 +1144,16 @@ class ItemType(type):
                 return ItemStack(self, count)
             raise ItemError(f"Cannot instantiate `{self.name}` without changes!")
 
-        runtime = self.ctx.inject(Runtime)
+        if name is None:
+            runtime = self.ctx.inject(Runtime)
+            # Generate unique name based on location and counter.
+            name = (
+                "anonymous_"
+                + runtime.get_nested_location().split("/").pop()
+                + f"_{next(self.counter)}"
+            )
 
-        # Generate unique name based on location and counter
-        # Format: zz_<function_name>_<counter>
-        name = (
-            "anonymous_"
-            + runtime.get_nested_location().split("/").pop()
-            + f"_{next(self.counter)}"
-        )
-
-        # Create anonymous subclass with overrides
+        # Create subclass with overrides.
         item = type(name, (self,), kwargs)
         if count is not None:
             return ItemStack(item, count)
