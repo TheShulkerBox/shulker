@@ -11,6 +11,7 @@ dotenv.load_dotenv()
 SERVER_ID = os.environ.get("BLOOM_SERVER_ID")
 BLOOM_API_KEY = os.environ.get("BLOOM_API_KEY")
 ERROR_PATTERN = re.compile(r"\[\d\d:\d\d:\d\d\] \[Server thread/ERROR\]: (.+)")
+DEFAULT_LOG_LINES = 200
 
 
 def create_url() -> str:
@@ -52,7 +53,13 @@ async def make_request(
         return resp
 
 
-async def watch_for_errors(url: str, token: str) -> list[str]:
+async def watch_for_errors(
+    url: str,
+    token: str,
+    *,
+    include_backlog: bool = False,
+    backlog_lines: int = DEFAULT_LOG_LINES,
+) -> list[str]:
     errors = []
     try:
         async with connect(
@@ -63,16 +70,24 @@ async def watch_for_errors(url: str, token: str) -> list[str]:
             # Authenticate with the server
             auth_message = {"event": "auth", "args": [token]}
             await websocket.send(json.dumps(auth_message))
+            if include_backlog:
+                await websocket.send(json.dumps({"event": "send logs", "args": [None]}))
 
             # Listen for messages
             async for message in websocket:
                 if (data := json.loads(message)) and (
                     data["event"] == "console output"
                 ):
-                    for arg in data["args"]:
+                    args = data["args"]
+                    if include_backlog and backlog_lines > 0:
+                        args = args[-backlog_lines:]
+                        include_backlog = False
+
+                    for arg in args:
                         rich.print(arg)
                         if "Server thread/ERROR" in arg:
-                            errors.append(ERROR_PATTERN.match(arg).group(1).strip())
+                            if match := ERROR_PATTERN.match(arg):
+                                errors.append(match.group(1).strip())
 
     except Exception as err:
         print(err)

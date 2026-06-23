@@ -1,0 +1,35 @@
+from item:base import KitItem
+
+
+# A one-use melee tool: bonking with it swaps it into a weaker shard.
+class FragileSpyglass(KitItem):
+    id = "spyglass"
+    item_name = "Fragile Spyglass"
+    lore = "Fragile, use with caution!"
+    melee = {
+        damage: 4,
+        speed: 1.0,
+        knockback: 3,
+    }
+    strike = {
+        slot: "weapon.mainhand",
+        attacker: ./spyglass/on_bonk,
+    }
+    enchantment_glint_override = true
+
+
+class SpyglassShard(KitItem):
+    id = "amethyst_shard"
+    item_name = "Spyglass Shard"
+    lore = "Ouch! It's a bit sharp"
+    melee = {
+        damage: 2,
+        speed: 1.8,
+    }
+
+
+function ./spyglass/on_bonk:
+    # Replace the exact held spyglass so the broken shard keeps occupying the weapon slot.
+    item replace entity @s weapon.mainhand with SpyglassShard
+    playsound minecraft:block.glass.break master @s ~ ~ ~ 1 1.5
+    playsound minecraft:block.amethyst_block.break master @s ~ ~ ~ 0.25 1.7

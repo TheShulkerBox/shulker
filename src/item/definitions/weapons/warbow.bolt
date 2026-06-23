@@ -1,0 +1,223 @@
+from item:base import KitItem
+from item:definitions/weapon import Bow
+from lib:helpers import ticks
+from lib:xp import XP
+from server:core import SERVER_TICK
+from server:events import ON_PLAYER_RESET
+from component:bow import BOW_CHARGE, BOW_PRECISION, VANILLA_ACCURACY
+from player:events import ON_HURT
+
+WARBOW_CHARGING: FunctionPath = item:warbow/while_charging
+WARBOW_CLEAR_FOCUS_STATE: FunctionPath = item:warbow/clear_focus_state
+WARBOW_FIRE: FunctionPath = item:warbow/on_fire
+WARBOW_HIT: FunctionPath = item:warbow/on_hit
+WARBOW_TICK_ARROW: FunctionPath = item:warbow/tick_projectile
+WARBOW_HIT_BLOCK: FunctionPath = item:warbow/hit_block
+WARBOW_FUMBLE_FOCUS: FunctionPath = item:warbow/fumble_focus
+
+WARBOW_RELOAD = Scoreboard("item.warbow_reload", criteria="dummy")
+WARBOW_DAMAGE_TAKEN = Scoreboard("item.warbow_damage_taken", criteria="minecraft.custom:minecraft.damage_taken")
+WARBOW_LAST_DAMAGE_TAKEN = Scoreboard("item.warbow_last_damage_taken", criteria="dummy")
+WARBOW_PROJECTILE_TIMER = Scoreboard("item.warbow_projectile_timer", criteria="dummy")
+WARBOW_GRAVITY_TIMER = Scoreboard("item.warbow_projectile_sound_timer", criteria="dummy")
+
+FOCUS_TAG = "warbow.focus"
+FUMBLED_FOCUS_TAG = "warbow.fumbled_focus"
+PROJECTILE_TAG = "warbow.projectile"
+FOCUSED_PROJECTILE_TAG = "warbow.focused_projectile"
+
+WARBOW_RELOAD_TICKS = ticks("45t")
+WARBOW_VELOCITY_AMPLIFIER = 2
+HUNGER_AMPLIFIER = 1
+HUNGER_TICKS = ticks("2.5s")
+
+
+# The arrow item exists separately from the bow so the ammo component can give it
+# after the reload timer completes.
+class HeavyArrow(KitItem):
+    id = "tipped_arrow"
+    item_name = "Heavy Arrow"
+    potion_contents = {
+        custom_color: "#5e5e5e",
+    }
+
+
+# HeavyAmmo owns the reload completion. The bow only starts the timer after a shot.
+class HeavyAmmo(KitItem):
+    id = "stick"
+    item_name = "Warbow Ammo"
+    ammo = {
+        output_item: HeavyArrow,
+        reload_score: WARBOW_RELOAD["@s"],
+        reload_ticks: WARBOW_RELOAD_TICKS,
+    }
+
+
+# The bow component wires Minecraft's bow use/projectile events into the functions
+# below. Those functions intentionally live with the weapon item, not the kit.
+class Warbow(Bow):
+    item_name = "Warbow"
+    lore = "A high-caliber bow with extended reload times"
+    enchantment_glint_override = true
+    bow = {
+        charging: WARBOW_CHARGING,
+        unnock: WARBOW_CLEAR_FOCUS_STATE,
+        fire: WARBOW_FIRE,
+        hit: WARBOW_HIT,
+        tick_arrow: WARBOW_TICK_ARROW,
+        hit_block: WARBOW_HIT_BLOCK,
+        accuracy: VANILLA_ACCURACY,
+    }
+
+
+append function ON_HURT:
+    execute if entity @s[tag=FOCUS_TAG] run function WARBOW_FUMBLE_FOCUS:
+        tag @s add FUMBLED_FOCUS_TAG
+        tag @s remove FOCUS_TAG
+        title @s actionbar {text: "You have fumbled your focus. Redraw your bow to regain focus.", color: Theme.Failure}
+
+
+function WARBOW_CHARGING:
+    execute unless entity @s[tag=FUMBLED_FOCUS_TAG] run function ~/update_focus:
+        # Focus becomes armed after three seconds unless incoming damage fumbled it.
+        if BOW_CHARGE["@s"] <= ticks("3s") - 1:
+            execute function ~/show_focus_progress:
+                if BOW_CHARGE["@s"] <= (ticks("1s") - 1):
+                    title @s actionbar "Focusing."
+                if ticks("1s") <= BOW_CHARGE["@s"] <= (ticks("2s") - 1):
+                    title @s actionbar "Focusing.."
+                if ticks("2s") <= BOW_CHARGE["@s"] <= (ticks("3s") - 1):
+                    title @s actionbar "Focusing..."
+
+        # breath sound when almost live
+        if BOW_CHARGE["@s"] == ticks("3s") - 1:
+            playsound minecraft:entity.player.breath master @s ~ ~ ~ 1 0.7
+
+        # focus is now live
+        if BOW_CHARGE["@s"] == ticks("3s"):
+            execute function ~/arm_focus:
+                tag @s add FOCUS_TAG
+                if BOW_CHARGE["@s"] <= (ticks("6s") - 1):
+                    title @s actionbar {text: "Focus Mode: Your next shot is extra potent", bold: true}
+
+        # drain after some time
+        if BOW_CHARGE["@s"] >= ticks("6s"):
+            execute function ~/drain_stamina:
+                title @s actionbar [
+                    {text: "Stamina draining", color: Theme.Failure, bold: true},
+                    {text: ": Release bow to regain stamina", bold: false}
+                ]
+                effect give @s hunger HUNGER_AMPLIFIER HUNGER_TICKS true
+    
+    # for the "zoom" effect
+    effect give @s minecraft:slowness 1 0 false
+
+
+function WARBOW_FIRE:
+    # access the owner of the arrow
+    function ~/on_origin:
+        # figure out if focus shot
+        execute store result score var SCORE.temp["#focused_shot"] if entity @s[tag=FOCUS_TAG]
+        
+        # The ammo component watches this score and fills the XP bar while it counts down.
+        WARBOW_RELOAD["@s"] = WARBOW_RELOAD_TICKS
+        XP.set_points(0)
+        
+        effect give @s minecraft:weakness 2 0 true
+        effect give @s minecraft:slowness 1 4 true
+        
+        title @s actionbar "Reloading"
+        
+        # validate min charge
+        if BOW_CHARGE["@s"] < ticks("1s"):
+            return:
+                function WARBOW_CLEAR_FOCUS_STATE
+                title @s actionbar {text: "Warbow can only shoot fully charged shots", color: Theme.Failure}
+                playsound minecraft:entity.item.break master @a ~ ~ ~ 0.4 1.6
+                return fail
+        
+        playsound minecraft:block.anvil.land master @a ~ ~ ~ 0.4 1.7
+        
+        execute if entity @s[tag=FOCUS_TAG] run playsound minecraft:entity.arrow.shoot master @a ~ ~ ~ 0.3 2
+        playsound minecraft:block.fire.extinguish master @s[tag=FOCUS_TAG] ~ ~ ~ 0.3 1.2
+        playsound minecraft:entity.player.breath master @s[tag=FOCUS_TAG] ~ ~ ~ 2 0
+
+        return 1
+    
+    # early exit if it wasn't a full charge
+    execute on origin unless function ~/on_origin run return 1
+    
+    # otherwise, merge in stuff
+    tag @s add PROJECTILE_TAG
+    SELF.merge({damage: 2.0, crit: false, pickup: 2})
+
+    # extra stuff if focus shot
+    if SCORE.temp["#focused_shot"] > 0:
+        SELF.merge({damage: 3.0, crit: false})
+        tag @s add FOCUSED_PROJECTILE_TAG
+    
+    # amplify velocity
+    SELF.Motion[0] = (SELF.Motion[0] * BOW_PRECISION * WARBOW_VELOCITY_AMPLIFIER) / (BOW_PRECISION)
+    SELF.Motion[1] = (SELF.Motion[1] * BOW_PRECISION * WARBOW_VELOCITY_AMPLIFIER) / (BOW_PRECISION)
+    SELF.Motion[2] = (SELF.Motion[2] * BOW_PRECISION * WARBOW_VELOCITY_AMPLIFIER) / (BOW_PRECISION)
+    
+    # clean up focus
+    execute on origin run function WARBOW_CLEAR_FOCUS_STATE
+    
+
+function WARBOW_HIT:
+    execute if entity @s run particle minecraft:end_rod ~ ~1 ~ 0.2 0.4 0.2 0.05 12 force
+    execute on attacker run playsound minecraft:entity.arrow.hit_player master @s ~ ~ ~ 1 1.2
+
+
+function WARBOW_CLEAR_FOCUS_STATE:
+    tag @s remove FOCUS_TAG
+    tag @s remove FUMBLED_FOCUS_TAG
+    BOW_CHARGE["@s"].reset()
+    title @s actionbar ""
+
+
+function WARBOW_TICK_ARROW:
+    execute unless entity @s[tag=PROJECTILE_TAG] run return fail
+
+    # Projectile behavior is item-owned because the bow created the special arrow.
+    WARBOW_PROJECTILE_TIMER["@s"] += 1
+    WARBOW_GRAVITY_TIMER["@s"] += 1
+
+    # toggle for rotation bugs
+    data merge entity @s {Air:1s}
+
+    # toggle off/on every 4 ticks
+    if WARBOW_GRAVITY_TIMER["@s"] <= 4:
+        SELF.NoGravity = true
+    elif WARBOW_GRAVITY_TIMER["@s"] > 5:
+        SELF.NoGravity = false
+    
+    # reset gravity
+    scoreboard players set @s[scores={WARBOW_GRAVITY_TIMER=7..}] WARBOW_GRAVITY_TIMER 0
+
+    # particles
+    particle minecraft:crit ^ ^ ^ 0 0 0 0.1 1 force @a[distance=..64]
+    particle minecraft:end_rod ~ ~ ~ 0 0 0 0 1 force @a[distance=..64]
+
+    # focus particles
+    execute if entity @s[tag=FOCUSED_PROJECTILE_TAG] run function ~/focused_projectile_particles:
+        particle minecraft:white_ash ~ ~ ~ 0.1 0.1 0.1 0.1 5 force
+        particle minecraft:end_rod ~ ~ ~ 0 0 0 0 1 force
+        playsound minecraft:item.trident.riptide_3 master @a ~ ~ ~ 0.3 2
+
+    # death timer
+    kill @s[scores={WARBOW_PROJECTILE_TIMER=500..}]
+
+
+function WARBOW_HIT_BLOCK:
+    particle minecraft:end_rod ~ ~ ~ 0 0 0 0.2 20 force @a[distance=..64]
+    playsound minecraft:block.bamboo.break master @a[distance=..16] ~ ~ ~ 1 0
+    tag @s remove FOCUS_TAG
+    tag @s remove FUMBLED_FOCUS_TAG
+
+
+append function ON_PLAYER_RESET:
+    function WARBOW_CLEAR_FOCUS_STATE
+    WARBOW_RELOAD["@s"].reset()
+    WARBOW_LAST_DAMAGE_TAKEN["@s"].reset()

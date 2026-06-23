@@ -1,6 +1,37 @@
 from item:definitions/weapon import Bow
 
+MUSKET_FIRE: FunctionPath = item:musket/fire
+MUSKET_RELOAD: FunctionPath = item:musket/reload
+
 
 class Musket(Bow):
     id = "crossbow"
     item_name = "Musket"
+    charged_projectiles = [
+        {
+            id: "minecraft:arrow",
+            count: 1,
+        }
+    ]
+    crossbow = {
+        fire: MUSKET_FIRE,
+    }
+    kill = {
+        slot: "weapon.mainhand",
+        killer: MUSKET_RELOAD,
+    }
+
+
+function MUSKET_FIRE:
+    tag @s add musket_projectile
+    data merge entity @s {damage:7.0d,crit:0b,pickup:2b}
+
+    execute on owner run playsound minecraft:entity.firework_rocket.blast master @a ~ ~ ~ 1 0.4
+    execute on owner run playsound minecraft:item.flintandsteel.use master @a ~ ~ ~ 1 0
+    execute on owner run playsound minecraft:item.flintandsteel.use master @a ~ ~ ~ 1 0
+    particle minecraft:poof ~ ~ ~ 0.8 0.8 0.8 0.05 3
+    particle minecraft:large_smoke ~ ~ ~ 0 0 0 0 1 normal @a
+
+
+function MUSKET_RELOAD:
+    execute if items entity @s weapon.mainhand (-Musket) run item replace entity @s weapon.mainhand with Musket

@@ -103,6 +103,21 @@ class TestingBow(KitItem):
         unnock: _component_callback("bow", "unnock"),
         fire: ./fire,
         hit: ./hit,
+        # accuracy: 1.0,
+    }
+
+
+class TestingCrossbow(KitItem):
+    id = "crossbow"
+    item_name = "Component Test: Crossbow"
+    lore = "crossbow charge, charging, load, cancel, fire, and hit"
+    crossbow = {
+        charge: _component_callback("crossbow", "charge"),
+        charging: _component_callback("crossbow", "charging"),
+        load: _component_callback("crossbow", "load"),
+        cancel: _component_callback("crossbow", "cancel"),
+        fire: ./crossbow_fire,
+        hit: ./crossbow_hit,
     }
 
 
@@ -113,6 +128,14 @@ function ./fire:
 function ./hit:
     tellraw @s "u were hit by a warbow"
     execute on attacker run tellraw @s "you hit the target"
+
+function ./crossbow_fire:
+    execute on owner run tellraw @s "[component test] crossbow: fire"
+    tellraw @a "i am a crossbow arrow"
+
+function ./crossbow_hit:
+    tellraw @s "[component test] crossbow: hit"
+    execute on attacker run tellraw @s "you hit the target with a crossbow"
 
 
 class TestingTicking(KitItem):
@@ -239,6 +262,7 @@ function ./give_all:
     give @s TestingSneaking
     give @s TestingUseable
     give @s TestingBow
+    give @s TestingCrossbow
     give @s TestingTicking
     give @s TestingArmor
     give @s TestingFood

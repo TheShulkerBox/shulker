@@ -37,7 +37,8 @@ function admin:kit_armor_stand_modernizer:
     execute as @s[type=armor_stand,tag=KitStand,name="Kit Conquistador"] run data modify entity @s CustomName set value conquistador
     execute as @s[type=armor_stand,tag=KitStand,name="Kit Brigadier"] run data modify entity @s CustomName set value brigadier
     execute as @s[type=armor_stand,tag=KitStand,name="Kit Ranger"] run data modify entity @s CustomName set value ranger
-    execute as @s[type=armor_stand,tag=KitStand,name="Kit Warbow"] run data modify entity @s CustomName set value warbow
+    execute as @s[type=armor_stand,tag=KitStand,name="Kit Warbow"] run data modify entity @s CustomName set value warbowman
+    execute as @s[type=armor_stand,tag=KitStand,name="Kit Warbowman"] run data modify entity @s CustomName set value warbowman
     execute as @s[type=armor_stand,tag=KitStand,name="Kit Poacher"] run data modify entity @s CustomName set value poacher
     execute as @s[type=armor_stand,tag=KitStand,name="Kit Engineer"] run data modify entity @s CustomName set value engineer
     execute as @s[type=armor_stand,tag=KitStand,name="Kit Maceman"] run data modify entity @s CustomName set value maceman

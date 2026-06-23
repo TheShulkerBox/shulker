@@ -16,6 +16,10 @@ Minecraft components.
 - Output: Transformed value (e.g., 16711680)
 - Example: dyed_color transformer converts hex colors to integers
 
+**Global transformers** inspect all resolved component values:
+- Input: The full resolved component dictionary
+- Output: One or more vanilla components to merge into the item
+
 ## Creating Custom Components
 
 Subclass `Component` and define fields for user input:
@@ -34,9 +38,9 @@ Subclass `Transformer` and define transformation logic:
     class HexColor(Transformer):
         color: str | int
 
-        def render(self) -> int | None:
+        def build(self) -> int | None:
             if isinstance(self.color, int):
-                return self.color
+                return None
             return int(self.color.lstrip('#'), 16)
 
 ## Auto-Registration
@@ -57,6 +61,7 @@ if TYPE_CHECKING:
 
 
 BuildOutput = dict[str, Any] | None
+TransformerOutput = Any | None
 
 
 class ComponentBuildError(ValueError):
@@ -108,13 +113,14 @@ class Component:
 
     def __init_subclass__(cls, cache: bool = True, base_type: type | None = None):
         """Auto-register component and convert to dataclass."""
-        if cls.__name__ == "Transformer":
-            return super().__init_subclass__()  # Don't register the base Transformer class
-        
+        if cls.__name__ in {"Transformer", "GlobalTransformer"}:
+            # Don't register the transformer base classes as custom components.
+            return super().__init_subclass__()
+
         cls._skip_cache = not cache
         cls._base_type = base_type
         cls.__annotations__  # just access it to catch any Annotated type errors early
-        
+
         if base_type is not None:
             cls.__annotations__["base_type"] = cls._base_type
 
@@ -182,8 +188,8 @@ class Transformer(Component):
     ## Subclassing
 
     1. Define fields for accepted input types (with union types if needed)
-    2. Implement `render()` to return transformed value
-    3. Optionally implement `post_render()` for cleanup
+    2. Implement `build()` to return transformed value
+    3. Optionally implement `post_build()` for cleanup
 
     ## Example
 
@@ -191,10 +197,10 @@ class Transformer(Component):
         class ColorTransformer(Transformer):
             color: str | int  # Accept hex string or integer
 
-            def render(self) -> int:
+            def build(self) -> int | None:
                 if isinstance(self.color, str):
                     return int(self.color.lstrip('#'), 16)
-                return self.color
+                return None
 
     Then use in items:
 
@@ -203,3 +209,30 @@ class Transformer(Component):
     """
 
     registered: ClassVar[list[Self]] = []  # Separate registry for transformers
+
+    def build(self) -> TransformerOutput:
+        """Transform this component's value.
+
+        Return None to ignore this transformer and preserve the original value.
+        """
+        raise NotImplementedError
+
+
+@dataclass(repr=False)
+class GlobalTransformer(Component):
+    """Base class for transformers that inspect all resolved components.
+
+    Global transformers run after custom components and per-component
+    transformers have completed their build and post-build hooks. They receive
+    the full resolved component dictionary via ``resolved_components`` and
+    return a dictionary of components that gets merged into the item output.
+    """
+
+    registered: ClassVar[list[Self]] = []
+
+    def build(self) -> BuildOutput:
+        """Return components to merge into the resolved output.
+
+        Return None to ignore this transformer.
+        """
+        raise NotImplementedError

@@ -10,13 +10,13 @@ class Vector:
     Examples:
     ```bolt
     # Store a unit vector from the current executor rotation.
-    look = Vector.unit().apply_to(STORAGE.temp.look)
+    STORAGE.temp.look = Vector.unit().data
 
     # Store the same direction with throw power baked in.
-    motion = Vector.unit(0.3).apply_to(STORAGE.temp.throwable.motion)
+    STORAGE.temp.throwable.motion = Vector.unit(0.3).data
 
     # Equivalent scaling syntax for compile-time numeric amplifiers.
-    motion = (Vector.unit() * 0.3).apply_to(STORAGE.temp.throwable.motion)
+    STORAGE.temp.throwable.motion = (Vector.unit() * 0.3).data
 
     # Apply a vector from a specific origin.
     end_pos = Vector.unit(2.0).apply_from(SELF.Pos, STORAGE.temp.raycast.end)
@@ -34,33 +34,39 @@ class Vector:
       player rotation before handing control to the user callback.
     """
 
-    def __init__(self, source: DataSource | Sequence[float] | None = None, amplifier: float = 1.0):
+    def __init__(
+        self,
+        source: DataSource | Sequence[float] | None = None,
+        amplifier: float = 1.0,
+        output: DataSource | None = None,
+    ):
         self.source = source
         self.amplifier = amplifier
+        self.output = output
 
         self._validate_amplifier(self.amplifier)
         if self.source is not None:
             self._validate_source(self.source)
 
     @classmethod
-    def unit(cls, amplifier: float = 1.0):
+    def unit(cls, amplifier: float = 1.0, output: DataSource | None = None):
         """Create a vector from the current executor rotation."""
-        return cls(amplifier=amplifier)
+        return cls(amplifier=amplifier, output=output)
 
     @classmethod
-    def of(cls, source: DataSource | Sequence[float], amplifier: float = 1.0):
+    def of(cls, source: DataSource | Sequence[float], amplifier: float = 1.0, output: DataSource | None = None):
         """Create a vector from a literal xyz sequence or runtime storage."""
-        return cls(source, amplifier)
+        return cls(source, amplifier, output)
 
     @classmethod
-    def from_storage(cls, source: DataSource, amplifier: float = 1.0):
+    def from_storage(cls, source: DataSource, amplifier: float = 1.0, output: DataSource | None = None):
         """Create a vector from runtime storage containing three coordinates."""
-        return cls(source, amplifier)
+        return cls(source, amplifier, output)
 
     def __mul__(self, amplifier: float):
         """Return a copy of this vector scaled by a compile-time number."""
         self._validate_amplifier(amplifier)
-        return Vector(self.source, self.amplifier * amplifier)
+        return Vector(self.source, self.amplifier * amplifier, self.output)
 
     def __rmul__(self, amplifier: float):
         """Return a copy of this vector scaled by a compile-time number."""
@@ -73,10 +79,21 @@ class Vector:
     def with_amplifier(self, amplifier: float):
         """Return a copy of this vector with a replacement amplifier."""
         self._validate_amplifier(amplifier)
-        return Vector(self.source, amplifier)
+        return Vector(self.source, amplifier, self.output)
+
+    def with_output(self, output: DataSource):
+        """Return a copy of this vector using a custom default output."""
+        return Vector(self.source, self.amplifier, output)
+
+    @property
+    def data(self) -> DataSource:
+        """Store this vector in its default output and return that data source."""
+        return self.store()
 
     def store(self, output: DataSource | None = None) -> DataSource:
         """Store this vector's xyz value and return the storage location."""
+        if output is None:
+            output = self.output
         if output is None:
             output = STORAGE.temp.vector
 

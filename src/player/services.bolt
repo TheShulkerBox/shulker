@@ -1,7 +1,7 @@
 from server:core import ROOT_ADVANCEMENT
 from server:events import ON_END_TICK
 
-PLAYER_TICK = ~/tick
+PLAYER_TICK = ./tick
 
 
 append function ON_END_TICK:

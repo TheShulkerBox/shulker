@@ -1,0 +1,74 @@
+from functools import cached_property
+
+from server:core import SERVER_TICK
+from player:services import PLAYER_TICK
+from lib:xp import XP
+from lib:predicates import has_item_predicate
+from item:type import ItemType
+
+from ./type import Component
+
+
+class Ammo(Component):
+    """Turns an inventory item into delayed ammo for another item.
+
+    The producer item starts `reload_score`; this component counts it down,
+    updates the XP bar, consumes one ammo item, and gives `output_item`.
+    """
+    output_item: Annotated[ItemType, "Item given after this ammo is consumed"]
+    reload_score: Annotated[ScoreSource, "Scoreboard objective used as this ammo's reload timer"]
+    reload_ticks: Annotated[int, "Reload duration, used to display progress on the XP bar"]
+
+    def build(self):
+        append function PLAYER_TICK:
+            # only tick if we actually have ammo
+            execute if predicate has_item_predicate(self.item) run function self.tick_reload
+    
+    @cached_property
+    def tick_reload(self):
+        path = f"{self.path}/tick_reload"
+        function path:
+            self.reload_score -= 1
+
+            # calculate the percentage of the xp bar to set
+            XP.set_points(((self.reload_ticks - self.reload_score) * 100) / self.reload_ticks)
+
+            if not self.reload_score:
+                function self.try_reload
+        
+        return path
+    
+    @cached_property
+    def try_reload(self):
+        path = f"{self.path}/try_reload"
+        function path:
+            # If the player already has this ammo output, don't consume a reserve item.
+            execute if predicate has_item_predicate(self.output_item) return run function self.cancel_reload
+            
+            # otherwise, we have ammo, clear 1 and move on
+            clear @s (-self.item) 1
+            function self.finish_reload
+        
+        return path
+
+    @cached_property
+    def cancel_reload(self):
+        path = f"{self.path}/cancel_reload"
+        function path:
+            XP.set_points(0)
+            self.reload_score = -1
+        
+        return path
+    
+    @cached_property
+    def finish_reload(self):
+        path = f"{self.path}/reload_reload"
+        function path:
+            give @s (self.output_item)
+            playsound minecraft:block.iron_door.open master @s ~ ~ ~ 0.8 0.5
+            XP.set_points(0)
+            self.reload_score = -1
+            execute if predicate has_item_predicate(self.item):
+                self.reload_score.reset()
+        
+        return path

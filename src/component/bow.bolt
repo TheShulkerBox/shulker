@@ -1,16 +1,28 @@
 from dataclasses import dataclass
 from functools import cached_property
+import math
 
 from lib:errors import CustomComponentError
 from lib:helpers import nbt_dump, ticks
+from lib:vector_utils import Vector
 from server:core import ROOT_ADVANCEMENT
 from server:events import ON_PLAYER_RESET
 
 from ./item_enchant import ItemEnchant
 from ./type import Component, ComponentBuildError, RecursiveComponent
 
-LAST_CHARGING_SCORE = Scoreboard("component.bow_last_charging", criteria="dummy")
-CHARGING_SCORE = Scoreboard("component.bow_charge", criteria="dummy")
+LAST_BOW_CHARGE = Scoreboard("component.bow_last_charging", criteria="dummy")
+BOW_CHARGE = Scoreboard("component.bow_charge", criteria="dummy")
+
+BOW_PRECISION = 10000
+BOW_DEFAULT_VELOCITY = 3.0
+
+# Vanilla bows shoot at velocity 3 with divergence 1.0. Internally, Minecraft
+# scales that divergence by 0.0172275 before adding gaussian noise to each axis.
+# This component exposes the reciprocal as "accuracy", so larger values mean a
+# tighter spread: VANILLA_ACCURACY * 2 is roughly twice as accurate as vanilla.
+VANILLA_BOW_DIVERGENCE = 0.0172275
+VANILLA_ACCURACY = 1 / VANILLA_BOW_DIVERGENCE
 
 
 class Bow(Component):
@@ -19,23 +31,35 @@ class Bow(Component):
     For various hooks, you should consider using `execute on` to select the appropriate entity. For example:
     - `fire` will default to arrow as `@s`. Use `execute on origin` to select the player.
     - `hit` will default to victim as `@s`. Use `execute on attacker` to select the shooter.
+
+    Accuracy is only implemented if you've held back the bow for a full (1s) charge.
     """
     nock: Annotated[FunctionPath | None, "Runs as the player when the bow is nocked"] = None
     charging: Annotated[FunctionPath | None, "Runs as the player when the bow is charging"] = None
     charged: Annotated[FunctionPath | None, "Runs as the player when the bow is fully charged"] = None
     unnock: Annotated[FunctionPath | None, "Runs as the player when the bow is unnocked"] = None
-    fire: Annotated[FunctionPath | None, "Runs on the arrow"] = None
+    fire: Annotated[FunctionPath | None, "Runs on the arrow when fired"] = None
+    tick_arrow: Annotated[FunctionPath | None, "Runs on the arrow every tick"] = None
     hit: Annotated[FunctionPath | None, "Runs as the victim of an arrow shot"] = None
+    hit_block: Annotated[FunctionPath | None, "Runs as the arrow when it hits a block"] = None
+    accuracy: Annotated[
+        int | float | ScoreSource | None,
+        "Accuracy value. Defaults to vanilla; score sources are read from the shooter and scaled by 10000."
+    ] = None
 
     def build(self):
         if self.item.id not in ("bow", "minecraft:bow"):
             raise CustomComponentError("Bow component can only be applied to items with id 'minecraft:bow'")
 
-        if not (self.nock or self.charging or self.charged or self.fire or self.hit):
+        if isinstance(self.accuracy, (int, float)) and self.accuracy <= 0:
+            raise CustomComponentError("Bow accuracy must be greater than 0")
+
+        if not (self.nock or self.charging or self.charged or self.unnock or self.fire or self.hit or (self.accuracy is not None)):
             raise CustomComponentError(
-                "At least one of `nock`, `charging`, `charged`, `unnock`, `fire`, or `hit` must be defined"
+                "At least one of `nock`, `charging`, `charged`, `unnock`, `fire`, `hit`, or `accuracy` must be defined"
             )
 
+        # helps track while we are charging
         advancement self.path {
             "parent": ROOT_ADVANCEMENT,
             "criteria": {
@@ -49,47 +73,77 @@ class Bow(Component):
             "rewards": { "function": self.while_charging }
         }
         
-        effects = {
-            "minecraft:projectile_spawned": [
+        # optional enchantment effects
+        effects = {}
+
+        # code on projectile spawning for `on_fire` and custom accuracy
+        if self.fire or (self.accuracy is not None) or self.tick_arrow:
+            effects["minecraft:projectile_spawned"] = [
                 { "effect": { "type": "minecraft:run_function", "function": self.on_fire } }
-            ],
-            "minecraft:post_attack": [
+            ]
+
+        # code on projectile hit for `on_hit`
+        if self.hit:
+            effects["minecraft:post_attack"] = [
                 {
                     "effect": { "type": "minecraft:run_function", "function": self.hit },
                     "enchanted": "attacker",
                     "affected": "victim"
                 }
             ]
-        }
+        
+        # code for proj. hitting block for `hit_block`
+        if self.hit_block:
+            effects["minecraft:hit_block"] = [
+                {
+                    "effect": {
+                        "type": "minecraft:run_function",
+                        "function": self.hit_block
+                    }
+                }
+            ]
 
-        return {item_enchant: RecursiveComponent(ItemEnchant, effects)}
-    
+        # only add enchantment if needed
+        if effects:
+            return {item_enchant: RecursiveComponent(ItemEnchant, effects)}
+
     @cached_property
     def while_charging(self):
         path = f"{self.path}/while_charging"
-        detect_charging = f"{self.path}/detect_charging"
         
         function path:
             if self.nock:
-                if not (CHARGING_SCORE["@s"] > 0):
+                # knock happens on first tick of charging
+                if not (BOW_CHARGE["@s"] > 0):
                     function self.nock
                 
-            CHARGING_SCORE["@s"] += 1
+            BOW_CHARGE["@s"] += 1
 
             if self.charged:
-                if CHARGING_SCORE["@s"] == ticks("1s"):
+                # fully charged bow @ 1s
+                if BOW_CHARGE["@s"] == ticks("1s"):
                     function self.charged
 
-            schedule function detect_charging 1t replace
-            function self.charging
+            # handles detecting stop charge
+            schedule function self.detect_charging 1t replace
+            
+            if self.charging:
+                # callback
+                function self.charging
         
-        function detect_charging:
-            execute as @a[scores={CHARGING_SCORE=1..}]:
-                if LAST_CHARGING_SCORE["@s"] == CHARGING_SCORE["@s"]:
+        return path
+    
+    @cached_property
+    def detect_charging(self):
+        path = f"{self.path}/detect_charging"
+        function path:
+            execute as @a[scores={BOW_CHARGE=1..}]:
+                # if the charging score is the same as last tick, then we are no longer charging
+                if LAST_BOW_CHARGE["@s"] == BOW_CHARGE["@s"]:
                     return run function self.no_longer_charging
                 
-                schedule function detect_charging 1t replace
-                LAST_CHARGING_SCORE["@s"] = CHARGING_SCORE["@s"]
+                schedule function path 1t replace
+                LAST_BOW_CHARGE["@s"] = BOW_CHARGE["@s"]
             
         return path
     
@@ -107,14 +161,124 @@ class Bow(Component):
     def on_fire(self):
         path = f"{self.path}/on_fire"
         function path:
+            tag @s add self.arrow_tag
+            
+            if (self.accuracy is not None):
+                function self.normalize_arrow
+            
             if self.fire:
                 function self.fire
+            
+            if self.tick_arrow:
+                schedule function self.arrow_loop 1t replace
+            
+            if (self.accuracy is not None):
+                function self.apply_accuracy
+            
+            # prevents unnock from being called if u fire
+            schedule clear self.detect_charging
             function ./on_player_reset
 
         return path
+    
+    @cached_property
+    def arrow_tag(self):
+        return f"entity.{self.item.name}"
+    
+    @cached_property
+    def arrow_loop(self):
+        path = f"{self.path}/tick_arrow"
+        function path:
+            execute as @e[type=arrow, tag=self.arrow_tag] at @s:
+                schedule function path 1t replace
+                function self.tick_arrow
+
+        return path
+    
+    @cached_property
+    def normalize_arrow(self):
+        path = f"{self.path}/normalize_arrow"
+        function path:
+            execute on origin if score @s BOW_CHARGE matches ..19 run return fail
+
+            execute on origin:
+                # Calculate the shooter's un-randomized bow velocity and store it in temp storage for later use.
+                STORAGE.temp.bow_accuracy_vector = Vector.unit(BOW_DEFAULT_VELOCITY).data
+            
+            SELF.Motion[0] = STORAGE.temp.bow_accuracy_vector[0]
+            SELF.Motion[1] = STORAGE.temp.bow_accuracy_vector[1]
+            SELF.Motion[2] = STORAGE.temp.bow_accuracy_vector[2]
+
+        return path
+
+    @cached_property
+    def apply_accuracy(self):
+        path = f"{self.path}/apply_accuracy"
+        function path:
+            execute on origin if score @s BOW_CHARGE matches ..19 run return fail
+
+            # store current arrow velocity
+            STORAGE.temp.current_vector = SELF.Motion
+            motion_x = SCORE.temp["#bow_motion_x"]
+            motion_y = SCORE.temp["#bow_motion_y"]
+            motion_z = SCORE.temp["#bow_motion_z"]
+            motion_x = STORAGE.temp.current_vector[0] * BOW_PRECISION
+            motion_y = STORAGE.temp.current_vector[1] * BOW_PRECISION
+            motion_z = STORAGE.temp.current_vector[2] * BOW_PRECISION
+
+            # perform the mc gaussian noise approximation
+            applied_noise = self._apply_gaussian_noise(
+                self._calculate_accuracy_range(),
+                motion_x,
+                motion_y,
+                motion_z,
+            )
+
+            # apply back onto entity
+            raw f"execute store result entity @s Motion[0] double {1 / BOW_PRECISION} run scoreboard players get {applied_noise[0]}"
+            raw f"execute store result entity @s Motion[1] double {1 / BOW_PRECISION} run scoreboard players get {applied_noise[1]}"
+            raw f"execute store result entity @s Motion[2] double {1 / BOW_PRECISION} run scoreboard players get {applied_noise[2]}"
+
+        return path
+
+    def _calculate_accuracy_range(self):
+        """Calculate the accuracy range based on the bow's accuracy value.
+        
+        Supports both compile-time and runtime values.
+        """
+        if isinstance(self.accuracy, (int, float)):
+            # compile time is just 
+            return int((BOW_DEFAULT_VELOCITY * BOW_PRECISION) / self.accuracy)
+        
+        # Runtime accuracy scores are fixed-point x10000 so callers can
+        # store fractional values like VANILLA_ACCURACY * 10000.
+        return (BOW_DEFAULT_VELOCITY * BOW_PRECISION * BOW_PRECISION) / max(1, self.accuracy)
+
+    def _apply_gaussian_noise(self, spread: ScoreSource, motion_x: ScoreSource, motion_y: ScoreSource, motion_z: ScoreSource):
+        """Add bow accuracy noise to the given motion scores in place.
+        
+        Minecraft uses gaussian noise; two uniform samples per axis gives a simple triangular approximation centered on zero.
+        """
+        STORAGE.macro = {"upper": spread}
+        with var STORAGE.macro:
+            raw f"$execute store result score {SCORE.temp["#random_x"]} run random value 0..$(upper)"
+            raw f"$execute store result score {SCORE.temp["#random_y"]} run random value 0..$(upper)"
+            raw f"$execute store result score {SCORE.temp["#random_z"]} run random value 0..$(upper)"
+            raw f"$execute store result score {SCORE.temp["#random_x_2"]} run random value 0..$(upper)"
+            raw f"$execute store result score {SCORE.temp["#random_y_2"]} run random value 0..$(upper)"
+            raw f"$execute store result score {SCORE.temp["#random_z_2"]} run random value 0..$(upper)"
+
+        motion_x += SCORE.temp["#random_x"]
+        motion_y += SCORE.temp["#random_y"]
+        motion_z += SCORE.temp["#random_z"]
+        motion_x -= SCORE.temp["#random_x_2"]
+        motion_y -= SCORE.temp["#random_y_2"]
+        motion_z -= SCORE.temp["#random_z_2"]
+
+        return (motion_x, motion_y, motion_z)
 
 
 append function ON_PLAYER_RESET:
     execute function ./on_player_reset:
-        CHARGING_SCORE["@s"].reset()
-        LAST_CHARGING_SCORE["@s"].reset()
+        BOW_CHARGE["@s"].reset()
+        LAST_BOW_CHARGE["@s"].reset()

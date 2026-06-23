@@ -1,11 +1,12 @@
-import component:armor as _
 from kit:base import Kit
-from item:base import KitItem
 from item:definitions/food import Food
 from item:definitions/armor import Armor 
+from item:definitions/weapons/warbow import Warbow, HeavyArrow, HeavyAmmo
+from item:definitions/weapons/fragile_spyglass import FragileSpyglass
 
-warbow = Kit(
-    name="Warbow",
+
+warbowman = Kit(
+    name="Warbowman",
     tagline="Specializes in long-range combat",
     icon="tipped_arrow",
 
@@ -15,10 +16,11 @@ warbow = Kit(
         "feet": Armor(id="leather_boots", dyed_color="#DEB233"),
     },
     hotbar=[
-        KitItem(id="bow", item_name="Warbow"),
-        #Wabow Ammo,
+        Warbow,
+        HeavyArrow,
+        HeavyAmmo(count=15),
         Food(count=3),
-        #Spyglass
+        FragileSpyglass,
     ],
 )
 

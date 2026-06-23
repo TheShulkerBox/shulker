@@ -1,0 +1,12 @@
+# from typing import Any
+
+# from lib:errors import CustomComponentError
+# from lib:helpers import nbt_dump
+
+# from ./type import Component
+
+
+# class Tip(Component, base_type=str):
+#     """This component displays"""
+#     def build(self) -> dict[str, Any]:
+        

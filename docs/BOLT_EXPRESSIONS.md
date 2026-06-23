@@ -97,6 +97,26 @@ This pattern shows up in helpers that need partial precision, like motion or
 display scaling. Prefer a named precision constant so the scale-up and
 scale-down are visibly paired.
 
+When reading numeric NBT into a score, prefer an expression assignment over a
+raw command when the value is already available as a `DataSource`:
+
+```bolt
+PRECISION = 10000
+
+SCORE.temp["#x"] = SELF.Pos[0] * PRECISION
+SCORE.temp["#motion_x"] = STORAGE.temp.motion[0] * PRECISION
+```
+
+For look-direction or velocity vectors, prefer Shulker2's local
+`lib:vector_utils.Vector` abstraction over manual marker/base-position math:
+
+```bolt
+from lib:vector_utils import Vector
+
+Vector.unit(3.0).apply_to(STORAGE.temp.motion)
+SCORE.temp["#motion_x"] = STORAGE.temp.motion[0] * PRECISION
+```
+
 ## Data Sources
 
 Create data sources through `Data.storage(...)`, `Data.entity(...)`, or

@@ -25,14 +25,20 @@ def server():
 
 
 @server.command()
-def logs():
+@click.option("--lines", "-n", default=200, show_default=True, help="Backlog lines to fetch.")
+def logs(lines: int):
     import asyncio
     from plugins.bloom import make_request, watch_for_errors
 
     async def watch():
         resp = await make_request("websocket")
         data = resp.json()["data"]
-        await watch_for_errors(data["socket"], data["token"])
+        await watch_for_errors(
+            data["socket"],
+            data["token"],
+            include_backlog=True,
+            backlog_lines=lines,
+        )
 
     asyncio.run(watch())
 

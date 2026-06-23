@@ -1,2 +1,47 @@
+from item:type import ItemType
+
 ON_GROUND_PREDICATE = {condition: "minecraft:entity_properties", entity: "this", predicate: {"minecraft:flags": {is_on_ground: true}}}
 SNEAKING_PREDICATE = {condition: "minecraft:entity_properties", entity: "this", predicate: {flags: {is_sneaking: true}}}
+
+def has_item_predicate(item: ItemType):
+    return {
+        condition: "minecraft:any_of",
+        terms: [
+            {
+                condition: "minecraft:entity_properties",
+                entity: "this",
+                predicate: {
+                    "minecraft:slots": { "inventory.*": item.conditional_dict()
+                    }
+                }
+            },
+            {
+                condition: "minecraft:entity_properties",
+                entity: "this",
+                predicate: {
+                    "minecraft:slots": { "hotbar.*": item.conditional_dict() }
+                }
+            },
+            {
+                condition: "minecraft:entity_properties",
+                entity: "this",
+                predicate: {
+                    "minecraft:slots": { "weapon.*": item.conditional_dict() }
+                }
+            },
+            {
+                condition: "minecraft:entity_properties",
+                entity: "this",
+                predicate: {
+                    "minecraft:slots": { "player.cursor": item.conditional_dict() }
+                }
+            },
+            {
+                condition: "minecraft:entity_properties",
+                entity: "this",
+                predicate: {
+                    "minecraft:slots": { "player.crafting.*": item.conditional_dict() }
+                }
+            }
+        ]
+    }

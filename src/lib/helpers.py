@@ -2,13 +2,17 @@ from collections.abc import Callable, Iterator
 import copy
 from contextlib import contextmanager
 import dataclasses
+from decimal import Decimal
 import json
 import re
 from typing import Any, Literal, Protocol, Union, get_args, get_origin, overload
 import zlib
 
+from bolt_expressions.api import Objective
 import dacite
-from typeguard import ForwardRefPolicy, check_type as _check_type, TypeCheckError
+from bolt_expressions import Source
+from typeguard import ForwardRefPolicy, TypeCheckMemo, check_type as _check_type, TypeCheckError
+
 
 
 def title_case_to_snake_case(title_case_str: str):
@@ -53,6 +57,26 @@ def nbt_dump(obj: dict[str, Any]):
     return serialize(obj)
 
 
+def copy_with_sources(value: Any) -> Any:
+    """Deep-copy plain values while preserving bolt expression sources."""
+    from src.item.type import ItemType
+
+    if isinstance(value, (ItemType, Objective, Source)):
+        return value
+    if isinstance(value, dict):
+        return {
+            copy_with_sources(key): copy_with_sources(child)
+            for key, child in value.items()
+        }
+    if isinstance(value, list):
+        return [copy_with_sources(child) for child in value]
+    if isinstance(value, tuple):
+        return tuple(copy_with_sources(child) for child in value)
+    if isinstance(value, set):
+        return {copy_with_sources(child) for child in value}
+    return copy.deepcopy(value)
+
+
 @overload
 def deep_merge_dicts(
     d1: dict[str, Any], d2: dict[str, Any], inplace: Literal[False]
@@ -80,7 +104,7 @@ def deep_merge_dicts(
     if inplace:
         merged = d1
     else:
-        merged = copy.deepcopy(dict(d1))  # Make a copy of the first dictionary
+        merged = copy_with_sources(dict(d1))  # Make a copy of the first dictionary
 
     for key, value in d2.items():
         if key in merged:
@@ -149,12 +173,31 @@ def coerce_type(value: Any, t: type) -> Any:
 
 def check_type(value: Any, expected_type: type) -> bool:
     """Wrapper around typeguard's check_type that returns a boolean instead of raising an error."""
+    def typecheck_fail_callback(error: TypeCheckError, memo: TypeCheckMemo):
+        try:
+            from item.type import ItemType
+        except ModuleNotFoundError:
+            from src.item.type import ItemType
+        
+        if (args := get_args(expected_type)) and isinstance(args[0], type):
+            if issubclass(args[0], Source) and isinstance(value, Source):
+                return
+            if issubclass(args[0], ItemType) and isinstance(value, ItemType):
+                return
+        
+        raise error
+
     try:
         _coerceed_value = coerce_type(value, expected_type)
     except dacite.DaciteError:
         return False
     try:
-        _check_type(_coerceed_value, expected_type, forward_ref_policy=ForwardRefPolicy.IGNORE)
+        _check_type(
+            _coerceed_value,
+            expected_type,
+            forward_ref_policy=ForwardRefPolicy.IGNORE,
+            typecheck_fail_callback=typecheck_fail_callback,
+        )
     except TypeCheckError:
         return False
 
@@ -190,30 +233,37 @@ def _parse_to_ticks(period: str | int) -> int:
     if type(period) is int:
         return period
 
-    matches = re.findall(r"(\d+)(t|s|m|h|d)", period)
+    period_pattern = r"(\d+(?:\.\d+)?)(t|s|m|h|d)"
+    matches = re.findall(period_pattern, period)
     if not matches:
         raise ValueError(f"Invalid period format: {period}")
 
     # ensure the whole string was consumed (no garbage between/around matches)
-    if re.sub(r"(\d+)(t|s|m|h|d)", "", period) != "":
+    if re.sub(period_pattern, "", period) != "":
         raise ValueError(f"Invalid period format: {period}")
 
     total = 0
     for value, unit in matches:
-        value = int(value)
+        value = Decimal(value)
         match unit:
             case "t":
-                total += value
+                multiplier = 1
             case "s":
-                total += value * 20
+                multiplier = 20
             case "m":
-                total += value * 20 * 60
+                multiplier = 20 * 60
             case "h":
-                total += value * 20 * 3600
+                multiplier = 20 * 3600
             case "d":
-                total += value * 24000
+                multiplier = 24000
             case _:
                 raise ValueError(f"Unknown time unit: {unit}")
+
+        ticks = value * multiplier
+        if ticks != ticks.to_integral_value():
+            raise ValueError(f"Period does not resolve to a whole number of ticks: {period}")
+
+        total += int(ticks)
 
     return total
 

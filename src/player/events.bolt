@@ -2,6 +2,9 @@ DEATH_SCORE = Scoreboard("player.death_count", criteria="deathCount")
 
 ON_DEATH = ./on_death
 ON_KILL = ./on_kill
+ON_HURT = ./on_hurt
+ON_HURT_BY_PLAYER = ./on_hurt_by_player
+ON_DAMAGE_DEALT = ./on_damage_dealt
 
 
 advancement ON_KILL {
@@ -37,3 +40,50 @@ advancement ON_DEATH {
 function ON_DEATH:
     advancement revoke @s only ON_DEATH
     DEATH_SCORE["@s"].reset()
+
+advancement ON_HURT {
+  "criteria": {
+    "hurt": {
+      "trigger": "minecraft:entity_hurt_player",
+      "conditions": {
+        "entity": { "entity_type": "minecraft:player" }
+      }
+    }
+  },
+  "rewards": { "function": ON_HURT }
+}
+
+function ON_HURT:
+    advancement revoke @s only ON_HURT
+  
+advancement ON_DAMAGE_DEALT {
+  "criteria": {
+    "hurt": {
+      "trigger": "minecraft:player_hurt_entity",
+      "conditions": {
+        "entity": { "entity_type": "minecraft:player" }
+      }
+    }
+  },
+  "rewards": { "function": ON_DAMAGE_DEALT }
+}
+
+function ON_DAMAGE_DEALT:
+    advancement revoke @s only ON_DAMAGE_DEALT
+
+
+advancement ON_HURT_BY_PLAYER {
+  "criteria": {
+    "hurt": {
+      "trigger": "minecraft:entity_hurt_player",
+      "conditions": {
+        "entity": { "entity_type": "minecraft:player" },
+        "damage_source": { "type": "player" }
+      }
+    }
+  },
+  "rewards": { "function": ON_HURT_BY_PLAYER }
+}
+
+function ON_HURT_BY_PLAYER:
+    advancement revoke @s only ON_HURT_BY_PLAYER

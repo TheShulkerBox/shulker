@@ -5,8 +5,8 @@ defining items. Declaratively define items via classes by composing both
 vanilla and custom components to build complex items with ease.
 """
 
-import copy
 import dataclasses
+from json import JSONEncoder
 import json
 import traceback
 from typing import Any, ClassVar, Self
@@ -18,15 +18,19 @@ from bolt import Runtime
 import difflib
 import pprint
 
+from bolt_expressions.sources import Source
+
 from component.type import (
     Component,
     ComponentBuildError,
+    GlobalTransformer,
     RecursiveComponent,
     Transformer,
 )
 from lib.helpers import (
     camel_case_to_snake_case,
     coerce_type,
+    copy_with_sources,
     nbt_dump,
     deep_merge_dicts,
     check_type,
@@ -158,6 +162,7 @@ class ItemType(type):
         namespace["_components"] = {}
         namespace["_custom_components"] = {}
         namespace["_custom_transformers"] = {}
+        namespace["_global_transformers"] = {}
         namespace["_component_sources"] = {}
 
         cls.registered_items[name] = new_cls = super().__new__(
@@ -432,9 +437,7 @@ class ItemType(type):
 
                     # Track base_type component
                     if constructed_component.__class__._base_type is not None:
-                        output_component_mapping[constructed_component.name] = (
-                            constructed_component
-                        )
+                        output_component_mapping[name] = constructed_component
 
                     # Merge built vanilla components
                     deep_merge_dicts(resolved_components, output, inplace=True)
@@ -446,7 +449,7 @@ class ItemType(type):
 
     def handle_custom_transformers(
         self,
-        custom_transformers: list[Transformer],
+        custom_transformers: list[type[Transformer]],
         resolved_components: dict[str, Any],
     ) -> tuple[list[Transformer], list[CustomComponentError]]:
         """Process custom transformers that modify component values.
@@ -494,11 +497,11 @@ class ItemType(type):
                         resolved_components=dict(resolved_components),
                         **reconstructed_data,
                     )
-                    # Only update component if transformer returns a value
-                    if (
-                        transformed_value := constructed_transformer.build()
-                    ) is not None:
+                    transformed_value = constructed_transformer.build()
+                    if transformed_value is not None:
                         resolved_components[name] = transformed_value
+                    else:
+                        resolved_components[name] = data
                     constructed_transformers.append(constructed_transformer)
                 except Exception as err:
                     source_info = self._component_sources.get(name)
@@ -508,6 +511,53 @@ class ItemType(type):
                         [err],
                         hint=f"Error while building custom transformer '{name}' in item '{self.name}'",
                         source_info=source_info,
+                    ) from err
+
+            except ComponentError as err:
+                errors.append(err)
+
+        return constructed_transformers, errors
+
+    def handle_global_transformers(
+        self,
+        global_transformers: list[type[GlobalTransformer]],
+        resolved_components: dict[str, Any],
+    ) -> tuple[list[GlobalTransformer], list[CustomComponentError]]:
+        """Process global transformers that inspect all resolved components.
+
+        Global transformers run after custom components, per-component
+        transformers, and their post-build hooks. Each transformer can return
+        vanilla components that are deep-merged into resolved_components.
+        """
+        errors = []
+        constructed_transformers = []
+
+        for transformer in global_transformers:
+            name = transformer.name()
+
+            try:
+                try:
+                    constructed_transformer = transformer(
+                        item=self,
+                        resolved_components=dict(resolved_components),
+                    )
+                    output = constructed_transformer.build()
+
+                    if output is not None:
+                        if not isinstance(output, dict):
+                            raise ComponentBuildError(
+                                f"Global transformer '{name}' must return a dict or None."
+                            )
+
+                        deep_merge_dicts(resolved_components, output, inplace=True)
+
+                    constructed_transformers.append(constructed_transformer)
+                except Exception as err:
+                    raise ComponentError(
+                        name,
+                        resolved_components,
+                        [err],
+                        hint=f"Error while building global transformer '{name}' in item '{self.name}'",
                     ) from err
 
             except ComponentError as err:
@@ -549,7 +599,7 @@ class ItemType(type):
 
                 elif not callable(val):
                     # Deep copy to prevent mutations
-                    original_components[member] = copy.deepcopy(val)
+                    original_components[member] = copy_with_sources(val)
 
                     # Track source for error messages
                     self._component_sources[member] = {
@@ -563,7 +613,7 @@ class ItemType(type):
             original_components, {"custom_data": self.item_custom_data}, inplace=False
         )
 
-        # Phase 3: Apply custom components and transformers
+        # Phase 3: Apply custom components and per-component transformers
         custom_components, component_errors, custom_component_mapping = (
             self.handle_custom_components(Component.registered, output_components)
         )
@@ -575,27 +625,41 @@ class ItemType(type):
         if "id" in output_components:
             self.id = output_components.pop("id")
 
-        # Phase 5: Allow components/transformers to post-process
+        # Phase 5: Allow components and per-component transformers to post-process
         for component_or_transformer in chain(custom_components, custom_transformers):
             component_or_transformer.post_build(output_components, self)
 
-        # Phase 6: Validate and collect errors
+        # Phase 6: Apply global transformers after all component post-build hooks
+        global_transformers, global_transformer_errors = (
+            self.handle_global_transformers(
+                GlobalTransformer.registered, output_components
+            )
+        )
+
+        # Phase 7: Allow global transformers to post-process
+        for transformer in global_transformers:
+            transformer.post_build(output_components, self)
+
+        # Phase 8: Validate and collect errors
         if not self._has_errored:
             self._has_errored = self.calculate_errors(
                 component_errors,
-                transformer_errors,
+                transformer_errors + global_transformer_errors,
                 output_components,
                 original_components,
                 custom_component_mapping,
             )
 
-        # Phase 7: Cache and return
+        # Phase 9: Cache and return
         self._components = output_components
         self._custom_components = {
-            component.name: component for component in custom_components
+            component.name(): component for component in custom_components
         }
         self._custom_transformers = {
-            transformer.name: transformer for transformer in custom_transformers
+            transformer.name(): transformer for transformer in custom_transformers
+        }
+        self._global_transformers = {
+            transformer.name(): transformer for transformer in global_transformers
         }
 
         return output_components
@@ -791,7 +855,7 @@ class ItemType(type):
                             Group(
                                 *header_parts,
                                 Syntax(
-                                    json.dumps(component, indent=2),
+                                    json.dumps(component, indent=2, cls=ItemTypeEncoder),
                                     "python",
                                     theme="material",
                                 ),
@@ -880,6 +944,11 @@ class ItemType(type):
         """Return the custom transformers on an item"""
         return self._custom_transformers.copy()
 
+    @property
+    def global_transformers(self) -> dict[str, GlobalTransformer]:
+        """Return the global transformers that ran for this item"""
+        return self._global_transformers.copy()
+
     def item_string(self) -> str:
         """Generate a Minecraft give command string for this item.
 
@@ -889,15 +958,22 @@ class ItemType(type):
         Raises:
             ItemError: If item doesn't have an ID defined
         """
-        components = ",".join(
-            (f"!{k}" if v is Remove else f"{k}={nbt_dump(v)}")
-            for k, v in self.components.items()
-        )
+        components = []
+        for k, v in self.components.items():
+            if v is Remove:
+                components.append(f"!{k}")
+            elif isinstance(v, ItemType):
+                components.append(f"{k}={v.name}")
+            else:
+                components.append(f"{k}={nbt_dump(v)}")
+
+        final_components = ",".join(components)
+
         if not self.has_id:
             raise ItemError(
                 f"`{self.name}` item must define an `id` if generating a give or other command!"
             )
-        return f"{self.id}[{components}]"
+        return f"{self.id}[{final_components}]"
 
     def conditional_string(self) -> str:
         """Generate a Minecraft item predicate string for conditional checks.
@@ -916,10 +992,15 @@ class ItemType(type):
     def as_dict(self) -> dict[str, Any]:
         """Convert item to a dictionary suitable for NBT serialization."""
         # we need to convert `Remove` to negative components for use in storage / give commands, etc
-        components = {
-            (f"!{k}" if v is Remove else k): ({} if v is Remove else v)
-            for k, v in self.components.items()
-        }
+        components = {}
+        for k, v in self.components.items():
+            if v is Remove:
+                components[f"!{k}"] = {}
+            elif isinstance(v, ItemType):
+                components[k] = v.name
+            else:
+                components[k] = v
+
         return {"id": self.id, "count": 1, "components": components}
 
     __neg__ = __invert__ = conditional_string
@@ -954,6 +1035,10 @@ class ItemType(type):
             for trans in Transformer.registered
             if trans.name() in item_attrs
         ]
+        applied_global_transformers = [
+            f"  • {trans.name()} (global transformer) → {trans.__name__}"
+            for trans in GlobalTransformer.registered
+        ]
 
         # Build the display
         content_parts = [
@@ -976,12 +1061,17 @@ class ItemType(type):
         ]
 
         # Add custom components section if any apply
-        if applied_components or applied_transformers:
+        if applied_components or applied_transformers or applied_global_transformers:
             content_parts.extend(
                 [
                     "",
                     Text("Custom components/transformers:", style="bold"),
-                    *[Text(line) for line in applied_components + applied_transformers],
+                    *[
+                        Text(line)
+                        for line in applied_components
+                        + applied_transformers
+                        + applied_global_transformers
+                    ],
                 ]
             )
 
@@ -1067,3 +1157,15 @@ class ItemType(type):
         if count is not None:
             return ItemStack(item, count)
         return item
+
+
+class ItemTypeEncoder(JSONEncoder):
+    """Used to supply JSON serialization to `ItemType`"""
+
+    def default(self, obj):
+        if isinstance(obj, ItemType):
+            return obj.as_dict()
+        elif isinstance(obj, Source):
+            return str(obj)
+        
+        return super().default(obj)
