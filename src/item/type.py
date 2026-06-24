@@ -76,6 +76,12 @@ class ItemStack:
     def conditional_dict(self) -> dict[str, Any]:
         return self.item.conditional_dict()
 
+    def exact_conditional_string(self) -> str:
+        return self.item.exact_conditional_string()
+
+    def exact_conditional_dict(self) -> dict[str, Any]:
+        return self.item.exact_conditional_dict()
+
     def as_dict(self) -> dict[str, Any]:
         data = self.item.as_dict()
         data["count"] = self.count
@@ -938,6 +944,11 @@ class ItemType(type):
         return {"item_type": self.mro_data}
 
     @property
+    def exact_conditional_data(self) -> dict[str, Any]:
+        """Get custom data that matches only this item."""
+        return {"item": self.name}
+
+    @property
     def custom_components(self) -> dict[str, Component]:
         """Return the custom components on an item"""
         return self._custom_components.copy()
@@ -991,6 +1002,14 @@ class ItemType(type):
     def conditional_dict(self) -> dict[str, Any]:
         """Generate an item predicate dictionary for conditional checks."""
         return {"predicates": {"minecraft:custom_data": self.conditional_data}}
+
+    def exact_conditional_string(self) -> str:
+        """Generate an item predicate string for matching only this item."""
+        return f"*[custom_data~{nbt_dump(self.exact_conditional_data)}]"
+
+    def exact_conditional_dict(self) -> dict[str, Any]:
+        """Generate an item predicate dictionary for matching only this item."""
+        return {"predicates": {"minecraft:custom_data": self.exact_conditional_data}}
 
     def as_dict(self) -> dict[str, Any]:
         """Convert item to a dictionary suitable for NBT serialization."""

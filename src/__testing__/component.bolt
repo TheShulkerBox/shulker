@@ -198,6 +198,17 @@ class TestingPotion(KitItem):
     }
 
 
+class TestingDurability(KitItem):
+    id = "diamond_hoe"
+    item_name = "Component Test: Item Durability"
+    lore = "item_durability used and broken callbacks"
+    max_damage = 4
+    item_durability = {
+        used: _component_callback("item_durability", "used"),
+        broken: _component_callback("item_durability", "broken"),
+    }
+
+
 
 THROWABLE_CHARGE_TIME = 1.0
 
@@ -267,6 +278,7 @@ function ./give_all:
     give @s TestingArmor
     give @s TestingFood
     give @s TestingPotion
+    give @s TestingDurability
     # give @s TestingDroppable
     # give @s TestingResupply
     # give @s TestingItemEnchant

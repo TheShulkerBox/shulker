@@ -29,7 +29,7 @@ class Using(Component):
                 "requirement": {
                     "trigger": "minecraft:using_item",
                     "conditions": {
-                        "item": self.item.conditional_dict()
+                        "item": self.item.exact_conditional_dict()
                     }
                 }
             },

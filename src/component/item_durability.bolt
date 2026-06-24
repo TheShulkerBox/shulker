@@ -1,0 +1,48 @@
+from server:core import ROOT_ADVANCEMENT
+from lib:errors import CustomComponentError
+
+from ./type import Component
+
+
+class ItemDurability(Component):
+    """Runs callbacks when this item loses durability or breaks."""
+
+    used: Annotated[FunctionPath | None, "Runs as the player when the item durability changes"] = None
+    broken: Annotated[FunctionPath | None, "Runs as the player when the item reaches 0 durability"] = None
+
+    def build(self):
+        if not (self.used or self.broken):
+            raise CustomComponentError(
+                "At least one of `used` or `broken` must be defined",
+                self.name(),
+                self,
+            )
+
+        if self.used:
+            advancement f"{self.path}/used" {
+                "parent": ROOT_ADVANCEMENT,
+                "criteria": {
+                    "used": {
+                        "trigger": "minecraft:item_durability_changed",
+                        "conditions": {
+                            "item": self.item.conditional_dict()
+                        }
+                    }
+                },
+                "rewards": { "function": self.used }
+            }
+
+        if self.broken:
+            advancement f"{self.path}/broken" {
+                "parent": ROOT_ADVANCEMENT,
+                "criteria": {
+                    "broken": {
+                        "trigger": "minecraft:item_durability_changed",
+                        "conditions": {
+                            "item": self.item.conditional_dict(),
+                            "durability": 0
+                        }
+                    }
+                },
+                "rewards": { "function": self.broken }
+            }

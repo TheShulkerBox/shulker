@@ -1,14 +1,28 @@
 from item:definitions/weapon import Weapon
-from component:shield_hit import SHIELD_BLOCKED_DAMAGE
+from component:using import USING_SCORE
+from component:shield_hit import ShieldHit, SHIELD_BLOCKED_DAMAGE
 from kit:events import KIT_RESET, KIT_RESUPPLY
+from lib:helpers import ticks
 
 
-CUTLASS_BLOCKED: FunctionPath = item:cutlass/on_blocked
+CUTLASS_BREAK: FunctionPath = item:cutlass/break
 CUTLASS_REPAIR: FunctionPath = item:cutlass/repair
 CUTLASS_RESET: FunctionPath = item:cutlass/reset
+CUTLASS_START: FunctionPath = item:cutlass/parry/start
+CUTLASS_USING: FunctionPath = item:cutlass/parry/using
+CUTLASS_SUCCESS: FunctionPath = item:cutlass/parry/success
+CUTLASS_FAIL: FunctionPath = item:cutlass/parry/fail
+CUTLASS_COOLDOWN_LOOP: FunctionPath = item:cutlass/cooldown_loop
 
 CUTLASS_PARRY_TIER = Scoreboard("item.cutlass_parry_tier", criteria="dummy")
 CUTLASS_PREVIOUS_TIER = Scoreboard("item.cutlass_previous_tier", criteria="dummy")
+CUTLASS_COOLDOWN_TIMER = Scoreboard("item.cutlass_cooldown", criteria="dummy")
+
+CUTLASS_IGNORE_UPGRADE = "item.cutlass_ignore_upgrade"
+
+CUTLASS_BLOCK_DURATION = "1.0s"
+CUTLASS_COOLDOWN_SUCCESS = "2.5s"
+CUTLASS_COOLDOWN_FAILURE = "3.5s"
 
 CUTLASS_SPEED = 1.6
 CUTLASS_WEIGHT = "medium"
@@ -81,28 +95,48 @@ CUTLASS_TIERS = {
 }
 
 
+def glint(val: bool = True):
+    item modify entity @s weapon.mainhand {function: "set_components", components: {enchantment_glint_override: val}}
+
+
 class _Copper(Weapon):
     id = CUTLASS_TIERS["copper"]["id"]
     item_name = CUTLASS_TIERS["copper"]["item_name"]
     lore = ["This sword can only handle a limited number of strikes!"]
     blocks_attacks = {
-        block_delay_seconds: 0.0,
+        block_delay_seconds: 0.05,
         disable_cooldown_scale: 1.0,
         damage_reductions: [
             {
                 base: 0.0,
                 factor: 1.0,
-                horizontal_blocking_angle: 180.0,
+                horizontal_blocking_angle: 90.0,
             }
         ],
     }
     shield_hit = {
-        blocked: CUTLASS_BLOCKED,
+        start: CUTLASS_START,
+        during: CUTLASS_USING,
+        # end: CUTLASS_FAIL,
+        blocked: CUTLASS_SUCCESS,
     }
     melee = {
         damage: CUTLASS_TIERS["copper"]["damage"],
         speed: CUTLASS_SPEED,
         weight: CUTLASS_WEIGHT,
+    }
+    use_cooldown = {
+        # ignored for shields..
+        seconds: 1,
+        cooldown_group: "shulker:cutlass"
+    }
+    item_durability = {
+        broken: CUTLASS_BREAK
+    }
+    enchantment_glint_override = true
+    use_effects = {
+        can_sprint: true,
+        speed_multiplier: 0.85,
     }
 
 
@@ -154,8 +188,13 @@ for tier_name, cutlass in CUTLASS_TIERS.items():
         Cutlass.TitaniumPlusPlus = cutlass["item"]
 
 
-function CUTLASS_BLOCKED:
+function CUTLASS_SUCCESS:
+    execute if entity @s[tag=CUTLASS_IGNORE_UPGRADE] return run tag @s remove CUTLASS_IGNORE_UPGRADE
+    glint(False)
+
     CUTLASS_PARRY_TIER["@s"] = SHIELD_BLOCKED_DAMAGE["@s"] / 10
+    tellraw @a [SHIELD_BLOCKED_DAMAGE["@s"], "=>", CUTLASS_PARRY_TIER["@s"]]
+    ShieldHit.disable(CUTLASS_COOLDOWN_SUCCESS)
 
     if CUTLASS_PARRY_TIER["@s"] <= 0:
         return run title @s actionbar {text: "Parried, but the hit was too weak to improve your cutlass.", color: Theme.Failure}
@@ -188,6 +227,37 @@ function CUTLASS_BLOCKED:
         {text: "+6 (max)", color: "dark_red"},
         {text: " damage!", color: "gold"}
     ]
+    CUTLASS_COOLDOWN_TIMER["@s"] = ticks(CUTLASS_COOLDOWN_SUCCESS)
+    schedule function CUTLASS_COOLDOWN_LOOP 1t replace
+
+
+function CUTLASS_COOLDOWN_LOOP:
+    execute as @a[scores={CUTLASS_COOLDOWN_TIMER=1..}]:
+        schedule function CUTLASS_COOLDOWN_LOOP 1t replace
+        CUTLASS_COOLDOWN_TIMER["@s"] -= 1
+        if CUTLASS_COOLDOWN_TIMER["@s"] == 0:
+            glint(True)
+
+
+function CUTLASS_START:
+    tag @s remove CUTLASS_IGNORE_UPGRADE
+
+
+function CUTLASS_USING:
+    USING_SCORE["@s"] += 1
+    if USING_SCORE["@s"] >= ticks(CUTLASS_BLOCK_DURATION):
+        ShieldHit.disable(CUTLASS_COOLDOWN_FAILURE)
+        function CUTLASS_FAIL
+
+
+function CUTLASS_FAIL:
+    CUTLASS_COOLDOWN_TIMER["@s"] = ticks(CUTLASS_COOLDOWN_FAILURE)
+    schedule function CUTLASS_COOLDOWN_LOOP 1t replace
+    glint(False)
+    execute if entity @s[tag=CUTLASS_IGNORE_UPGRADE] run return fail
+    playsound minecraft:block.fire.extinguish master @s ~ ~ ~ .4 2
+    playsound minecraft:item.shield.break player @a ~ ~ ~ .9 0.85
+    tag @s add CUTLASS_IGNORE_UPGRADE
 
 
 function CUTLASS_REPAIR:
@@ -195,18 +265,23 @@ function CUTLASS_REPAIR:
         if "min_parry_tier" not in cutlass:
             continue
 
-        if cutlass["min_parry_tier"] <= CUTLASS_PREVIOUS_TIER["@s"] <= cutlass["max_parry_tier"]:
-            item replace entity @s weapon.mainhand with cutlass["item"]
+        if cutlass["min_parry_tier"] <= CUTLASS_PARRY_TIER["@s"] <= cutlass["max_parry_tier"]:
+            execute function ~/{cutlass['class_name'].lower()}/set:
+                item replace entity @s weapon.mainhand with cutlass["item"]
+                glint(False)
 
 
-function CUTLASS_RESET:
-    CUTLASS_PARRY_TIER["@s"].reset()
-    CUTLASS_PREVIOUS_TIER["@s"].reset()
-
-
-append function KIT_RESET:
-    function CUTLASS_RESET
+function CUTLASS_BREAK:
+    item replace entity @s weapon.mainhand with Cutlass.Copper
 
 
 append function KIT_RESUPPLY:
     function CUTLASS_REPAIR
+
+
+append function KIT_RESET:
+    execute function CUTLASS_RESET:
+        tag @s remove CUTLASS_IGNORE_UPGRADE
+        CUTLASS_PARRY_TIER["@s"].reset()
+        CUTLASS_PREVIOUS_TIER["@s"].reset()
+

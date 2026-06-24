@@ -31,7 +31,14 @@ append function SPAWN_ENTITIES_LOADED:
                 DeathLootTable: "minecraft:empty",
                 Invulnerable: true,
                 ShowArms: true,
-                equipment: {mainhand: {id: "iron_sword", components: {"minecraft:weapon": {disable_blocking_for_seconds: 1.0}}}}
+                equipment: {
+                    mainhand: {
+                        id: "iron_sword", components: {
+                            "minecraft:weapon": {disable_blocking_for_seconds: 1.0},
+                            "minecraft:item_model": "air",
+                        }
+                    }
+                }
             }
 
 
@@ -69,10 +76,8 @@ class ShieldHit(Using):
         path = f"{self.path}/start"
         function path:
             SHIELD_BLOCKED_DAMAGE["@s"].reset()
-            SHIELD_BLOCK_HAND["@s"] = 0
+            SHIELD_BLOCK_HAND["@s"] = 1
 
-            if items entity @s weapon.mainhand self.item.conditional_string():
-                SHIELD_BLOCK_HAND["@s"] = 1
             if items entity @s weapon.offhand self.item.conditional_string():
                 SHIELD_BLOCK_HAND["@s"] = 2
 
@@ -152,9 +157,11 @@ class ShieldHit(Using):
         """
         with tag_self() as PLAYER_TAG:
             tag @s add SHIELD_DISABLED_TAG
-            execute as @e[type=armor_stand, tag=SHIELD_DISABLE_STAND_TAG, limit=1]:
+            execute rotated as @s as @e[type=armor_stand, tag=SHIELD_DISABLE_STAND_TAG, limit=1]:
+                tp @s ^ ^ ^1.0
                 SELF.equipment.mainhand.components."minecraft:weapon".disable_blocking_for_seconds = ticks(period) / 20
                 damage @p[tag=PLAYER_TAG] 1.0 minecraft:player_attack by @s
+                tp @s 0.0 0.0 0.0
             schedule function ./clear_disabled_tags 2t replace
 
 
