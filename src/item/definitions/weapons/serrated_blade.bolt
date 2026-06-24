@@ -22,7 +22,7 @@ function APPLY_HEALING_BLOCK:
     schedule function TICK_HEALING_BLOCK 1t replace
 
 function TICK_HEALING_BLOCK:
-    execute @a[scores={HEALING_BLOCK=1..}]:
+    execute as @a[scores={HEALING_BLOCK=1..}]:
         HEALING_BLOCK["@s"] -= 1
         execute if entity @s[scores={HEALING_BLOCK=..0}]:
             HEALING_BLOCK["@s"].reset()
