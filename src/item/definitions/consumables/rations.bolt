@@ -16,6 +16,12 @@ class Rations(Food):
         callback: EAT_RATIONS,
         animation: "eat"
     }
+    consumable = {
+        has_consume_particles: true,
+        sound: {
+            sound_id: "entity.generic.eat"
+        }
+    }
 
 function EAT_RATIONS:
     execute if entity @s[scores={HEALING_BLOCK=1..}] run playsound minecraft:entity.wither_skeleton.step voice @a ~ ~ ~ 0.5 0.5
