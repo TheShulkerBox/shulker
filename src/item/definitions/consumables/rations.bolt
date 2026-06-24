@@ -14,13 +14,9 @@ class Rations(Food):
     useable = {
         delay: 0.8,
         callback: EAT_RATIONS,
-        animation: "eat"
-    }
-    consumable = {
-        has_consume_particles: true,
-        sound: {
-            sound_id: "entity.generic.eat"
-        }
+        animation: "eat",
+        sound: "entity.generic.eat",
+        eat_particles: true
     }
 
 function EAT_RATIONS:

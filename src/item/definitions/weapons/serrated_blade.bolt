@@ -22,7 +22,7 @@ function APPLY_HEALING_BLOCK:
     effect clear @s saturation
     effect clear @s instant_health
     effect give @s wither 1 0
-    playsound minecraft:block.beehive.shear master @a ~ ~ ~ 1 1.6
+    playsound minecraft:block.beehive.shear master @a ~ ~ ~ 0.75 1.6
     schedule function TICK_HEALING_BLOCK 1t replace
 
 function TICK_HEALING_BLOCK:

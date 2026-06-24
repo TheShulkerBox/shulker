@@ -38,6 +38,7 @@ class Useable(Component):
     cooldown: Annotated[float, "How much you have to wait before you can use the item again"] = 0.25
     cooldown_group: Annotated[str, "Group for cooldowns"] = ""
     animation: AnimationLiteral = "none"
+    eat_particles: bool = false
     sound: str = ""
     on_use_effects: list[dict[str, Any]] = field(default_factory=list)
 
@@ -78,7 +79,7 @@ class Useable(Component):
             "consumable": {
                 "consume_seconds": self.delay,
                 "animation": self.animation,
-                "has_consume_particles": false,
+                "has_consume_particles": self.eat_particles,
                 "sound": {"sound_id": self.sound},
             },
         }
