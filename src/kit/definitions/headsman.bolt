@@ -4,6 +4,7 @@ from item:definitions/food import Food
 from item:definitions/armor import Armor
 from item:definitions/weapon import Weapon
 from item:definitions/weapons/headsman_axe import HeadsmanAxe
+from item:definitions/weapons/serrated_blade import SerratedBlade
 
 # TODO: Tips
 
@@ -19,7 +20,7 @@ headsman = Kit(
     },
     hotbar=[
         HeadsmanAxe, # tip:'Instakills enemies at low health'
-        Weapon(id="stone_sword", item_name="Serrated Blade"), # tip:'Clears healing and regen on hit'
+        SerratedBlade, # tip:'Clears healing and regen on hit'
         Food(count=3)
     ]
 )
