@@ -12,6 +12,7 @@ class Rations(Food):
     always_edible = true
     food = {nutrition: 1, saturation: 0.2}
     useable = {
+        delay: 0.8,
         callback: EAT_RATIONS,
         animation: "eat"
     }

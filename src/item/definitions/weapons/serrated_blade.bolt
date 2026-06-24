@@ -18,6 +18,9 @@ class SerratedBlade(Weapon):
 
 function APPLY_HEALING_BLOCK:
     scoreboard players set @s HEALING_BLOCK 20
+    effect clear @s regeneration
+    effect clear @s saturation
+    effect clear @s instant_health
     effect give @s wither 1 0
     playsound minecraft:block.beehive.shear master @a ~ ~ ~ 1 1.6
     schedule function TICK_HEALING_BLOCK 1t replace
