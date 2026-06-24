@@ -66,3 +66,14 @@ def small_caps(text: str) -> str:
     """Converts a string to small caps."""
 
     return "".join(SMALL_CAPS_MAP.get(c, c) for c in text.lower())
+
+
+def shadow_rgba(
+    red: float,
+    green: float,
+    blue: float,
+    opacity: float = 1.0,
+) -> list[float]:
+    """Builds the float-list format expected by text-component shadow_color."""
+
+    return [red, green, blue, opacity]

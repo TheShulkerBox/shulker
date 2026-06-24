@@ -110,12 +110,12 @@ class TestingBow(KitItem):
 class TestingCrossbow(KitItem):
     id = "crossbow"
     item_name = "Component Test: Crossbow"
-    lore = "crossbow charge, charging, load, cancel, fire, and hit"
+    lore = "crossbow nock, charging, loaded, unnock, fire, and hit"
     crossbow = {
-        charge: _component_callback("crossbow", "charge"),
+        nock: _component_callback("crossbow", "nock"),
         charging: _component_callback("crossbow", "charging"),
-        load: _component_callback("crossbow", "load"),
-        cancel: _component_callback("crossbow", "cancel"),
+        loaded: _component_callback("crossbow", "loaded"),
+        unnock: _component_callback("crossbow", "unnock"),
         fire: ./crossbow_fire,
         hit: ./crossbow_hit,
     }
@@ -235,9 +235,9 @@ function ./on_throw:
 
 # class TestingResupply(KitItem):
 #     id = "bundle"
-#     item_name = "Component Test: Resupply On Empty"
-#     lore = "resupply_on_empty boolean base component"
-#     resupply_on_empty = true
+#     item_name = "Component Test: Resupply"
+#     lore = "resupply component with only_on_empty behavior"
+#     resupply = {only_on_empty: true}
 
 
 # class TestingItemEnchant(KitItem):

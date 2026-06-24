@@ -2,6 +2,7 @@ from item:definitions/weapon import Bow
 from item:definitions/consumables/blindness_dart import BlindnessDart
 
 ON_KILL: FunctionPath = item:iron_dagger/on_kill
+BLINDNESS_DART_COUNT = Scoreboard("item.blindness_dart_count", criteria="dummy")
 
 class Blowgun(Bow):
     id = "bow"
@@ -9,4 +10,5 @@ class Blowgun(Bow):
     kill = {killer: ON_KILL}
 
 function ON_KILL:
-    give @s BlindnessDart
+    execute store result score @s BLINDNESS_DART_COUNT run clear @s (-BlindnessDart) 0
+    execute if score @s BLINDNESS_DART_COUNT matches ..0 run give @s BlindnessDart

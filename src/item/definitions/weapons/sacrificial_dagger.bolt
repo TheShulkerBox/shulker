@@ -2,6 +2,7 @@ from item:definitions/weapon import Weapon
 from item:definitions/consumables/totems import Totem
 
 SACRIFICE_KILL = item:sacrificial_dagger/kill
+TOTEM_COUNT = Scoreboard("item.totem_count", criteria="dummy")
 
 class SacrificialDagger(Weapon):
     id = "stone_sword"
@@ -12,6 +13,5 @@ class SacrificialDagger(Weapon):
     }
 
 function SACRIFICE_KILL:
-    #> TODO:
-    # Custom Component resupply_on_empty
-    give @s Totem
+    execute store result score @s TOTEM_COUNT run clear @s (-Totem) 0
+    execute if score @s TOTEM_COUNT matches ..2 run give @s Totem

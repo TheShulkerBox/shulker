@@ -6,6 +6,8 @@ class Totem(KitItem):
     id = "totem_of_undying"
     item_model = "totem_of_undying"
     item_name = "Totem of the Deathless"
+    lore = ["Constructed from the ashes", "At what cost.."]
+    capped_count = 3
     max_stack_size = 3
     break_sound = "minecraft:entity.item.break"
     death_protection = {

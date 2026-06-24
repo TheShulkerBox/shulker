@@ -92,11 +92,17 @@ Component fields are validated before `build()` runs. If a component declares
 `base_type`, the item may pass the base value directly instead of a dict:
 
 ```bolt
-class ResupplyOnEmpty(Component, base_type=bool):
-    def build(self):
-        return {"custom_data": {resupply_on_empty: true}}
+class Resupply(Component):
+    only_on_empty: bool = False
+    callback: FunctionPath | None = None
 
-resupply_on_empty = true
+    def build(self):
+        return {"custom_data": {"component": {"resupply": {
+            only_on_empty: self.only_on_empty,
+            callback: self.callback,
+        }}}}
+
+resupply = {only_on_empty: true}
 ```
 
 `build()` should return a dict of resolved components or `None`. Use
@@ -168,8 +174,10 @@ original component value is restored.
 : Defines weapon damage, speed, knockback, crit boost, and weight. Damage and
   speed override vanilla base attributes; weight is stored in `custom_data`.
 
-`resupply_on_empty`
-: Boolean marker stored in `custom_data` for resupply behavior.
+`resupply`
+: Customizes kit resupply behavior. `only_on_empty` skips replacing the item
+  while the player already has it, and `callback` runs whenever the kit
+  resupplies that item.
 
 `sneaking`
 : Runs start/during/end callbacks while a matching player is sneaking. Optional

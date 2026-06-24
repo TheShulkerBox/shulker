@@ -11,7 +11,7 @@ class ItemEnchant(Component, base_type=dict[str, Any]):
     Primarily used by other components to apply custom effects to items w/o generating an enchantment PER component.
     """
     _all_effects: ClassVar[dict[str, dict[str, Any]]] = {}
-    _built: ClassVar[bool] = False
+    _built_items: ClassVar[set[str]] = set()
 
     def build(self):
         effects = {}
@@ -22,10 +22,10 @@ class ItemEnchant(Component, base_type=dict[str, Any]):
         
         deep_merge_dicts(self._all_effects.setdefault(self.item.name, {}), effects, inplace=True)
 
-        return {"enchantments": {nbt_dump(f"item:{self.item.name}"): 1}}
+        return {"enchantments": {f"item:{self.item.name}": 1}}
     
     def post_build(self, _, item_obj: "ItemType"):
-        if self._built or not self.base_type:
+        if item_obj.name in self._built_items or item_obj.name not in self._all_effects:
             return
         
         enchantment item_obj.path {
@@ -39,3 +39,5 @@ class ItemEnchant(Component, base_type=dict[str, Any]):
             "slots": [ "any" ],
             "effects": self._all_effects[item_obj.name]
         }
+
+        self._built_items.add(item_obj.name)

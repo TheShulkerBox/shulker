@@ -1,0 +1,26 @@
+from item:definitions/consumables/blindness_dart import BlindnessDart
+from item:definitions/consumables/totems import Totem
+from item:type import ItemType
+from player:services import PLAYER_TICK
+
+
+CAPPED_COUNT_SURPLUS = Scoreboard("item.capped_count_surplus", criteria="dummy")
+
+
+def enforce_capped_count(item: ItemType, cap: int):
+    function f"player:services/capped_count/{item.name}":
+        execute store result score @s CAPPED_COUNT_SURPLUS run clear @s (-item) 0
+        CAPPED_COUNT_SURPLUS["@s"] -= cap
+        execute if score @s CAPPED_COUNT_SURPLUS matches 1.. run function f"player:services/capped_count/{item.name}/trim"
+
+    function f"player:services/capped_count/{item.name}/trim":
+        clear @s (-item) 1
+        CAPPED_COUNT_SURPLUS["@s"] -= 1
+        execute if score @s CAPPED_COUNT_SURPLUS matches 1.. run function f"player:services/capped_count/{item.name}/trim"
+
+    append function PLAYER_TICK:
+        function f"player:services/capped_count/{item.name}"
+
+
+enforce_capped_count(BlindnessDart, 1)
+enforce_capped_count(Totem, 3)

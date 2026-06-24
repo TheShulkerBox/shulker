@@ -111,7 +111,7 @@ def generate_loot_table(modifier = None, **kwargs: dict[str, Any]) -> list[dict[
         calculated_pool = slot_pool(slot)
 
         if modifier is not None:
-            calculated_pool = modifier(calculated_pool)
+            calculated_pool = modifier(calculated_pool, slot)
         
         pools.append(calculated_pool)
 

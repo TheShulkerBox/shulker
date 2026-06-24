@@ -56,7 +56,7 @@ function RANGER_RESTORE_SWORD_EDGE:
 
 
 append function PLAYER_TICK:
-    execute if predicate has_item_predicate(SpentSword) run function RANGER_TICK
+    execute if predicate has_item_predicate(SpentSword.conditional_dict()) run function RANGER_TICK
 
 
 append function ON_HURT_BY_PLAYER:

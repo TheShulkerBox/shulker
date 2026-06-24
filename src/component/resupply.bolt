@@ -1,0 +1,43 @@
+from lib:predicates import has_item_predicate
+from lib:storage_helpers import loop
+from lib:inventory_management import generate_loot_table
+
+from ./type import Component
+
+
+class Resupply(Component):
+    """Custom behavior for kit resupply."""
+
+    only_on_empty: bool = False
+    modifier: dict[str, Any] | None = None
+    callback: FunctionPath | None = None
+
+    def build(self):
+        if self.only_on_empty:
+            return {"custom_data": {"component": {"resupply": {"only_on_empty": true}}}}
+    
+    def post_build(self, _, item_obj: "ItemType"):
+        if self.modifier is None:
+            return
+
+        def modifier(pool: dict[str, Any], slot: str):
+            pool["entries"][0]["children"][1]["functions"] = [
+                self.modifier
+                | {
+                    "condition": "minecraft:entity_properties",
+                    "entity": "this",
+                    "predicate": {
+                        "minecraft:slots": {
+                            slot: { "predicates": item_obj.conditional_dict() }
+                        }
+                    }
+                }
+            ]
+            return pool
+        
+        loot_table self.path {"pools": generate_loot_table(modifier=modifier, hotbar=True)}
+
+        if self.callback:
+            append function kit:resupply:
+                execute if predicate has_item_predicate(item_obj.conditional_dict()):
+                    loot replace entity @s hotbar.0 loot self.path

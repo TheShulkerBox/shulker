@@ -4,6 +4,9 @@ from item:base import KitItem
 class BlindnessDart(KitItem):
     id = "tipped_arrow"
     item_name = "Blindness Dart"
+    lore = ["Blinds the target for 2 seconds", "Gain +1 Dart on kill"]
+    capped_count = 1
+    resupply = {only_on_empty: true}
     potion_contents = {
         custom_effects:[
             {

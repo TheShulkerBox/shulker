@@ -13,6 +13,11 @@ import dacite
 from bolt_expressions import Source
 from typeguard import ForwardRefPolicy, TypeCheckMemo, check_type as _check_type, TypeCheckError
 
+from lib.types import NumberLike
+
+
+def clamp(value: NumberLike, lower: NumberLike, upper: NumberLike):
+    return max(lower, min(upper, value))
 
 
 def title_case_to_snake_case(title_case_str: str):
@@ -36,7 +41,8 @@ def nbt_dump(obj: dict[str, Any]):
             case dict():
                 items = []
                 for key, value in obj.items():
-                    serialized_key = key
+                    # we need to stringify keys..
+                    serialized_key = serialize(key) if ":" in key else key
                     serialized_value = serialize(value)
                     items.append(f"{serialized_key}: {serialized_value}")
                 return "{" + ", ".join(items) + "}"

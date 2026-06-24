@@ -177,7 +177,7 @@ class Bow(Component):
             
             # prevents unnock from being called if u fire
             schedule clear self.detect_charging
-            function ./on_player_reset
+            execute on origin run function ./on_player_reset
 
         return path
     

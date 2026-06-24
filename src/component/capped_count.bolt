@@ -1,0 +1,9 @@
+from ./type import Component, ComponentBuildError
+
+
+class CappedCount(Component, base_type=int):
+    def build(self):
+        if self.base_type < 1:
+            raise ComponentBuildError("capped_count must be at least 1")
+
+        return {"custom_data": {capped_count: self.base_type}}

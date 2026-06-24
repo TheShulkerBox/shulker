@@ -1,8 +1,7 @@
 from lib:inventory_management import generate_loot_table, hotbar_with_slots_modify
 
 
-def apply_modifier(pool: dict[str, Any]) -> dict[str, Any]:
-    slot = pool["entries"][0]["children"][1]["slot_source"]["slots"]
+def apply_modifier(pool: dict[str, Any], slot: str) -> dict[str, Any]:
     pool["entries"][0]["children"][1]["functions"] = [
         {
             "function": "minecraft:set_item",
@@ -54,8 +53,7 @@ function ./bundlify/apply:
     }
 
 
-def undo_modifier(pool: dict[str, Any]) -> dict[str, Any]:
-    slot = pool["entries"][0]["children"][1]["slot_source"]["slots"]
+def undo_modifier(pool: dict[str, Any], slot: str) -> dict[str, Any]:
     pool["entries"][0]["children"][1] = {
         "type": "minecraft:slots",
         "slot_source": {

@@ -1,182 +1,317 @@
+from kit:events import KIT_RESET
+from item:type import ItemType
 from item:definitions/weapon import Crossbow
+from lib:helpers import deep_merge_dicts, clamp
+from lib:text import shadow_rgba
+from lib:inventory_management import mass_modify
 from player:services import PLAYER_TICK
 
 
-RANGER_SWAP_MODE: FunctionPath = item:ranger/swap_mode
-RANGER_TRIPLE_FIRE: FunctionPath = item:ranger/triple_fire
-RANGER_RAPID_FIRE: FunctionPath = item:ranger/rapid_fire
-RANGER_RAPID_LOAD: FunctionPath = item:ranger/rapid_load
-RANGER_RAPID_ACTIONBAR: FunctionPath = item:ranger/rapid_actionbar
+# ──────────────────────────────────────────────────────────────────────────────
+# Ranger Crossbow
+#
+# Two firing modes that share a single piece of state: a chamber count (0..3).
+#   - Triple: one trigger fires the whole chamber at once as a spread, then empty.
+#   - Rapid:  fires one arrow per trigger, auto-rechambering between shots until
+#             the chamber is empty.
+# Left-click swaps modes and keeps the current chamber count (e.g. 2 rapid shots
+# left -> a "double" in triple mode).
+#
+# State model (single source of truth):
+#   - RANGER_CHAMBER       : how many shots are loaded (0..3).
+#   - RANGER_RAPID_MODE_TAG: present -> rapid mode, absent -> triple mode.
+# The equipped item variant is purely a *render* of (mode, chamber); it is never
+# read back to recover state. `RANGER_REFRESH_ITEM` is the only thing that swaps
+# the held item to match the state.
+# ──────────────────────────────────────────────────────────────────────────────
 
-RANGER_RAPID_SHOTS = Scoreboard("item.ranger_rapid_shots", criteria="dummy")
+RANGER_SWAP_MODE: FunctionPath = item:ranger_crossbow/swap_mode
+RANGER_LOAD: FunctionPath = item:ranger_crossbow/load
+RANGER_TRIPLE_FIRE: FunctionPath = item:ranger_crossbow/triple_fire
+RANGER_RAPID_FIRE: FunctionPath = item:ranger_crossbow/rapid_fire
+RANGER_REFRESH_ITEM: FunctionPath = item:ranger_crossbow/refresh_item
+RANGER_ACTIONBAR: FunctionPath = item:ranger_crossbow/actionbar
+RANGER_RAPID_RESUPPLY: FunctionPath = item:ranger_crossbow/rapid_resupply
+RANGER_TRIPLE_RESUPPLY: FunctionPath = item:ranger_crossbow/triple_resupply
 
+RANGER_CHAMBER = Scoreboard("item.ranger_chamber", criteria="dummy")
+RANGER_MAX_CHAMBER = 3
+
+RANGER_RAPID_MODE_TAG = "ranger_rapid"
 RANGER_RAPID_SHOT_TAG = "ranger_rapid_shot"
 RANGER_TRIPLE_SHOT_TAG = "ranger_triple_shot"
 
+RANGER_BASE_ITEM_ENCHANT = {
+    "minecraft:projectile_spread": [
+        {
+            "effect": {
+                "type": "minecraft:add",
+                "value": 4.0,
+            }
+        }
+    ],
+    "minecraft:ammo_use": [
+        {
+            "effect": {
+                "type": "minecraft:add",
+                "value": 2.0
+            }
+        }
+    ]
+}
+
+
+def ranger_item_enchant(extra: dict[str, Any] | None = None) -> dict[str, Any]:
+    if extra is None:
+        extra = {}
+    return deep_merge_dicts(RANGER_BASE_ITEM_ENCHANT, extra)
+
+
+def crossbow_reload(projectile_count: int) -> dict[str, Any]:
+    """Reloads crossbow with x projectiles (removing if none)"""
+    if projectile_count <= 0:
+        return {
+            function: "minecraft:set_components",
+            components: { "!minecraft:charged_projectiles": {} }
+        }
+
+    output = {
+        function: "minecraft:set_components",
+        components: {
+            "minecraft:charged_projectiles": []
+        }
+    }
+
+    for _ in range(projectile_count):
+        output["components"]["minecraft:charged_projectiles"].append({ id: "minecraft:arrow", count: 1 })
+    
+    return output
+
+class RangerModeColor:
+    Triple = Theme.Success
+    TripleMuted = "#66776d"
+    TripleShadow = shadow_rgba(0.09, 0.14, 0.11)
+    TripleMutedShadow = shadow_rgba(0.11, 0.13, 0.11)
+    Rapid = "#d78d8d"
+    RapidMuted = "#786868"
+    RapidShadow = shadow_rgba(0.15, 0.09, 0.09)
+    RapidMutedShadow = shadow_rgba(0.13, 0.11, 0.11)
+    Hint = "gray"
+
+
+# ── Item variants (render targets for the state, not state themselves) ──────────
 
 class RangerCrossbow(Crossbow):
     item_name = "Ranger Crossbow"
-    two_handed = {callback: RANGER_SWAP_MODE}
     left_click = {
         callback: RANGER_SWAP_MODE,
         cooldown: 0.5,
     }
-    charged_projectiles = [
-        {
-            id: "minecraft:arrow",
-            count: 1,
-        }
-    ]
-    max_stack_size = 1
+    two_handed = {}
+    item_enchant = {
+        "minecraft:projectile_spread": [
+            {
+                "effect": {
+                    "type": "minecraft:add",
+                    "value": 4.0,
+                }
+            }
+        ],
+        "minecraft:ammo_use": [
+            {
+                "effect": {
+                    "type": "minecraft:add",
+                    "value": 2.0
+                }
+            }
+        ]
+    }
 
 
 class RangerTripleCrossbow(RangerCrossbow):
     lore = "Triple mode"
     enchantment_glint_override = true
-    charged_projectiles = [
-        {
-            id: "minecraft:arrow",
-            count: 1,
-        },
-        {
-            id: "minecraft:arrow",
-            count: 1,
-        },
-        {
-            id: "minecraft:arrow",
-            count: 1,
-        }
-    ]
-    item_enchant = {
-        "minecraft:projectile_count": [
-            {
-                "effect": {
-                    "type": "minecraft:add",
-                    "value": 2.0,
-                }
-            }
-        ],
-        "minecraft:projectile_spread": [
-            {
-                "effect": {
-                    "type": "minecraft:add",
-                    "value": 10.0,
-                }
-            }
-        ],
-        "minecraft:ammo_use": [
-            {
-                "effect": {
-                    "type": "minecraft:add",
-                    "value": 2
-                }
-            }
-        ]
-    }
     crossbow = {
+        loaded: RANGER_LOAD,
         fire: RANGER_TRIPLE_FIRE,
     }
+    # resupply = {
+    #     modifier: crossbow_reload(projectile_count=3),
+    #     callback: RANGER_TRIPLE_RESUPPLY
+    # }
 
 
 class RangerRapidCrossbow(RangerCrossbow):
     lore = "Rapid mode"
     crossbow = {
-        load: RANGER_RAPID_LOAD,
+        loaded: RANGER_LOAD,
         fire: RANGER_RAPID_FIRE,
     }
-    item_enchant = {
-        "minecraft:ammo_use": [
-            {
-                "effect": {
-                    "type": "minecraft:add",
-                    "value": 1
-                }
-            }
-        ]
-    }
+    # resupply = {
+    #     modifier: crossbow_reload(projectile_count=1),
+    #     callback: RANGER_RAPID_RESUPPLY
+    # }
 
-# TODO: remove arrows from crossbow if crossbow was unloaded .or keep unloaded varients of items
+
+# ── Rendering: state -> held item ───────────────────────────────────────────────
+
+def replace_held(variant: ItemType, projectile_count = None):
+    """Replace whichever hand holds a ranger crossbow with `variant`"""
+    variant_table = variant.as_loot_table()
+    if projectile_count is not None:
+        variant_table["functions"] = [crossbow_reload(projectile_count)]
+
+    execute if items entity @s weapon.mainhand (-RangerCrossbow) return run loot replace entity @s weapon.mainhand loot variant_table
+    execute if items entity @s weapon.offhand (-RangerCrossbow) return run loot replace entity @s weapon.offhand loot variant_table
+
+
+function RANGER_RAPID_RESUPPLY:
+     RANGER_CHAMBER["@s"] = 3
+
+
+function RANGER_TRIPLE_RESUPPLY:
+     RANGER_CHAMBER["@s"] = 3
+
+
+function RANGER_REFRESH_ITEM:
+    # clamp, then render the held item to match (mode, chamber)
+    RANGER_CHAMBER["@s"] = clamp(RANGER_CHAMBER["@s"], 0, RANGER_MAX_CHAMBER)
+
+    execute if entity @s[tag=RANGER_RAPID_MODE_TAG] return run function ~/render_rapid:
+        if RANGER_CHAMBER["@s"] <= 0:
+            replace_held(RangerRapidCrossbow)
+        else:
+            replace_held(RangerRapidCrossbow, 1)
+
+    execute function ~/render_triple:
+        if RANGER_CHAMBER["@s"] <= 0:
+            replace_held(RangerTripleCrossbow)
+        elif RANGER_CHAMBER["@s"] == 1:
+            replace_held(RangerTripleCrossbow, 1)
+        elif RANGER_CHAMBER["@s"] == 2:
+            replace_held(RangerTripleCrossbow, 2)
+        else:
+            replace_held(RangerTripleCrossbow, 3)
+
+
+# ── Mode swapping (keeps chamber count, just changes how it is spent) ───────────
+
 function RANGER_SWAP_MODE:
-    execute if items entity @s weapon.* (-RangerTripleCrossbow) run return run function ~/swap_to_rapid
-    execute if items entity @s weapon.* (-RangerRapidCrossbow) run return run function ~/swap_to_triple
-
-    function ~/swap_to_rapid:
-        execute if items entity @s weapon.mainhand (-RangerTripleCrossbow) run item replace entity @s weapon.mainhand with RangerRapidCrossbow
-        execute if items entity @s weapon.offhand (-RangerTripleCrossbow) run item replace entity @s weapon.offhand with RangerRapidCrossbow
-        RANGER_RAPID_SHOTS["@s"] = 3
-        title @s actionbar {text: "Rapid Mode", color: Theme.Failure, bold: true}
-        playsound minecraft:block.iron_trapdoor.open master @s ~ ~ ~ 1 1.2
-
-    function ~/swap_to_triple:
-        execute if items entity @s weapon.mainhand (-RangerRapidCrossbow) run item replace entity @s weapon.mainhand with RangerTripleCrossbow
-        execute if items entity @s weapon.offhand (-RangerRapidCrossbow) run item replace entity @s weapon.offhand with RangerTripleCrossbow
-        RANGER_RAPID_SHOTS["@s"].reset()
-        title @s actionbar {text: "Triple Mode", color: Theme.Success, bold: true}
+    execute if entity @s[tag=RANGER_RAPID_MODE_TAG] return run function ~/to_triple:
+        tag @s remove RANGER_RAPID_MODE_TAG
+        function RANGER_REFRESH_ITEM
+        function RANGER_ACTIONBAR
         playsound minecraft:item.crossbow.loading_end master @s ~ ~ ~ 1 1.2
         playsound minecraft:item.crossbow.loading_end master @s ~ ~ ~ 1 0.8
 
+    execute function ~/to_rapid:
+        tag @s add RANGER_RAPID_MODE_TAG
+        function RANGER_REFRESH_ITEM
+        function RANGER_ACTIONBAR
+        playsound minecraft:block.iron_trapdoor.open master @s ~ ~ ~ 1 1.2
 
-# TODO: arrow counting should be global. if u shoot triple, it shoots everything in the chamber.
-#    if u shoot rapid, then switch to triple, u only shoot 2 or 1 based on whats in the chamber
-# TODO: add triple green arrows to actionbar when triple
-# TODO: rapid fire doesn't reload. consider item modifier for reloading tbh 
-#    {function:"minecraft:set_components",components:{"minecraft:charged_projectiles":[{id:"arrow",count:3}]}}
+
+# ── Loading + firing ────────────────────────────────────────────────────────────
+
+# A finished reload always tops the chamber back up, regardless of mode.
+function RANGER_LOAD:
+    RANGER_CHAMBER["@s"] = RANGER_MAX_CHAMBER
+    function RANGER_REFRESH_ITEM
+    function RANGER_ACTIONBAR
+
 
 function RANGER_TRIPLE_FIRE:
+    # this func runs multiple times..
     tag @s add RANGER_TRIPLE_SHOT_TAG
-    SELF.merge({crit: false, pickup: 2})
-    execute on owner run playsound minecraft:item.crossbow.shoot master @a ~ ~ ~ 0.6 1.2
+    SELF.merge({damage: 2.5, crit: false, pickup: 2})
 
-
-function RANGER_RAPID_LOAD:
-    RANGER_RAPID_SHOTS["@s"] = 3
+    execute on origin run function ~/on_origin:
+        # so we ensure we run this only once!
+        if RANGER_CHAMBER["@s"] > 0:
+            # the whole chamber is spent in a single volley
+            RANGER_CHAMBER["@s"] = 0
+            playsound minecraft:item.crossbow.shoot master @a ~ ~ ~ 0.6 1.2
 
 
 function RANGER_RAPID_FIRE:
     tag @s add RANGER_RAPID_SHOT_TAG
-    SELF.merge({damage: 1.2, crit: false, pickup: 2})
-    execute on origin run function ~/rapid_owner_fire
+    SELF.merge({damage: 1.25, crit: false, pickup: 2})
+
+    execute on origin run function ~/on_origin:
+        RANGER_CHAMBER["@s"] -= 1
+        if RANGER_CHAMBER["@s"] > 0:
+            function RANGER_REFRESH_ITEM
+
+        if RANGER_CHAMBER["@s"] > 0:
+            # auto-rechamber the next round
+            playsound minecraft:block.iron_trapdoor.open master @s ~ ~ ~ 0.8 1.4
 
 
-function ~/rapid_owner_fire:
-    if RANGER_RAPID_SHOTS["@s"] <= 0:
-        RANGER_RAPID_SHOTS["@s"] = 3
-
-    RANGER_RAPID_SHOTS["@s"] -= 1
-
-    if RANGER_RAPID_SHOTS["@s"] > 0:
-        execute if items entity @s weapon.mainhand (-RangerRapidCrossbow) run item replace entity @s weapon.mainhand with RangerRapidCrossbow
-        playsound minecraft:block.iron_trapdoor.open master @s ~ ~ ~ 0.8 1.4
-    else:
-        title @s actionbar {text: "Rapid spent", color: Theme.Failure}
-
+# ── Actionbar ───────────────────────────────────────────────────────────────────
 
 append function PLAYER_TICK:
-    execute if items entity @s weapon.mainhand (-RangerTripleCrossbow) run title @s actionbar [
-        {text: "Triple Mode", color: Theme.Success, bold: true},
-        {text: " | Left-click to switch", color: "gray", bold: false}
+    execute if items entity @s weapon.mainhand (-RangerCrossbow) run function RANGER_ACTIONBAR
+
+
+function RANGER_ACTIONBAR:
+    execute if entity @s[tag=RANGER_RAPID_MODE_TAG] run return run function ~/rapid
+    function ~/triple
+
+
+def ranger_actionbar_line(label: str, lit_count: int, lit: str, lit_shadow: int, muted: str, muted_shadow: int):
+    """Build the actionbar text component for a given chamber count."""
+    line = [
+        {text: label, color: lit},
+        {text: " | ", color: RangerModeColor.Hint},
     ]
-    execute if items entity @s weapon.mainhand (-RangerRapidCrossbow) run function RANGER_RAPID_ACTIONBAR
+    if lit_count > 0:
+        line.append({text: "↑" * lit_count, color: lit, shadow_color: lit_shadow})
+    if lit_count < RANGER_MAX_CHAMBER:
+        line.append({text: "↑" * (RANGER_MAX_CHAMBER - lit_count), color: muted, shadow_color: muted_shadow})
+    line.append({text: " | Left-click to Swap", color: RangerModeColor.Hint})
+    return line
 
 
-function RANGER_RAPID_ACTIONBAR:
-    if RANGER_RAPID_SHOTS["@s"] <= 0:
-        RANGER_RAPID_SHOTS["@s"] = 3
+def build_ranger_actionbar(path, labels, lit, lit_shadow, muted, muted_shadow):
+    """Generate a 4-case (3/2/1/0) actionbar function for one mode.
+    
+    `labels` is indexed by chamber count, so triple can show Triple/Double/Single
+    while rapid always shows Rapid.
+    """
+    line3 = ranger_actionbar_line(labels[3], 3, lit, lit_shadow, muted, muted_shadow)
+    line2 = ranger_actionbar_line(labels[2], 2, lit, lit_shadow, muted, muted_shadow)
+    line1 = ranger_actionbar_line(labels[1], 1, lit, lit_shadow, muted, muted_shadow)
+    line0 = ranger_actionbar_line(labels[0], 0, lit, lit_shadow, muted, muted_shadow)
 
-    if RANGER_RAPID_SHOTS["@s"] >= 3:
-        title @s actionbar [
-            {text: "↑↑↑", color: Theme.Failure},
-            {text: " | Left-click to switch", color: "gray"}
-        ]
-    elif RANGER_RAPID_SHOTS["@s"] == 2:
-        title @s actionbar [
-            {text: "↑↑", color: Theme.Failure},
-            {text: "↑", color: "dark_gray"},
-            {text: " | Left-click to switch", color: "gray"}
-        ]
-    elif RANGER_RAPID_SHOTS["@s"] == 1:
-        title @s actionbar [
-            {text: "↑", color: Theme.Failure},
-            {text: "↑↑", color: "dark_gray"},
-            {text: " | Left-click to switch", color: "gray"}
-        ]
+    function path:
+        if RANGER_CHAMBER["@s"] >= RANGER_MAX_CHAMBER:
+            title @s actionbar line3
+        elif RANGER_CHAMBER["@s"] == 2:
+            title @s actionbar line2
+        elif RANGER_CHAMBER["@s"] == 1:
+            title @s actionbar line1
+        else:
+            title @s actionbar line0
+
+
+build_ranger_actionbar(
+    f"{RANGER_ACTIONBAR}/triple",
+    ["Triple", "Single", "Double", "Triple"],
+    RangerModeColor.Triple, RangerModeColor.TripleShadow,
+    RangerModeColor.TripleMuted, RangerModeColor.TripleMutedShadow,
+)
+
+build_ranger_actionbar(
+    f"{RANGER_ACTIONBAR}/rapid",
+    ["Rapid", "Rapid", "Rapid", "Rapid"],
+    RangerModeColor.Rapid, RangerModeColor.RapidShadow,
+    RangerModeColor.RapidMuted, RangerModeColor.RapidMutedShadow,
+)
+
+
+# ── Reset ───────────────────────────────────────────────────────────────────────
+
+# Fresh rangers start in triple mode with a full chamber, matching the loadout item.
+append function KIT_RESET:
+    tag @s remove RANGER_RAPID_MODE_TAG
+    RANGER_CHAMBER["@s"] = RANGER_MAX_CHAMBER

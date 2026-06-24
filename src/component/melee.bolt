@@ -70,7 +70,7 @@ class Melee(Component):
                 )
             )
             enchantments = output.setdefault("enchantments", {})
-            enchantments[nbt_dump("shulker:negative_sharpness")] = self.crit * 2
+            enchantments["shulker:negative_sharpness"] = self.crit * 2
 
         #> TODO:
         # Implement Weapon Weight

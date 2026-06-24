@@ -192,7 +192,7 @@ class ItemType(type):
         fields = [
             field
             for field in dataclasses.fields(component)
-            if field.name not in ("item", "resolved_components")
+            if field.name not in ("item", "resolved_components", "base_type")
         ]
         field_errors: list[ValidationError] = []
         reconstructed_data = {}
@@ -231,10 +231,6 @@ class ItemType(type):
 
         # Handle simple case: data itself matches a field type
         for field in fields:
-            if check_type(data, field.type):
-                reconstructed_data[field.name] = data
-                continue
-
             # Handle dict case: validate each field
             if check_type(data, dict):
                 if (value := data.get(field.name)) is None:
@@ -251,6 +247,11 @@ class ItemType(type):
                     field_errors.append(ValidationError(field.name, value, field.type))
                 else:
                     reconstructed_data[field.name] = value
+                continue
+
+            if check_type(data, field.type):
+                reconstructed_data[field.name] = data
+                continue
 
         # Check for unexpected keys (only for dict data)
         if component._base_type is None and check_type(data, dict):
@@ -364,10 +365,10 @@ class ItemType(type):
         errors: list[CustomComponentError] = []
         output_component_mapping: dict[str, Component] = {}
 
-        components_queue = deque(custom_components)
+        components_queue = deque((component, False) for component in custom_components)
 
         while components_queue:
-            component = components_queue.popleft()
+            component, force_build = components_queue.popleft()
             name = component.name()
 
             try:
@@ -379,9 +380,11 @@ class ItemType(type):
                 # (custom components aren't in the vanilla schema)
                 del resolved_components[name]
 
-                # Use cache if available and caching is enabled
-                if name in self._component_cache:
-                    output = self._component_cache[name]
+                # Use cache if available and caching is enabled. Recursive
+                # component invocations may provide different data for the same
+                # component name, so they must build from their current payload.
+                if not force_build and name in self._component_cache:
+                    output, constructed_component = self._component_cache[name]
                 else:
                     # Validate fields and reconstruct data
                     reconstructed_data, field_errors = self._validate_dataclass_fields(
@@ -408,7 +411,7 @@ class ItemType(type):
                                     # If we have a recursive component, we need to add it back to the queue
                                     # so that it gets processed as a normal component. We also need to merge
                                     # its output into the current output (replacing the wrapper.)
-                                    components_queue.append(value.component)
+                                    components_queue.append((value.component, True))
                                     output[key] = value.data
 
                         constructed_components.append(constructed_component)
@@ -424,8 +427,8 @@ class ItemType(type):
                         ) from err
 
                     # Cache output if caching is enabled
-                    if not component._skip_cache:
-                        self._component_cache[name] = output
+                    if not component._skip_cache and not force_build:
+                        self._component_cache[name] = (output, constructed_component)
 
                 # Merge component output into resolved_components
                 if output is not None:
@@ -1002,6 +1005,28 @@ class ItemType(type):
                 components[k] = v
 
         return {"id": self.id, "count": 1, "components": components}
+
+    def as_loot_table(self) -> dict[str, Any]:
+        """Converts item into a loot table. Useful for adding item modifiers"""
+        return {
+            "pools": [
+                {
+                    "rolls": 1,
+                    "entries": [
+                        {
+                            "type": "minecraft:item",
+                            "name": self.id,
+                            "functions": [
+                                {
+                                    "function": "minecraft:set_components",
+                                    "components": self.as_dict()["components"]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
 
     __neg__ = __invert__ = conditional_string
     __pos__ = __str__ = item_string

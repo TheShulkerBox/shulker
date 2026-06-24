@@ -22,7 +22,7 @@ class Ammo(Component):
     def build(self):
         append function PLAYER_TICK:
             # only tick if we actually have ammo
-            execute if predicate has_item_predicate(self.item) run function self.tick_reload
+            execute if predicate has_item_predicate(self.item.conditional_dict()) run function self.tick_reload
     
     @cached_property
     def tick_reload(self):
@@ -43,7 +43,7 @@ class Ammo(Component):
         path = f"{self.path}/try_reload"
         function path:
             # If the player already has this ammo output, don't consume a reserve item.
-            execute if predicate has_item_predicate(self.output_item) return run function self.cancel_reload
+            execute if predicate has_item_predicate(self.output_item.conditional_dict()) return run function self.cancel_reload
             
             # otherwise, we have ammo, clear 1 and move on
             clear @s (-self.item) 1
@@ -68,7 +68,7 @@ class Ammo(Component):
             playsound minecraft:block.iron_door.open master @s ~ ~ ~ 0.8 0.5
             XP.set_points(0)
             self.reload_score = -1
-            execute if predicate has_item_predicate(self.item):
+            execute if predicate has_item_predicate(self.item.conditional_dict()):
                 self.reload_score.reset()
         
         return path

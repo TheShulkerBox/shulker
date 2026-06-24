@@ -1,6 +1,6 @@
 from item:definitions/weapon import Weapon
 from component:shield_hit import SHIELD_BLOCKED_DAMAGE
-from kit:events import KIT_RESET, KIT_RESTOCK
+from kit:events import KIT_RESET, KIT_RESUPPLY
 
 
 CUTLASS_BLOCKED: FunctionPath = item:cutlass/on_blocked
@@ -201,11 +201,12 @@ function CUTLASS_REPAIR:
 
 function CUTLASS_RESET:
     CUTLASS_PARRY_TIER["@s"].reset()
+    CUTLASS_PREVIOUS_TIER["@s"].reset()
 
 
 append function KIT_RESET:
     function CUTLASS_RESET
 
 
-append function KIT_RESTOCK:
+append function KIT_RESUPPLY:
     function CUTLASS_REPAIR

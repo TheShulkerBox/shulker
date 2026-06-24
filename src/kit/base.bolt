@@ -11,6 +11,7 @@ from lib:shulker_box import ShulkerBox
 from server:core import SERVER_LOAD
 from lib:inventory_management import hotbar_with_slots_modify
 from lib:rom import LOAD_ROM
+from lib:predicates import has_item_predicate
 
 KITS_ROM = Database(Data.storage("rom:main").root.kits)
 
@@ -108,6 +109,25 @@ class Kit:
                         item replace entity @s slot with item item.count
                     else:
                         item replace entity @s slot with item
+                hotbar_with_slots_modify {function: "set_custom_data", tag: {taco: bell}}
+
+            function ~/{self.id}/resupply:
+                for slot, item in self:
+                    resupply = item.components.get("custom_data", {}).get("component", {}).get("resupply", {})
+
+                    if resupply.get("only_on_empty", False):
+                        if isinstance(item, ItemStack):
+                            execute unless predicate has_item_predicate(item.conditional_dict()) run item replace entity @s slot with item item.count
+                        else:
+                            execute unless predicate has_item_predicate(item.conditional_dict()) run item replace entity @s slot with item
+                    elif isinstance(item, ItemStack):
+                        item replace entity @s slot with item item.count
+                    else:
+                        item replace entity @s slot with item
+
+                    callback = resupply.get("callback")
+                    if callback:
+                        function callback
                 hotbar_with_slots_modify {function: "set_custom_data", tag: {taco: bell}}
 
             function ~/{self.id}/mannequin:

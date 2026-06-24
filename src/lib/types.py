@@ -1,26 +1,40 @@
-from typing import Annotated, Any, Literal
+from typing import Any, Literal, TypeAlias
 from bolt_expressions import ScoreSource, DataSource
 
-IntLike: Annotated[type, "Works like an int for runtime math"] = (
-    int | ScoreSource | DataSource
-)
-FloatLike: Annotated[type, "Works like an float/double for runtime math"] = (
-    float | ScoreSource | DataSource
-)
-StringLike: Annotated[type, "Works like an str for runtime data"] = str | DataSource
-TextComponentLike: Annotated[type, "Works like a text component"] = (
+IntLike: TypeAlias = int | ScoreSource | DataSource
+"""Works like an int for runtime math"""
+
+FloatLike: TypeAlias = float | ScoreSource | DataSource
+"""Works like a float/double for runtime math"""
+
+NumberLike: TypeAlias = IntLike | FloatLike
+"""Works as an IntLike or a FloatLike"""
+
+StringLike: TypeAlias = str | DataSource
+"""Works like a str for runtime data"""
+
+TextComponentLike: TypeAlias = (
     str | dict[str, "TextComponentLike"] | list["TextComponentLike"] | DataSource
 )
-CompoundLike: Annotated[type, "Works like a nbt compound"] = dict[str, Any] | DataSource
+"""Works like a text component"""
+
+CompoundLike: TypeAlias = dict[str, Any] | DataSource
+"""Works like an nbt compound"""
 
 # Path Types
-FunctionPath: Annotated[type, "Path to a function"] = str
-AdvancementPath: Annotated[type, "Path to an advancement"] = str
-PredicatePath: Annotated[type, "Path to a predicate"] = str
+FunctionPath: TypeAlias = str
+"""Path to a function"""
 
-SlotLiteral: Annotated[type, "A slot in the player's inventory"] = Literal[
+AdvancementPath: TypeAlias = str
+"""Path to an advancement"""
+
+PredicatePath: TypeAlias = str
+"""Path to a predicate"""
+
+SlotLiteral: TypeAlias = Literal[
     "mainhand", "offhand", "head", "chest", "legs", "feet", "any"
 ]
+"""A slot in the player's inventory"""
 
 class Remove:
     """Sentinel class for removal operations. do not instantiate."""

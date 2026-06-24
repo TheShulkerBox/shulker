@@ -1,74 +1,42 @@
 from functools import cached_property
 
 from lib:errors import CustomComponentError
-from lib:helpers import nbt_dump
 from server:core import ROOT_ADVANCEMENT
 from server:events import ON_PLAYER_RESET
 
 from ./item_enchant import ItemEnchant
 from ./type import Component, RecursiveComponent
 
-CROSSBOW_LAST_CHARGING_SCORE = Scoreboard("component.crossbow_last_charging", criteria="dummy")
-CROSSBOW_CHARGING_SCORE = Scoreboard("component.crossbow_charge", criteria="dummy")
-CROSSBOW_LOADED_SCORE = Scoreboard("component.crossbow_loaded", criteria="dummy")
-CROSSBOW_HAND_SCORE = Scoreboard("component.crossbow_hand", criteria="dummy")
+CROSSBOW_CHARGE = Scoreboard("component.crossbow_charge", criteria="dummy")
+LAST_CROSSBOW_CHARGE = Scoreboard("component.crossbow_last_charging", criteria="dummy")
+CROSSBOW_HAND = Scoreboard("component.crossbow_hand", criteria="dummy")
+
+CROSSBOW_MAINHAND = 1
+CROSSBOW_OFFHAND = 2
 
 
 class Crossbow(Component):
-    """This component provides crossbow functionality and custom hooks for charge, load, fire, and hit events.
+    """Custom hooks for vanilla crossbow charging, loading, firing, and hits."""
 
-    Crossbows have two separate phases:
-    - `charge`/`charging` happen while the player is holding right click to load the crossbow.
-    - `load` happens once that charging interaction ends and the same held crossbow now has
-      `minecraft:charged_projectiles`.
-    - `fire` happens later, when the loaded projectile entity is actually spawned.
-
-    That split matters because releasing right click loads a crossbow, but does not fire it.
-
-    Example:
-    ```
-    class TestingCrossbow(KitItem):
-        id = "crossbow"
-        crossbow = {
-            charge: ./on_charge_start,
-            charging: ./while_charging,
-            load: ./on_loaded,
-            cancel: ./on_cancel,
-            fire: ./on_projectile_spawned,
-            hit: ./on_hit,
-        }
-    ```
-
-    Hook context examples:
-    - `charge`, `charging`, `load`, and `cancel` run as the player.
-    - `fire` runs as the fired projectile. Use `execute on owner` to select the shooter.
-    - `hit` runs as the victim of the projectile. Use `execute on attacker` to select the shooter.
-
-    Notes:
-    - The component remembers whether charging started from mainhand or offhand, then checks
-      that same slot with `if items` when charging stops.
-    - `load` and `cancel` are mutually exclusive for a single charge interaction.
-    - `fire`/`hit` use the same item-enchantment effect pipeline as the bow component.
-    """
-
-    charge: Annotated[FunctionPath | None, "Runs as the player when crossbow charging starts"] = None
-    charging: Annotated[FunctionPath | None, "Runs as the player while the crossbow is charging"] = None
-    load: Annotated[FunctionPath | None, "Runs as the player when the crossbow finishes loading"] = None
-    # TODO: fix cancel not working (says load instead)
-    cancel: Annotated[FunctionPath | None, "Runs as the player when charging stops without loading"] = None
-    fire: Annotated[FunctionPath | None, "Runs on the fired projectile"] = None
-    hit: Annotated[FunctionPath | None, "Runs as the victim of a crossbow projectile"] = None
+    nock: Annotated[FunctionPath | None, "Runs as the player when charging starts"] = None
+    charging: Annotated[FunctionPath | None, "Runs as the player while charging"] = None
+    loaded: Annotated[FunctionPath | None, "Runs as the player when a loads a crossbow"] = None
+    unnock: Annotated[FunctionPath | None, "Runs as the player when charging stops without loading"] = None
+    fire: Annotated[FunctionPath | None, "Runs as the player when the crossbow fires"] = None
+    tick_arrow: Annotated[FunctionPath | None, "Runs on fired arrows every tick"] = None
+    hit: Annotated[FunctionPath | None, "Runs as the victim of an arrow shot"] = None
+    hit_block: Annotated[FunctionPath | None, "Runs as the arrow when it hits a block"] = None
 
     def build(self):
         if self.item.id not in ("crossbow", "minecraft:crossbow"):
             raise CustomComponentError("Crossbow component can only be applied to items with id 'minecraft:crossbow'")
 
-        if not (self.charge or self.charging or self.load or self.cancel or self.fire or self.hit):
+        if not (self.nock or self.charging or self.loaded or self.unnock or self.fire or self.hit or self.hit_block):
             raise CustomComponentError(
-                "At least one of `charge`, `charging`, `load`, `cancel`, `fire`, or `hit` must be defined"
+                "At least one of `nock`, `charging`, `loaded`, `unnock`, `fire`, `hit`, or `hit_block` must be defined"
             )
 
-        advancement self.path {
+        advancement self.charge_advancement {
             "parent": ROOT_ADVANCEMENT,
             "criteria": {
                 "requirement": {
@@ -80,14 +48,15 @@ class Crossbow(Component):
             },
             "rewards": { "function": self.while_charging }
         }
-        
+
         effects = {}
 
-        if self.on_fire:
+        # code on projectile spawning for `on_fire`
+        if self.fire or self.tick_arrow:
             effects["minecraft:projectile_spawned"] = [
                 { "effect": { "type": "minecraft:run_function", "function": self.on_fire } }
             ]
-        
+
         if self.hit:
             effects["minecraft:post_attack"] = [
                 {
@@ -96,72 +65,102 @@ class Crossbow(Component):
                     "affected": "victim"
                 }
             ]
-        
+
+        if self.hit_block:
+            effects["minecraft:hit_block"] = [
+                {
+                    "effect": {
+                        "type": "minecraft:run_function",
+                        "function": self.hit_block
+                    }
+                }
+            ]
+
         if effects:
             return {item_enchant: RecursiveComponent(ItemEnchant, effects)}
 
     @cached_property
+    def charge_advancement(self):
+        return f"{self.path}/charging"
+
+    @cached_property
     def while_charging(self):
         path = f"{self.path}/while_charging"
-        detect_charging = f"{self.path}/detect_charging"
 
         function path:
-            if not (CROSSBOW_CHARGING_SCORE["@s"] > 0):
-                CROSSBOW_HAND_SCORE["@s"] = 0
-                if items entity @s weapon.mainhand self.item.conditional_string():
-                    CROSSBOW_HAND_SCORE["@s"] = 1
-                if items entity @s weapon.offhand self.item.conditional_string():
-                    CROSSBOW_HAND_SCORE["@s"] = 2
+            if not (CROSSBOW_CHARGE["@s"] > 0):
+                function self.start_charging
 
-                if self.charge:
-                    function self.charge
+            CROSSBOW_CHARGE["@s"] += 1
 
-            CROSSBOW_CHARGING_SCORE["@s"] += 1
+            schedule function self.detect_charging 1t replace
 
-            schedule function detect_charging 1t replace
             if self.charging:
                 function self.charging
-
-        function detect_charging:
-            execute as @a[scores={CROSSBOW_CHARGING_SCORE=1..}]:
-                if CROSSBOW_LAST_CHARGING_SCORE["@s"] == CROSSBOW_CHARGING_SCORE["@s"]:
-                    return run function self.no_longer_charging
-
-                schedule function detect_charging 1t replace
-                CROSSBOW_LAST_CHARGING_SCORE["@s"] = CROSSBOW_CHARGING_SCORE["@s"]
 
         return path
 
     @cached_property
-    def charged_conditional_string(self):
-        """Item predicate for this exact item after it has loaded a projectile."""
-        return f"{self.item.id}[custom_data~{nbt_dump(self.item.conditional_data)},charged_projectiles]"
+    def start_charging(self):
+        path = f"{self.path}/start_charging"
+
+        function path:
+            # Keep track of which hand is being used
+            CROSSBOW_HAND["@s"].reset()
+
+            if items entity @s weapon.mainhand self.item.conditional_string():
+                CROSSBOW_HAND["@s"] = CROSSBOW_MAINHAND
+
+            if items entity @s weapon.offhand self.item.conditional_string():
+                CROSSBOW_HAND["@s"] = CROSSBOW_OFFHAND
+
+            if self.nock:
+                function self.nock
+
+        return path
+
+    @cached_property
+    def detect_charging(self):
+        path = f"{self.path}/detect_charging"
+        function path:
+            execute as @a[scores={CROSSBOW_CHARGE=1..}]:
+                if LAST_CROSSBOW_CHARGE["@s"] == CROSSBOW_CHARGE["@s"]:
+                    return run function self.no_longer_charging
+
+                schedule function path 1t replace
+                LAST_CROSSBOW_CHARGE["@s"] = CROSSBOW_CHARGE["@s"]
+
+        return path
 
     @cached_property
     def no_longer_charging(self):
         path = f"{self.path}/no_longer_charging"
         function path:
-            if self.load:
-                CROSSBOW_LOADED_SCORE["@s"] = 0
-                if CROSSBOW_HAND_SCORE["@s"] == 1:
-                    if items entity @s weapon.mainhand self.charged_conditional_string:
-                        CROSSBOW_LOADED_SCORE["@s"] = 1
-                if CROSSBOW_HAND_SCORE["@s"] == 2:
-                    if items entity @s weapon.offhand self.charged_conditional_string:
-                        CROSSBOW_LOADED_SCORE["@s"] = 1
 
-                if CROSSBOW_LOADED_SCORE["@s"] == 1:
-                    function self.load
-                else:
-                    if self.cancel:
-                        function self.cancel
+            if self.loaded or self.unnock:
+                function self.detect_loaded
+            
+            function self.reset
 
-                CROSSBOW_LOADED_SCORE["@s"].reset()
+        return path
+    
+    
+    @cached_property
+    def detect_loaded(self):
+        path = f"{self.path}/detect_loaded"
+        function path:
+            if CROSSBOW_HAND["@s"] == CROSSBOW_MAINHAND:
+                if self.loaded:
+                    execute unless items entity @s weapon.mainhand *[minecraft:charged_projectiles=[]] return:
+                        function self.loaded
+                if self.unnock:
+                    function self.unnock
             else:
-                if self.cancel:
-                    function self.cancel
-
-            function ./crossbow_on_player_reset
+                if self.loaded:
+                    execute unless items entity @s weapon.offhand *[minecraft:charged_projectiles=[]] return:
+                        function self.loaded
+                if self.unnock:
+                    function self.unnock
 
         return path
 
@@ -171,14 +170,37 @@ class Crossbow(Component):
         function path:
             if self.fire:
                 function self.fire
-            function ./crossbow_on_player_reset
+            
+            if self.tick_arrow:
+                schedule function self.arrow_loop 1t replace
+
+            schedule clear self.detect_charging
+            
+            function self.reset
 
         return path
+    
+    @cached_property
+    def arrow_tag(self):
+        return f"entity.{self.item.name}"
+    
+    @cached_property
+    def arrow_loop(self):
+        path = f"{self.path}/tick_arrow"
+        function path:
+            execute as @e[type=arrow, tag=self.arrow_tag] at @s:
+                schedule function path 1t replace
+                function self.tick_arrow
+
+        return path
+
+    @cached_property
+    def reset(self):
+        return ./crossbow_on_player_reset
 
 
 append function ON_PLAYER_RESET:
     execute function ./crossbow_on_player_reset:
-        CROSSBOW_CHARGING_SCORE["@s"].reset()
-        CROSSBOW_LAST_CHARGING_SCORE["@s"].reset()
-        CROSSBOW_LOADED_SCORE["@s"].reset()
-        CROSSBOW_HAND_SCORE["@s"].reset()
+        CROSSBOW_CHARGE["@s"].reset()
+        LAST_CROSSBOW_CHARGE["@s"].reset()
+        CROSSBOW_HAND["@s"].reset()
