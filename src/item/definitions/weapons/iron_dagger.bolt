@@ -1,5 +1,4 @@
 from item:definitions/weapon import Weapon
-from lib:player import tag_self
 
 ATTEMPT_ASSASSINATE: FunctionPath = item:iron_dagger/attempt_assassinate
 SWAP_STAB: FunctionPath = item:iron_dagger/swap_to_stab

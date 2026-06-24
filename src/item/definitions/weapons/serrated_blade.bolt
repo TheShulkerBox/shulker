@@ -1,0 +1,30 @@
+from item:definitions/weapon import Weapon
+
+APPLY_HEALING_BLOCK: FunctionPath = item:serrated_blade/apply
+TICK_HEALING_BLOCK: FunctionPath = item:serrated_blade/tick
+
+HEALING_BLOCK = Scoreboard("shulker.healing_block", criteria="dummy")
+
+class SerratedBlade(Weapon):
+    id = "stone_sword"
+    item_model = "stone_sword"
+    melee = {
+        damage: 5, 
+        speed: 1.6, 
+        weight: "medium"
+    }
+    strike = {slot: "weapon.mainhand", victim: APPLY_HEALING_BLOCK}
+
+function APPLY_HEALING_BLOCK:
+    scoreboard players set @s HEALING_BLOCK 20
+    effect give @s wither 1 0
+    playsound minecraft:block.beehive.shear master @a ~ ~ ~ 1 1.6
+    schedule function TICK_HEALING_BLOCK 1t replace
+
+function TICK_HEALING_BLOCK:
+    execute @a[scores={HEALING_BLOCK=1..}]:
+        HEALING_BLOCK["@s"] -= 1
+        execute if entity @s[scores={HEALING_BLOCK=..0}]:
+            HEALING_BLOCK["@s"].reset()
+        execute if entity @s[scores={HEALING_BLOCK=1..}]:
+            schedule function TICK_HEALING_BLOCK 1t replace

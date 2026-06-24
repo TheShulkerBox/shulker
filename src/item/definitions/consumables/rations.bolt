@@ -1,4 +1,7 @@
 from ../food import Food
+from ../weapons/serrated_blade import HEALING_BLOCK
+
+EAT_RATIONS = "item:rations/eat"
 
 class Rations(Food):
     """Quick healing food that can be eaten quickly in battle."""
@@ -8,18 +11,11 @@ class Rations(Food):
     item_name = "Rations"
     always_edible = true
     food = {nutrition: 1, saturation: 0.2}
-    consumable = {
-        consume_seconds: 0.8,
-        on_consume_effects: [
-            {
-                type: "apply_effects",
-                effects: [
-                    {
-                        id: "regeneration",
-                        amplifier: 3,
-                        duration: 3 * 20,
-                    }
-                ]
-            }
-        ]
+    useable = {
+        callback: EAT_RATIONS,
+        animation: "eat"
     }
+
+function EAT_RATIONS:
+    execute if entity @s[scores={HEALING_BLOCK=1..}] run playsound minecraft:entity.wither_skeleton.step voice @a ~ ~ ~ 0.5 0.5
+    execute unless entity @s[scores={HEALING_BLOCK=1..}] run effect give @s regeneration 3 3
