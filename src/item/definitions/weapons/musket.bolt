@@ -2,37 +2,10 @@ from item:definitions/weapon import Crossbow
 from lib:player import tag_self
 
 MUSKET_FIRE: FunctionPath = item:musket/fire
-MUSKET_RELOAD: FunctionPath = item:musket/reload
-MUSKET_TICK: FunctionPath = item:musket/tick_projectile
 MUSKET_DISPLAY_TICK: FunctionPath = item:musket/tick_display
-MUSKET_RAY_ITER: FunctionPath = item:musket/ray/iter
-MUSKET_RAY_CHECK: FunctionPath = item:musket/ray/check
-MUSKET_RAY_HIT: FunctionPath = item:musket/ray/hit
-MUSKET_DAMAGE: FunctionPath = item:musket/damage
-MUSKET_HIT_BLOCK: FunctionPath = item:musket/hit_block
-MUSKET_DESPAWN: FunctionPath = item:musket/despawn
 
-MUSKET_DAMAGE_TYPE = item:weapon/musket
-
-MUSKET_PROJECTILE_TAG = "musket_projectile"
 MUSKET_DISPLAY_TAG = "musket_cannonball"
-MUSKET_SHOOTER_TAG = "musket_shooter"
-MUSKET_CURRENT_PROJECTILE_TAG = "musket_current_projectile"
-
-MUSKET_PROJECTILE_TIMER = Scoreboard("item.musket_projectile_timer", criteria="dummy")
-MUSKET_LIFETIME_TICKS = 10
-MUSKET_RAY_STEPS = 20
-MUSKET_RAY_STEP_SIZE = 0.5
-MUSKET_SPEED = MUSKET_RAY_STEPS * MUSKET_RAY_STEP_SIZE
-MUSKET_DAMAGE_AMOUNT = 7
 MUSKET_CANNONBALL_BLOCK = "minecraft:netherite_block"
-
-
-damage_type MUSKET_DAMAGE_TYPE {
-    "exhaustion": 0.1,
-    "message_id": "player",
-    "scaling": "when_caused_by_living_non_player"
-}
 
 
 class Musket(Crossbow):
@@ -46,18 +19,9 @@ class Musket(Crossbow):
     crossbow = {
         fire: MUSKET_FIRE,
     }
-    kill = {
-        slot: "weapon.mainhand",
-        killer: MUSKET_RELOAD,
-    }
 
 
 function MUSKET_FIRE:
-    tag @s add MUSKET_PROJECTILE_TAG
-    tag @s add MUSKET_CURRENT_PROJECTILE_TAG
-    MUSKET_PROJECTILE_TIMER["@s"] = MUSKET_LIFETIME_TICKS
-    SELF.merge({damage: 0.0, crit: false, pickup: 2, NoGravity: true, Silent: true, Motion: [0.0, 0.0, 0.0]})
-
     execute on owner run playsound minecraft:entity.firework_rocket.blast master @a ~ ~ ~ 1 0.4
     execute on owner run playsound minecraft:item.flintandsteel.use master @a ~ ~ ~ 1 0
     execute on owner run playsound minecraft:item.flintandsteel.use master @a ~ ~ ~ 1 0
@@ -77,94 +41,7 @@ function MUSKET_FIRE:
             })
             ride @s mount @n[type=arrow, tag=MUSKET_ARROW_TAG]
 
-    tag @s remove MUSKET_CURRENT_PROJECTILE_TAG
-    schedule function MUSKET_TICK 1t replace
     schedule function MUSKET_DISPLAY_TICK 5t replace
-
-
-function MUSKET_RELOAD:
-    execute if items entity @s weapon.mainhand (-Musket) run item replace entity @s weapon.mainhand with Musket
-
-
-function MUSKET_TICK:
-    execute as @e[type=arrow, tag=MUSKET_PROJECTILE_TAG] at @s:
-        schedule function MUSKET_TICK 1t replace
-
-        tag @a[tag=MUSKET_SHOOTER_TAG] remove MUSKET_SHOOTER_TAG
-        tag @s add MUSKET_CURRENT_PROJECTILE_TAG
-        execute on owner run tag @s add MUSKET_SHOOTER_TAG
-
-        SCORE.temp["#musket_hit"] = 0
-        SCORE.temp["#musket_distance"] = 0
-        function MUSKET_RAY_ITER
-
-        if SCORE.temp["#musket_hit"] > 0:
-            function MUSKET_DESPAWN
-        else:
-            raw f"tp @s ^ ^ ^{MUSKET_SPEED}"
-            MUSKET_PROJECTILE_TIMER["@s"] -= 1
-            if MUSKET_PROJECTILE_TIMER["@s"] <= 0:
-                particle minecraft:lava ~ ~ ~ 0.25 0.25 0.25 0.1 5 force @a
-                particle minecraft:large_smoke ~ ~ ~ 0.1 0.1 0.1 0.1 3 normal @a
-                function MUSKET_DESPAWN
-
-        tag @a[tag=MUSKET_SHOOTER_TAG] remove MUSKET_SHOOTER_TAG
-        tag @s remove MUSKET_CURRENT_PROJECTILE_TAG
-
-
-function MUSKET_RAY_ITER:
-    execute if score #musket_hit temp matches 0 positioned ~-0.05 ~-0.05 ~-0.05 as @a[dx=0, sort=nearest, tag=!MUSKET_SHOOTER_TAG] run function MUSKET_RAY_CHECK
-
-    execute unless block ~ ~ ~ air if score #musket_hit temp matches 0:
-        SCORE.temp["#musket_hit"] = 1
-        function MUSKET_HIT_BLOCK
-
-    SCORE.temp["#musket_distance"] += 1
-
-    particle minecraft:mycelium ~ ~ ~ 0 0 0 0 1 force @a
-    particle minecraft:smoke ~ ~ ~ 0 0 0 0 1 force @a
-
-    execute
-        if score #musket_hit temp matches 0
-        if score #musket_distance temp matches f"..{MUSKET_RAY_STEPS - 1}"
-        positioned f"^ ^ ^{MUSKET_RAY_STEP_SIZE}"
-        run function MUSKET_RAY_ITER
-
-
-function MUSKET_RAY_CHECK:
-    execute
-        if score #musket_hit temp matches 0
-        positioned ~-0.9 ~-0.9 ~-0.9
-        if entity @s[dx=0]
-        positioned ~0.95 ~0.95 ~0.95
-        run function MUSKET_RAY_HIT
-
-
-function MUSKET_RAY_HIT:
-    SCORE.temp["#musket_hit"] = 1
-    tp @e[type=arrow, tag=MUSKET_CURRENT_PROJECTILE_TAG, limit=1] ~ ~ ~
-    function MUSKET_DAMAGE
-
-
-function MUSKET_DAMAGE:
-    execute if entity @a[tag=MUSKET_SHOOTER_TAG] run damage @s MUSKET_DAMAGE_AMOUNT MUSKET_DAMAGE_TYPE by @a[tag=MUSKET_SHOOTER_TAG, limit=1]
-    execute unless entity @a[tag=MUSKET_SHOOTER_TAG] run damage @s MUSKET_DAMAGE_AMOUNT MUSKET_DAMAGE_TYPE
-
-    particle minecraft:lava ~ ~1 ~ 0.25 0.25 0.25 0.1 5 force @a
-    particle minecraft:large_smoke ~ ~1 ~ 0.1 0.1 0.1 0.1 3 normal @a
-    execute as @a[tag=MUSKET_SHOOTER_TAG, limit=1] at @s run playsound minecraft:entity.arrow.hit_player master @s ~ ~ ~ 0.3 1
-
-
-function MUSKET_HIT_BLOCK:
-    tp @s ~ ~ ~
-    particle minecraft:lava ~ ~ ~ 0.25 0.25 0.25 0.1 5 force @a
-    particle minecraft:large_smoke ~ ~ ~ 0.1 0.1 0.1 0.1 3 normal @a
-    playsound minecraft:block.netherite_block.hit master @a[distance=..24] ~ ~ ~ 0.7 0.6
-
-
-function MUSKET_DESPAWN:
-    execute on passengers run kill @s
-    kill @s
 
 
 function MUSKET_DISPLAY_TICK:

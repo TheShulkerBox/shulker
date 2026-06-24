@@ -15,7 +15,7 @@ from plugins.bloom import make_request, watch_for_errors
 
 PACK = "shulkerbox_data_pack.zip"
 TARGET = f"/TheShulkerBox/datapacks/{PACK}"
-RELOAD_LOG_TIMEOUT = 10
+RELOAD_LOG_TIMEOUT = 5
 
 
 def get_git_user() -> str:
