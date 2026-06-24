@@ -8,6 +8,7 @@ HEALING_BLOCK = Scoreboard("shulker.healing_block", criteria="dummy")
 class SerratedBlade(Weapon):
     id = "stone_sword"
     item_model = "stone_sword"
+    item_name = "Serrated Blade"
     melee = {
         damage: 5, 
         speed: 1.6, 
