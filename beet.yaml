@@ -22,10 +22,10 @@ pipeline:
   - mecha
   - plugins.minecraft_namespace_checker
   - plugins.cleanup_empty_functions
+  - data_pack:
+      load: [vendor/*]
 
 data_pack:
-  load: [ vendor/* ]
-
   filter:
     block:
       - namespace: "minecraft"
@@ -47,7 +47,7 @@ meta:
 
   bolt:
     entrypoint: "*"
-    prelude: [ "server:prelude" ]
+    prelude: ["server:prelude"]
 
   bolt_expressions:
     temp_objective: "temp"
