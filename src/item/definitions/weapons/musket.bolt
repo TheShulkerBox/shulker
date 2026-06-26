@@ -1,11 +1,6 @@
 from item:definitions/weapon import Crossbow
-from lib:player import tag_self
 
 MUSKET_FIRE: FunctionPath = item:musket/fire
-MUSKET_DISPLAY_TICK: FunctionPath = item:musket/tick_display
-
-MUSKET_DISPLAY_TAG = "musket_cannonball"
-MUSKET_CANNONBALL_BLOCK = "minecraft:netherite_block"
 
 
 class Musket(Crossbow):
@@ -27,25 +22,3 @@ function MUSKET_FIRE:
     execute on owner run playsound minecraft:item.flintandsteel.use master @a ~ ~ ~ 1 0
     particle minecraft:poof ~ ~ ~ 0.8 0.8 0.8 0.05 3
     particle minecraft:large_smoke ~ ~ ~ 0 0 0 0 1 normal @a
-
-    with tag_self() as MUSKET_ARROW_TAG:
-        execute summon block_display:
-            SELF.merge({
-                Tags: [MUSKET_DISPLAY_TAG],
-                block_state: {Name: MUSKET_CANNONBALL_BLOCK},
-                transformation: {
-                    translation: [-0.25, -0.25, -0.25],
-                    scale: [0.5, 0.5, 0.5],
-                },
-                teleport_duration: 1,
-            })
-            ride @s mount @n[type=arrow, tag=MUSKET_ARROW_TAG]
-
-    schedule function MUSKET_DISPLAY_TICK 5t replace
-
-
-function MUSKET_DISPLAY_TICK:
-    execute as @e[type=block_display, tag=MUSKET_DISPLAY_TAG] at @s:
-        execute on vehicle run return run schedule function MUSKET_DISPLAY_TICK 5t replace
-        particle minecraft:poof ~ ~ ~ 0.25 0.25 0.25 0 6 force
-        kill @s
