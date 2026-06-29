@@ -1,0 +1,165 @@
+#> Booth Registration command:
+#> TODO:
+# Review return_pos, return_rot
+#
+# function summit.battlegrounds:api/register_booth {booth_id:"shulker", booth_name:"The Shulker Box", return_pos:"[43.48d, 148.00d, -82.29d]", return_rot:"[-243.08f, 1.67f]", struct_function:"shulker:booth/domination/arena_structure", compatibility:"shulker", kit_function:"summit.battlegrounds.example:blue/give_kit_d"} 
+from lib.text import Theme
+from server:core import SERVER_LOAD
+from game:player import TEAM_SCORE, TEAM_MATCHER
+
+WIN_THRESHOLD: int = 100
+
+# Tags
+BOOTH_ID = "shulker"
+IN_BATTLEGROUNDS = "summit.battlegrounds.player"
+DOMINATION_POINT_ENTITY = "shulker.domination_control_point"
+
+# Fake players
+GAME_SCORE = "#shulker.domination.score"
+
+# Bossbar
+DOMINATION_BOSSBAR = "shulker:game.domination.global_score"
+
+# Scoreboard objectives
+SUMMIT_BATTLEGROUNDS = Scoreboard("summit.battlegrounds", criteria="dummy")
+PLAYER_BALANCE = Scoreboard("shulker.ctrl_point_balance", criteria="dummy")
+GAME_STATE = Scoreboard("shulker.domination.game_state", criteria="dummy")
+
+# Function Paths
+ARENA_LOAD: FunctionPath = shulker:booth/load
+ARENA_UNLOAD: FunctionPath = shulker:booth/unload
+PLAYER_ENTER_ATTEMPT: FunctionPath = shulker:booth/player_enter_attempt
+PLAYER_ENTER_SUCCESS: FunctionPath = shulker:booth/player_enter_success
+PLAYER_LEAVE: FunctionPath = shulker:booth/player_leave
+PLAYER_DIED: FunctionPath = shulker:booth/player_died
+DOMINATION_MAIN: FunctionPath = shulker:booth/domination/main
+BOOTH_STRUCTURE_SET: FunctionPath = shulker:booth/domination/arena_structure
+UPDATE_CLOCK: FunctionPath = shulker:booth/domination/clock
+
+# API Function tags enum
+append function_tag summit.battlegrounds:api/booth_active { "values": [ARENA_LOAD] }
+append function_tag summit.battlegrounds:api/booth_inactive { "values": [ARENA_UNLOAD] }
+append function_tag summit.battlegrounds:api/player_enter_attempt { "values": [PLAYER_ENTER_ATTEMPT] }
+append function_tag summit.battlegrounds:api/player_enter { "values": [PLAYER_ENTER_SUCCESS] }
+append function_tag summit.battlegrounds:api/player_leave { "values": [PLAYER_LEAVE] }
+append function_tag summit.battlegrounds:api/player_died { "values": [PLAYER_DIED] }
+
+# Domination gamemode main loop
+function DOMINATION_MAIN:
+    execute unless data storage summit.battlegrounds:database session{booth_id: BOOTH_ID} run return 0
+    schedule function DOMINATION_MAIN 5t
+    schedule function UPDATE_CLOCK 20t
+
+    # Tick domination point entities. We'll change team score based on the balance of nearby players
+    #> TODO:
+    # We might instead make point control flip by adding another layer of buffer, making PLAYER_BALANCE set the first derivative (rate of change) for control of the point, with control state being determining which teams collects a set amount of progress per score tick.
+    execute as @e[tag=DOMINATION_POINT_ENTITY] at @s:
+        # Compute control point balance using nearby player information
+        # As players within range, increment/decrement balance variable for all points
+        as @a[tag=IN_BATTLEGROUNDS,distance=..5]:
+            if TEAM_SCORE["@s"] == 1:
+                PLAYER_BALANCE[f"@n[tag={DOMINATION_POINT_ENTITY}]"] += 1
+            if TEAM_SCORE["@s"] == 2:
+                PLAYER_BALANCE[f"@n[tag={DOMINATION_POINT_ENTITY}]"] -= 1
+        # If balance for the capture point is in team 1's favor
+        if PLAYER_BALANCE["@s"] > 0:
+            GAME_STATE[GAME_SCORE] += 1
+        # If balance for the capture point is in team 2's favor
+        elif PLAYER_BALANCE["@s"] < 0:
+            GAME_STATE[GAME_SCORE] -= 1
+        # If balance for the capture point is neutral
+        else:
+            ...
+    # Update bossbar
+    execute store result bossbar DOMINATION_BOSSBAR value run scoreboard players get GAME_SCORE GAME_STATE.objective()
+    # Team 1 wins
+    if GAME_STATE[GAME_SCORE] <= 0:
+        ...
+    # Team 2 wins
+    elif GAME_STATE[GAME_SCORE] >= WIN_THRESHOLD:
+        ...
+
+function UPDATE_CLOCK:
+    schedule function UPDATE_CLOCK 20t
+    if SUMMIT_BATTLEGROUNDS["$time_left"] == 40:
+        execute as @a[tag=IN_BATTLEGROUNDS] at @s:
+            title @s reset
+            title @s subtitle {text:"30 seconds remaining!", color: Theme.Secondary}
+            title @s title {text:""}
+            title @s reset
+    if SUMMIT_BATTLEGROUNDS["$time_left"] == 15:
+        execute as @a[tag=IN_BATTLEGROUNDS] at @s:
+            title @s times 1t 1s 1t
+            title @s subtitle {text:"5", color: Theme.Secondary}
+            title @s title {text:""} 
+            title @s reset
+            playsound minecraft:block.note_block.hat voice @s ~ ~ ~ 0.5 1.189207
+    if SUMMIT_BATTLEGROUNDS["$time_left"] == 14:
+        execute as @a[tag=IN_BATTLEGROUNDS] at @s:
+            title @s times 1t 1s 1t
+            title @s subtitle {text:"4", color: Theme.Secondary}
+            title @s title {text:""} 
+            title @s reset
+            playsound minecraft:block.note_block.hat voice @s ~ ~ ~ 0.5 1.189207
+    if SUMMIT_BATTLEGROUNDS["$time_left"] == 13:
+        execute as @a[tag=IN_BATTLEGROUNDS] at @s:
+            title @s times 1t 1s 1t
+            title @s subtitle {text:"3", color: Theme.Secondary}
+            title @s title {text:""} 
+            title @s reset
+            playsound minecraft:block.note_block.hat voice @s ~ ~ ~ 0.5 1.189207
+    if SUMMIT_BATTLEGROUNDS["$time_left"] == 12:
+        execute as @a[tag=IN_BATTLEGROUNDS] at @s:
+            title @s times 1t 1s 1t
+            title @s subtitle {text:"2", color: Theme.Secondary}
+            title @s title {text:""} 
+            title @s reset
+            playsound minecraft:block.note_block.hat voice @s ~ ~ ~ 0.5 1.189207
+    if SUMMIT_BATTLEGROUNDS["$time_left"] == 11:
+        execute as @a[tag=IN_BATTLEGROUNDS] at @s:
+            title @s times 1t 1s 1t
+            title @s subtitle {text:"1", color: Theme.Secondary}
+            title @s title {text:""} 
+            title @s reset
+            playsound minecraft:block.note_block.hat voice @s ~ ~ ~ 0.5 1.189207
+    if SUMMIT_BATTLEGROUNDS["$time_left"] == 10:
+        execute as @a[tag=IN_BATTLEGROUNDS] at @s:
+            title @s reset
+            title @s subtitle {text:"Time's up!", color: Theme.Failure}
+            title @s title {text:""}
+            title @s reset
+        # Announce end of match to all nearby players, regardless of whether they're in the arena
+        #> TODO:
+        # Review with rx so we don't break any rules.
+        playsound minecraft:item.goat_horn.sound.1 voice @a -98 81 118 5 0.5
+        
+
+# Event functions tied into API below
+function BOOTH_STRUCTURE_SET:
+    ...
+
+function ARENA_LOAD:
+    execute unless data storage summit.battlegrounds:database session{booth_id: BOOTH_ID} run return 0
+    schedule function DOMINATION_MAIN 1t
+    bossbar add DOMINATION_BOSSBAR [{text:'Red',color:dark_red},{text:' '},{text:' '},{text:' '},{text:' '},{text:' '},{text:' Team Victory Progress ',color:white},{text:' '},{text:' '},{text:' '},{text:' '},{text:' '},{text:'Blue',color:dark_blue}]
+    bossbar set DOMINATION_BOSSBAR style notched_20
+    bossbar set DOMINATION_BOSSBAR max WIN_THRESHOLD
+    bossbar set DOMINATION_BOSSBAR color white
+    GAME_STATE[GAME_SCORE] = WIN_THRESHOLD/2
+    execute store result bossbar DOMINATION_BOSSBAR value run scoreboard players get GAME_SCORE GAME_STATE.objective()
+    playsound minecraft:item.goat_horn.sound.0 voice @a -98 81 118 5 0.5
+    
+function ARENA_UNLOAD:
+    execute unless data storage summit.battlegrounds:database session{booth_id: BOOTH_ID} run return 0
+    bossbar remove DOMINATION_BOSSBAR
+
+function PLAYER_ENTER_SUCCESS:
+    execute unless data storage summit.battlegrounds:database session{booth_id: BOOTH_ID} run return 0
+    bossbar set DOMINATION_BOSSBAR players @a[tag=IN_BATTLEGROUNDS]
+
+function PLAYER_LEAVE:
+    execute unless data storage summit.battlegrounds:database session{booth_id: BOOTH_ID} run return 0
+    bossbar set DOMINATION_BOSSBAR players @a[tag=IN_BATTLEGROUNDS]
+
+function PLAYER_DIED:
+    execute unless data storage summit.battlegrounds:database session{booth_id: BOOTH_ID} run return 0

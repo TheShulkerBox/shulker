@@ -18,6 +18,7 @@ class Gamemode:
     FTM = "ftm"
     TDM = "tdm"
     CTF = "ctf"
+    Domination = "domination"
 
 
 class Tag:

@@ -1,0 +1,34 @@
+{
+    "namespace": "shulker",
+    "booth_name": "The Shulker Box",
+    "bounding_boxes": {
+        "booth_bounds": {
+            "position": {
+                "x": {"min": -129, "max": -110},
+                "y": {"min": 78, "max": 90},
+                "z": {"min": 68, "max": 87}
+            }
+        }
+    },
+    "on_player_enter": "shulker:booth/enter",
+    "sticker_book": {
+        "background_color": "#1a48c3",
+        "region": "textured_tropics",
+        "stickers": [
+            {
+                "sticker_id": "<sticker_id>",
+                "sticker_texture": "<texture_location>",
+                "sticker_name": "Welcome to Booth",
+                "unobtained_text": "Enter the Booth",
+                "obtained_text": "Rewarded for entering the Booth"
+            }
+        ]
+    },
+    "balloons": [
+        {
+            "balloon_id": "smithie",
+            "balloon_name": "Smithie",
+            "balloon_model": "summit_balloons:item/smithie"
+        }
+    ]
+}
