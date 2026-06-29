@@ -8,6 +8,10 @@ from server:core import SERVER_LOAD
 from game:player import TEAM_SCORE, TEAM_MATCHER
 
 WIN_THRESHOLD: int = 100
+BOSSBAR_MIDDLE: int = 50
+#> TODO: 
+# Figure out why I can't make this dynamic
+#BOSSBAR_MIDDLE = (WIN_THRESHOLD/2)
 
 # Tags
 BOOTH_ID = "shulker"
@@ -71,7 +75,7 @@ function DOMINATION_MAIN:
         else:
             ...
     # Update bossbar
-    execute store result bossbar DOMINATION_BOSSBAR value run scoreboard players get GAME_SCORE GAME_STATE.objective()
+    execute store result bossbar DOMINATION_BOSSBAR value run scoreboard players get var GAME_STATE[GAME_SCORE]
     # Team 1 wins
     if GAME_STATE[GAME_SCORE] <= 0:
         ...
@@ -145,8 +149,7 @@ function ARENA_LOAD:
     bossbar set DOMINATION_BOSSBAR style notched_20
     bossbar set DOMINATION_BOSSBAR max WIN_THRESHOLD
     bossbar set DOMINATION_BOSSBAR color white
-    GAME_STATE[GAME_SCORE] = WIN_THRESHOLD/2
-    execute store result bossbar DOMINATION_BOSSBAR value run scoreboard players get GAME_SCORE GAME_STATE.objective()
+    GAME_STATE[GAME_SCORE] = BOSSBAR_MIDDLE
     playsound minecraft:item.goat_horn.sound.0 voice @a -98 81 118 5 0.5
     
 function ARENA_UNLOAD:
