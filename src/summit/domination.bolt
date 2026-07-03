@@ -6,6 +6,8 @@
 from lib.text import Theme
 from server:core import SERVER_LOAD
 from game:player import TEAM_SCORE, TEAM_MATCHER
+# Summit only V
+from kit:services/resupply import TICK_RESUPPLY_TIME
 
 WIN_THRESHOLD: int = 100
 BOSSBAR_MIDDLE: int = 50
@@ -51,8 +53,8 @@ append function_tag summit.battlegrounds:api/player_died { "values": [PLAYER_DIE
 # Domination gamemode main loop
 function DOMINATION_MAIN:
     execute unless data storage summit.battlegrounds:database session{booth_id: BOOTH_ID} run return 0
-    schedule function DOMINATION_MAIN 5t
-    schedule function UPDATE_CLOCK 20t
+    function TICK_RESUPPLY_TIME
+    schedule function DOMINATION_MAIN 1t
 
     # Tick domination point entities. We'll change team score based on the balance of nearby players
     #> TODO:
@@ -145,6 +147,7 @@ function BOOTH_STRUCTURE_SET:
 function ARENA_LOAD:
     execute unless data storage summit.battlegrounds:database session{booth_id: BOOTH_ID} run return 0
     schedule function DOMINATION_MAIN 1t
+    schedule function UPDATE_CLOCK 1t
     bossbar add DOMINATION_BOSSBAR [{text:'Red',color:dark_red},{text:' '},{text:' '},{text:' '},{text:' '},{text:' '},{text:' Team Victory Progress ',color:white},{text:' '},{text:' '},{text:' '},{text:' '},{text:' '},{text:'Blue',color:dark_blue}]
     bossbar set DOMINATION_BOSSBAR style notched_20
     bossbar set DOMINATION_BOSSBAR max WIN_THRESHOLD

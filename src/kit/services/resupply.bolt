@@ -1,0 +1,56 @@
+from lib:text import Theme
+from lib:interaction import Interaction
+
+RESUPPLY_CRATE_TAG = "ResupplyCrate"
+
+RESUPPLY_TIMER = Scoreboard("kit.resupply_timer",criteria="dummy")
+
+TICK_RESUPPLY_TIME: FunctionPath = "kit:resupply/tick"
+RESUPPLY_SUCCEED: FunctionPath = "kit:resupply/succeed"
+RESUPPLY_FAIL: FunctionPath = "kit:resupply/fail"
+
+ResupplyCrate = Interaction(RESUPPLY_CRATE_TAG)
+
+function TICK_RESUPPLY_TIME:
+    execute as @a[scores={RESUPPLY_TIMER=1..}]:
+        RESUPPLY_TIMER["@s"] -= 1
+        if RESUPPLY_TIMER["@s"] == 0:
+            playsound minecraft:block.note_block.hat master @s ~ ~ ~ 1 0
+
+function ResupplyCrate.on_right_click:
+    if RESUPPLY_TIMER["@s"] > 0:
+        execute function RESUPPLY_FAIL:
+            SCORE.temp["@s"] = RESUPPLY_TIMER["@s"]
+            SCORE.temp["@s"] = (SCORE.temp["@s"] / 20)
+            title @s actionbar [{text: "You must wait ", color: Failure}, {score: {name: "@s", objective: "temp"}}, {text: " seconds to resupply.", color: Failure}]
+            playsound minecraft:block.note_block.hat master @s ~ ~ ~ 1 0
+    else:
+        execute function RESUPPLY_SUCCEED:
+            #> TODO:
+            # Complete reverse lookup by hashed kit id, set new cooldown score, return items (apply).
+            tellraw @s {text:"Resupplied!", color: Success}
+
+
+function ResupplyCrate.on_left_click:
+    if RESUPPLY_TIMER["@s"] > 0:
+        function RESUPPLY_FAIL
+    else:
+        title @s actionbar [{text: "Press ", color: Primary},{keybind: "key.use", color: Secondary},{text: " to resupply!", color: Primary}]
+
+function admin:resupply_crate/create:
+    execute align xyz positioned ~0.5 ~0.5 ~0.5:
+        summon interaction ~ ~ ~ {Tags:["NEW_SUMMON"]}
+        execute as @n[tag=NEW_SUMMON] run function admin:resupply_crate/init:
+            SELF.merge({Tags:[RESUPPLY_CRATE_TAG, Interaction.global_tag], response:1, width:1.2, height: 1.2})
+
+
+function admin:resupply_crate/destroy:
+    execute as @n[type=interaction,tag=RESUPPLY_CRATE_TAG,distance=..10] at @s:
+        setblock ~ ~ ~ air
+        kill @s
+
+function shulker:summit/resupply_crate/create:
+    execute align xyz positioned ~0.5 ~0.5 ~0.5:
+        summon interaction ~ ~ ~ {Tags:["NEW_SUMMON"]}
+        execute as @n[tag=NEW_SUMMON] run function admin:resupply_crate/summit_init:
+            SELF.merge({Tags:[RESUPPLY_CRATE_TAG, Interaction.global_tag, "summit.interactable", "summit.static"], response:1, width:1.2, height: 1.2})
