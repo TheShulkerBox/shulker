@@ -4,8 +4,8 @@
 # Text display shows Kit name
 # Interaction entity 
 
-from kit:base import Kit
-from lib:interaction import Interaction
+from shulker:kit/base import Kit
+from shulker:lib/interaction import Interaction
 
 
 
@@ -18,7 +18,7 @@ for _kit in Kit._all_kits:
         function f"kit:loadout/{_kit.id}/description"
 
 
-function admin:kit_armor_stand_modernizer:
+function shulker:admin/kit_armor_stand_modernizer:
     execute as @s[type=armor_stand,tag=KitStand,name="Kit Archer"] run data modify entity @s CustomName set value archer
     execute as @s[type=armor_stand,tag=KitStand,name="Kit Headsman"] run data modify entity @s CustomName set value headsman
     execute as @s[type=armor_stand,tag=KitStand,name="Kit Assassin"] run data modify entity @s CustomName set value assassin
