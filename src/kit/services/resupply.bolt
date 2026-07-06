@@ -20,8 +20,11 @@ function TICK_RESUPPLY_TIME:
 function ResupplyCrate.on_right_click:
     if RESUPPLY_TIMER["@s"] > 0:
         execute function RESUPPLY_FAIL:
-            SCORE.temp["@s"] = (RESUPPLY_TIMER["@s"] / 20)
-            title @s actionbar [{text: "You must wait ", color: Failure}, {score: {name: "@s", objective: "temp"}}, {text: " seconds to resupply.", color: Failure}]
+            title @s actionbar [
+                {text: "You must wait ", color: Failure},
+                (RESUPPLY_TIMER["@s"] / 20),
+                {text: " seconds to resupply.", color: Failure}
+            ]
             playsound minecraft:block.note_block.hat master @s ~ ~ ~ 1 0
     else:
         execute function RESUPPLY_SUCCEED:

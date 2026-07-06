@@ -61,7 +61,7 @@ class Interaction:
 
     @cached_property
     def path(self):
-        return ~/interact_{self.tag}
+        return ~/interact_{self.tag.lower()}
     
     @cached_property
     def on_right_click(self):

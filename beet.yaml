@@ -35,6 +35,9 @@ data_pack:
       - namespace: "minecraft"
         path: "loot_tables/*"
 
+  load:
+    data/shulker/structure/battlegrounds/arena.nbt: src/summit/arena.nbt
+
 output: dist
 
 meta:

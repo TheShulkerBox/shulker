@@ -14,7 +14,7 @@ from plugins.bloom import make_request, watch_for_errors
 
 
 PACK = "shulkerbox_data_pack.zip"
-TARGET = f"/TheShulkerBox/datapacks/{PACK}"
+TARGET = f"/Summit/datapacks/{PACK}"
 RELOAD_LOG_TIMEOUT = 5
 
 
