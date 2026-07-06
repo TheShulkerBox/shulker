@@ -11,7 +11,10 @@ function KIT_RESET:
 
 
 function KIT_RESUPPLY:
-    execute unless score @s KIT_ID matches 1.. return fail
+    if KIT_ID["@s"] <= 0:
+        return fail
+    
+    clear @s (-KitItem)
 
     STORAGE.macro = {"kit_id": KITS_ROM.get(hashed_id=KIT_ID["@s"]).id}
     with var STORAGE.macro:
