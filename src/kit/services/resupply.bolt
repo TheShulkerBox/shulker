@@ -1,13 +1,13 @@
-from lib:text import Theme
-from lib:interaction import Interaction
+from shulker:lib/text import Theme
+from shulker:lib/interaction import Interaction
 
 RESUPPLY_CRATE_TAG = "ResupplyCrate"
 
 RESUPPLY_TIMER = Scoreboard("kit.resupply_timer",criteria="dummy")
 
-TICK_RESUPPLY_TIME: FunctionPath = "kit:resupply/tick"
-RESUPPLY_SUCCEED: FunctionPath = "kit:resupply/succeed"
-RESUPPLY_FAIL: FunctionPath = "kit:resupply/fail"
+TICK_RESUPPLY_TIME: FunctionPath = "shulker:kit/resupply/tick"
+RESUPPLY_SUCCEED: FunctionPath = "shulker:kit/resupply/succeed"
+RESUPPLY_FAIL: FunctionPath = "shulker:kit/resupply/fail"
 
 ResupplyCrate = Interaction(RESUPPLY_CRATE_TAG)
 
@@ -37,20 +37,20 @@ function ResupplyCrate.on_left_click:
     else:
         title @s actionbar [{text: "Press ", color: Primary},{keybind: "key.use", color: Secondary},{text: " to resupply!", color: Primary}]
 
-function admin:resupply_crate/create:
+function shulker:admin/resupply_crate/create:
     execute align xyz positioned ~0.5 ~0.5 ~0.5:
         summon interaction ~ ~ ~ {Tags:["NEW_SUMMON"]}
-        execute as @n[tag=NEW_SUMMON] run function admin:resupply_crate/init:
+        execute as @n[tag=NEW_SUMMON] run function shulker:admin/resupply_crate/init:
             SELF.merge({Tags:[RESUPPLY_CRATE_TAG, Interaction.global_tag], response:1, width:1.2, height: 1.2})
 
 
-function admin:resupply_crate/destroy:
+function shulker:admin/resupply_crate/destroy:
     execute as @n[type=interaction,tag=RESUPPLY_CRATE_TAG,distance=..10] at @s:
         setblock ~ ~ ~ air
         kill @s
 
-function shulker:summit/resupply_crate/create:
+function shulker:kit/resupply_crate/create:
     execute align xyz positioned ~0.5 ~0.5 ~0.5:
         summon interaction ~ ~ ~ {Tags:["NEW_SUMMON"]}
-        execute as @n[tag=NEW_SUMMON] run function admin:resupply_crate/summit_init:
+        execute as @n[tag=NEW_SUMMON] run function shulker:admin/resupply_crate/summit_init:
             SELF.merge({Tags:[RESUPPLY_CRATE_TAG, Interaction.global_tag, "summit.interactable", "summit.static"], response:1, width:1.2, height: 1.2})

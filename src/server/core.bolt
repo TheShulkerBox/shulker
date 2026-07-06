@@ -12,7 +12,7 @@ from functools import cache
 
 from bolt_expressions import Scoreboard, Expression
 
-from lib:text import Theme, boxed_text
+from shulker:lib/text import Theme, boxed_text
 
 #> Function Paths
 SERVER_LOAD = ./load

@@ -3,7 +3,7 @@ from functools import cache
 
 from bolt_expressions import Objective
 
-loot_table lib:player_head {
+loot_table shulker:lib/player_head {
     "type": "minecraft:entity",
     "pools": [
         {
@@ -35,7 +35,7 @@ loot_table lib:player_head {
 def get_player_name():
     """Gets the player name by loot spawning a player head and returning the name"""
 
-    loot spawn 0 0 0 loot lib:player_head
+    loot spawn 0 0 0 loot shulker:lib/player_head
     positioned 0 0 0 as @n[type=item] if items entity @s contents player_head[custom_data~{head:1b}]:
         STORAGE.temp.player_name = SELF.Item.components."minecraft:profile".name
         kill @s

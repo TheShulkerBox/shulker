@@ -23,7 +23,7 @@ pipeline:
   - plugins.minecraft_namespace_checker
   - plugins.cleanup_empty_functions
   - data_pack:
-      load: [vendor/*]
+      load: [vendor/*.zip]
 
 data_pack:
   filter:
@@ -39,15 +39,15 @@ output: dist
 
 meta:
   deploy: false
-  generate_namespace: "server"
+  generate_namespace: "shulker"
 
   mecha:
     formatting:
       snbt_ensure_ascii: false
 
   bolt:
-    entrypoint: "*"
-    prelude: ["server:prelude"]
+    entrypoint: "shulker:summit/*"
+    prelude: ["shulker:server/prelude"]
 
   bolt_expressions:
     temp_objective: "temp"
