@@ -21,8 +21,10 @@ class Ammo(Component):
 
     def build(self):
         append function PLAYER_TICK:
-            # only tick if we actually have ammo
-            execute if predicate has_item_predicate(self.item.conditional_dict()) run function self.tick_reload
+            # Check the cheap timer state first so idle players carrying reserve ammo
+            # don't evaluate the inventory predicate every tick. If ammo disappears
+            # mid-reload, the positive timer remains paused until ammo is reacquired.
+            execute if score var self.reload_score matches 1.. if predicate has_item_predicate(self.item.conditional_dict()) run function self.tick_reload
     
     @cached_property
     def tick_reload(self):

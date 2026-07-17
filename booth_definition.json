@@ -1,0 +1,22 @@
+{
+    "namespace": "shulker",
+    "booth_name": "The Shulker Box",
+    "bounding_boxes": {
+        "booth_bounds": {
+            "position": {
+                "x": {
+                    "min": -129.0,
+                    "max": -110.0
+                },
+                "y": {
+                    "min": 78.0,
+                    "max": 90.0
+                },
+                "z": {
+                    "min": 68.0,
+                    "max": 87.0
+                }
+            }
+        }
+    }
+}

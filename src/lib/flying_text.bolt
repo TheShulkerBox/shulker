@@ -10,7 +10,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 
 from server:core import clock
-from server:services/item_dropping import ITEM_PROCESSED_TAG
+from server:services/item_dropping_tags import ITEM_PROCESSED_TAG, SUMMIT_DROPPABLE_IGNORE_DATA
 
 TEXT_TAG = "flying_text.text_display"
 ITEM_TAG = "flying_text.item_vehicle"
@@ -72,7 +72,10 @@ class FlyingText:
                 Motion:[$(x), self.motion[1], $(z)],
                 Item: {
                     id: "minecraft:barrier",
-                    components: { item_model: "minecraft:air" },
+                    components: {
+                        item_model: "minecraft:air",
+                        custom_data: SUMMIT_DROPPABLE_IGNORE_DATA,
+                    },
                 },
                 NoGravity: true,
             }

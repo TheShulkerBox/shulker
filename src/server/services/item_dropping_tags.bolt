@@ -1,0 +1,7 @@
+# Shulker2's internal dropped-item service marker. Summit uses a different entity
+# tag, so Summit exemptions must be expressed through documented item custom data.
+ITEM_PROCESSED_TAG = "item.processed"
+
+# Summit processes every summoned item entity. Use its documented optimized
+# no-callback path for item entities that are intentional gameplay machinery.
+SUMMIT_DROPPABLE_IGNORE_DATA = {"summit": {"droppable": {"ignore": true}}}

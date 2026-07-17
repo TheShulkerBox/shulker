@@ -102,10 +102,12 @@ def beet_default(ctx: Context):
     # We insert the src directory so that we can import as 'lib.text' instead of 'src.lib.text'
     sys.path.insert(0, str(src))
 
-    for dir in src.iterdir():
-        if not dir.is_dir():
+    for path in src.iterdir():
+        # Finder can add metadata files such as .DS_Store beside source modules.
+        # They are not modules, but should not make the pack unbuildable.
+        if not path.is_dir() and not path.name.startswith("."):
             raise ValueError(
-                f"{dir} is not a directory. Please place all modules within their own directory."
+                f"{path} is not a directory. Please place all modules within their own directory."
             )
 
     # Mount every source module. ``bolt.entrypoint`` still decides which modules

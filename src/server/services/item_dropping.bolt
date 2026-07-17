@@ -1,7 +1,7 @@
 from component:droppable import Droppable
 from ../core import SERVER_TICK
+from ./item_dropping_tags import ITEM_PROCESSED_TAG
 
-ITEM_PROCESSED_TAG = "item.processed"
 HANDLE_ITEM = ./handle_item
 
 append function SERVER_TICK:

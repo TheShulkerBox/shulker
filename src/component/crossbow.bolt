@@ -88,6 +88,8 @@ class Crossbow(Component):
         path = f"{self.path}/while_charging"
 
         function path:
+            advancement revoke @s only self.charge_advancement
+
             if not (CROSSBOW_CHARGE["@s"] > 0):
                 function self.start_charging
 

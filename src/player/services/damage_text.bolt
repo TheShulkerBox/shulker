@@ -3,7 +3,6 @@
 # with random motion.
 #
 # Inspired from @itsduck__ from mcc
-from server:services/item_dropping import ITEM_PROCESSED_TAG
 from lib:flying_text import FlyingText
 
 DAMAGE_TAKEN = Scoreboard("player.damage_taken", criteria="minecraft.custom:minecraft.damage_taken")

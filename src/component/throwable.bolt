@@ -6,7 +6,7 @@ from lib:xp import XP
 from lib:helpers import deep_merge_dicts, ticks
 from lib:player import tag_self
 from lib:vector_utils import Vector
-from server:services/item_dropping import ITEM_PROCESSED_TAG
+from server:services/item_dropping_tags import ITEM_PROCESSED_TAG, SUMMIT_DROPPABLE_IGNORE_DATA
 
 from ./using import Using
 from ./type import ComponentBuildError, RecursiveComponent
@@ -117,7 +117,10 @@ class Throwable(Using):
 
                 # default thrown item data
                 item_data = {
-                    Item: {id: item_obj.id, components: {}},
+                    Item: {
+                        id: item_obj.id,
+                        components: {custom_data: SUMMIT_DROPPABLE_IGNORE_DATA},
+                    },
                     Tags: [THROWABLE_ITEM_TAG, THROWABLE_ITEM_TAG_INIT, ITEM_PROCESSED_TAG],
                     Owner: [0,0,0,0],
                     PickupDelay: 32767,

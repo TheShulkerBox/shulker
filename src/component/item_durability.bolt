@@ -19,6 +19,8 @@ class ItemDurability(Component):
             )
 
         if self.used:
+            used_advancement = f"{self.path}/used"
+            used_reward = f"{used_advancement}/reward"
             advancement f"{self.path}/used" {
                 "parent": ROOT_ADVANCEMENT,
                 "criteria": {
@@ -29,10 +31,16 @@ class ItemDurability(Component):
                         }
                     }
                 },
-                "rewards": { "function": self.used }
+                "rewards": { "function": used_reward }
             }
 
+            function used_reward:
+                advancement revoke @s only used_advancement
+                function self.used
+
         if self.broken:
+            broken_advancement = f"{self.path}/broken"
+            broken_reward = f"{broken_advancement}/reward"
             advancement f"{self.path}/broken" {
                 "parent": ROOT_ADVANCEMENT,
                 "criteria": {
@@ -44,5 +52,9 @@ class ItemDurability(Component):
                         }
                     }
                 },
-                "rewards": { "function": self.broken }
+                "rewards": { "function": broken_reward }
             }
+
+            function broken_reward:
+                advancement revoke @s only broken_advancement
+                function self.broken

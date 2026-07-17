@@ -112,6 +112,8 @@ class Bow(Component):
         path = f"{self.path}/while_charging"
         
         function path:
+            advancement revoke @s only self.path
+
             if self.nock:
                 # knock happens on first tick of charging
                 if not (BOW_CHARGE["@s"] > 0):

@@ -1,0 +1,185 @@
+"""Typed helpers for integrating a booth with the Summit Battlegrounds API.
+
+The Summit lifecycle tags are global. ``Battleground`` registers guarded wrapper
+functions so booth callbacks only run while their booth owns the active session.
+"""
+
+from dataclasses import dataclass
+from functools import cached_property
+
+from server:core import SERVER_LOAD
+
+
+PLAYER_TAG = "summit.battlegrounds.player"
+
+BATTLEGROUNDS_SCORE = Scoreboard("summit.battlegrounds", criteria="dummy")
+PLAYER_COUNT = BATTLEGROUNDS_SCORE["$players"]
+TIME_LEFT = BATTLEGROUNDS_SCORE["$time_left"]
+BLOCK_PLAYER_ENTER = BATTLEGROUNDS_SCORE["#block_player_enter"]
+
+DATABASE = Data.storage("summit.battlegrounds:database").root
+API_RESPONSE = Data.storage("summit.battlegrounds:api/response").root
+
+
+@dataclass
+class Battleground:
+    """Declaratively register a booth and its guarded lifecycle callbacks.
+
+    Callback functions are invoked by global Summit function tags. The generated
+    wrappers enforce the handbook's active-session guard before dispatching to
+    booth-owned code. ``booth_id`` must also be safe to embed in a resource path.
+
+    API methods return a shared temporary score; consume its value immediately.
+    """
+
+    booth_id: str
+    booth_name: str
+    return_pos: str
+    return_rot: str
+    structure_function: FunctionPath
+    kit_function: FunctionPath
+    compatibility: str | None = None
+
+    on_active: FunctionPath | None = None
+    on_inactive: FunctionPath | None = None
+    on_enter_attempt: FunctionPath | None = None
+    on_enter: FunctionPath | None = None
+    on_leave: FunctionPath | None = None
+    on_died: FunctionPath | None = None
+
+    def __post_init__(self):
+        if self.compatibility is None:
+            self.compatibility = self.booth_id
+
+        booth_id = self.booth_id
+        booth_name = self.booth_name
+        return_pos = self.return_pos
+        return_rot = self.return_rot
+        structure_function = self.structure_function
+        compatibility = self.compatibility
+        kit_function = self.kit_function
+
+        append function SERVER_LOAD:
+            function summit.battlegrounds:api/register_booth {
+                booth_id: booth_id,
+                booth_name: booth_name,
+                return_pos: return_pos,
+                return_rot: return_rot,
+                struct_function: structure_function,
+                compatibility: compatibility,
+                kit_function: kit_function
+            }
+
+        self._register_callbacks()
+
+    @cached_property
+    def _event_root(self) -> FunctionPath:
+        return ~/{self.booth_id}/event
+
+    def require_active(self):
+        """Stop the current function unless this booth owns the active session."""
+        booth_id = self.booth_id
+        execute unless data storage summit.battlegrounds:database session{booth_id: booth_id} run return 0
+
+    def block_enter(self):
+        """Block the player currently being processed by ``player_enter_attempt``."""
+        BATTLEGROUNDS_SCORE["#block_player_enter"] = 1
+
+    def set_structure(self, structure: str) -> ScoreSource:
+        """Replace the active arena structure and return the API result code."""
+        result = SCORE.temp["#battlegrounds_api_result"]
+        execute store result score var result run function summit.battlegrounds:api/set_structure {
+            booth_id: self.booth_id,
+            structure: structure
+        }
+        return result
+
+    def end_session(self) -> ScoreSource:
+        """End this booth's active session and return the API result code."""
+        result = SCORE.temp["#battlegrounds_api_result"]
+        execute store result score var result run function summit.battlegrounds:api/end_session {booth_id: self.booth_id}
+        return result
+
+    def assign_kit(
+        self,
+        kit_id: str,
+        kit_function: FunctionPath,
+        kit_name: str | None = None,
+    ) -> ScoreSource:
+        """Assign a kit and return the API result code."""
+        result = SCORE.temp["#battlegrounds_api_result"]
+        if kit_name is None:
+            execute store result score var result run function summit.battlegrounds:api/assign_kit {
+                booth_id: self.booth_id,
+                kit_id: kit_id,
+                kit_function: kit_function
+            }
+        else:
+            execute store result score var result run function summit.battlegrounds:api/assign_kit/v2 {
+                booth_id: self.booth_id,
+                kit_id: kit_id,
+                kit_function: kit_function,
+                kit_name: kit_name
+            }
+        return result
+
+    def unassign_kit(self) -> ScoreSource:
+        """Restore the default kit and return the API result code."""
+        result = SCORE.temp["#battlegrounds_api_result"]
+        execute store result score var result run function summit.battlegrounds:api/unassign_kit
+        return result
+
+    def get_kit(self) -> ScoreSource:
+        """Copy the executing player's kit into ``API_RESPONSE.get_kit``."""
+        result = SCORE.temp["#battlegrounds_api_result"]
+        execute store result score var result run function summit.battlegrounds:api/get_kit {booth_id: self.booth_id}
+        return result
+
+    def _register_callbacks(self):
+        if self.on_active is not None:
+            callback = self.on_active
+            wrapper = f"{self._event_root}/active"
+            function wrapper:
+                self.require_active()
+                function callback
+            append function_tag summit.battlegrounds:api/booth_active {"values": [wrapper]}
+
+        if self.on_inactive is not None:
+            callback = self.on_inactive
+            wrapper = f"{self._event_root}/inactive"
+            function wrapper:
+                self.require_active()
+                function callback
+            append function_tag summit.battlegrounds:api/booth_inactive {"values": [wrapper]}
+
+        if self.on_enter_attempt is not None:
+            callback = self.on_enter_attempt
+            wrapper = f"{self._event_root}/enter_attempt"
+            function wrapper:
+                self.require_active()
+                function callback
+            append function_tag summit.battlegrounds:api/player_enter_attempt {"values": [wrapper]}
+
+        if self.on_enter is not None:
+            callback = self.on_enter
+            wrapper = f"{self._event_root}/enter"
+            function wrapper:
+                self.require_active()
+                function callback
+            append function_tag summit.battlegrounds:api/player_enter {"values": [wrapper]}
+
+        if self.on_leave is not None:
+            callback = self.on_leave
+            wrapper = f"{self._event_root}/leave"
+            function wrapper:
+                self.require_active()
+                function callback
+            append function_tag summit.battlegrounds:api/player_leave {"values": [wrapper]}
+
+        if self.on_died is not None:
+            callback = self.on_died
+            wrapper = f"{self._event_root}/died"
+            function wrapper:
+                self.require_active()
+                function callback
+            append function_tag summit.battlegrounds:api/player_died {"values": [wrapper]}
