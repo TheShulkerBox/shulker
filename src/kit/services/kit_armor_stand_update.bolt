@@ -4,8 +4,8 @@
 # Text display shows Kit name
 # Interaction entity 
 
-from shulker:kit/base import Kit
-from shulker:lib/interaction import Interaction
+from kit:base import Kit
+from lib:interaction import Interaction
 
 
 

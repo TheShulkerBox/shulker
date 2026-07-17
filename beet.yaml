@@ -18,8 +18,10 @@ require:
   - plugins.custom_load
 
 pipeline:
+  - plugins.default_namespace_imports
   - plugins.component_import
   - mecha
+  - plugins.namespace_mount
   - plugins.minecraft_namespace_checker
   - plugins.cleanup_empty_functions
   - data_pack:
@@ -43,6 +45,8 @@ output: dist
 meta:
   deploy: false
   generate_namespace: "shulker"
+  provided_namespaces: ["gu", "minecraft", "player_motion", "reef", "summit"]
+  local_resource_namespaces: ["admin", "matching", "playerdb", "xp"]
 
   mecha:
     formatting:

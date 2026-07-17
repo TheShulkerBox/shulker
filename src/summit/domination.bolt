@@ -3,11 +3,13 @@
 # Review return_pos, return_rot
 #
 # function summit.battlegrounds:api/register_booth {booth_id:"shulker", booth_name:"The Shulker Box", return_pos:"[43.48d, 148.00d, -82.29d]", return_rot:"[-243.08f, 1.67f]", struct_function:"shulker:booth/domination/arena_structure", compatibility:"shulker", kit_function:"summit.battlegrounds.example:blue/give_kit_d"} 
+
 from lib.text import Theme
-from shulker:server/core import SERVER_LOAD
-from shulker:game/player import TEAM_SCORE, TEAM_MATCHER
+
+from server:core import SERVER_LOAD
+from game:player import TEAM_SCORE, TEAM_MATCHER
 # Summit only V
-from shulker:kit/services/resupply import TICK_RESUPPLY_TIME
+from kit:services/resupply import TICK_RESUPPLY_TIME
 
 WIN_THRESHOLD: int = 100
 BOSSBAR_MIDDLE: int = 50
@@ -49,6 +51,17 @@ append function_tag summit.battlegrounds:api/player_enter_attempt { "values": [P
 append function_tag summit.battlegrounds:api/player_enter { "values": [PLAYER_ENTER_SUCCESS] }
 append function_tag summit.battlegrounds:api/player_leave { "values": [PLAYER_LEAVE] }
 append function_tag summit.battlegrounds:api/player_died { "values": [PLAYER_DIED] }
+
+append function SERVER_LOAD:
+    function summit.battlegrounds:api/register_booth {
+        booth_id: "shulker",
+        booth_name: "The Shulker Box",
+        return_pos: [43.48d, 148.00d, -82.29d],
+        return_rot: [-243.08f, 1.67f],
+        struct_function: "shulker:booth/domination/arena_structure",
+        compatibility: "shulker",
+        kit_function: "summit.battlegrounds.example:blue/give_kit_d"
+    }
 
 # Domination gamemode main loop
 function DOMINATION_MAIN:

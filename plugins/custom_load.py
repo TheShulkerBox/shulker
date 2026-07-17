@@ -61,7 +61,9 @@ def resolve_import(src: Path, current: Path, spec: str) -> Path | None:
     for suffix in (".bolt", ".py"):
         path = src.joinpath(*parts).with_suffix(suffix)
         if path.exists():
-            return path
+            # Relative imports can leave ``..`` in the path. Normalize it before
+            # deriving Python import names or data-pack module keys.
+            return path.resolve()
 
     return None
 
@@ -85,6 +87,15 @@ def seed_entrypoints(src: Path, entrypoint: str | list[str]) -> list[Path]:
     return paths
 
 
+def source_modules(src: Path) -> list[Path]:
+    """Return every importable source module, independent of the entrypoint graph."""
+    return sorted(
+        path
+        for path in src.rglob("*")
+        if path.suffix in (".bolt", ".py") and path.name != "__init__.py"
+    )
+
+
 def beet_default(ctx: Context):
     src = ctx.directory / "src"
 
@@ -97,22 +108,10 @@ def beet_default(ctx: Context):
                 f"{dir} is not a directory. Please place all modules within their own directory."
             )
 
-    bolt_meta = ctx.meta.get("bolt", {})
-    queue = [
-        resolve_import(src, src / "dummy.bolt", prelude)
-        for prelude in bolt_meta.get("prelude", [])
-    ]
-    queue.extend(seed_entrypoints(src, bolt_meta.get("entrypoint", "*")))
-    seen: set[Path] = set()
-
-    # Only load the summit entrypoint graph. Dead modules in this repo are allowed to be cursed.
-    while queue:
-        path = queue.pop()
-
-        if path is None or path in seen or "__testing__" in path.parts:
-            continue
-
-        seen.add(path)
+    # Mount every source module. ``bolt.entrypoint`` still decides which modules
+    # are evaluated, but mounting must not depend on the import graph: registries
+    # such as ``component:all`` need access to every module before evaluation.
+    for path in source_modules(src):
         key = module_path(src, path)
 
         if path.suffix == ".py":
@@ -121,6 +120,3 @@ def beet_default(ctx: Context):
             continue
 
         ctx.data[Module][key] = Module(source_path=path)
-
-        for match in LOCAL_IMPORT_PATTERN.finditer(path.read_text()):
-            queue.append(resolve_import(src, path, match.group(1)))

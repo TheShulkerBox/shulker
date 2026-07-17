@@ -9,7 +9,7 @@ from lib:db import Database
 from lib:const import ARMOR_SLOTS
 from lib:shulker_box import ShulkerBox
 from server:core import SERVER_LOAD
-from lib:inventory_management import hotbar_with_slots_modify
+# from lib:inventory_management import hotbar_with_slots_modify
 from lib:rom import LOAD_ROM
 from lib:predicates import has_item_predicate
 
@@ -109,7 +109,7 @@ class Kit:
                         item replace entity @s slot with item item.count
                     else:
                         item replace entity @s slot with item
-                hotbar_with_slots_modify {function: "set_custom_data", tag: {taco: bell}}
+                # hotbar_with_slots_modify {function: "set_custom_data", tag: {taco: bell}}
 
             function ~/{self.id}/resupply:
                 for slot, item in self:
@@ -128,7 +128,7 @@ class Kit:
                     callback = resupply.get("callback")
                     if callback:
                         function callback
-                hotbar_with_slots_modify {function: "set_custom_data", tag: {taco: bell}}
+                # hotbar_with_slots_modify {function: "set_custom_data", tag: {taco: bell}}
 
             function ~/{self.id}/mannequin:
                 execute summon mannequin function ~/../apply

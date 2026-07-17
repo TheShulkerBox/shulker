@@ -1,5 +1,5 @@
-from shulker:lib/text import Theme
-from shulker:lib/interaction import Interaction
+from lib:text import Theme
+from lib:interaction import Interaction
 
 RESUPPLY_CRATE_TAG = "ResupplyCrate"
 

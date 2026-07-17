@@ -1,0 +1,70 @@
+from lib:raycast import raycast
+from lib:interaction import Interaction
+from server:core import SERVER_TICK
+
+
+interaction_entity = Interaction(tag="chest_name_tag")
+
+block_tag c:chests {
+    "values": [
+        "minecraft:chest",
+        "minecraft:trapped_chest",
+        "#minecraft:copper_chests"
+    ]
+}
+
+
+function interaction_entity.on_right_click:
+    STORAGE.temp.name_tag = {}
+    execute if items entity @s weapon.mainhand name_tag[custom_name]:
+        STORAGE.temp.name_tag.name = SELF.SelectedItem.components."minecraft:custom_name"
+        STORAGE.temp.name_tag.slot = "mainhand"
+    if not STORAGE.temp.name_tag.name:
+        STORAGE.temp.name_tag.name = SELF.equipment.offhand.components."minecraft:custom_name"
+        STORAGE.temp.name_tag.slot = "offhand"
+
+    execute anchored eyes:
+        with raycast(steps=250, step_size=0.01) as ray:
+            function ray.on_block_hit:
+                execute unless block ~ ~ ~ #c:chests run return fail
+                BLOCK.CustomName = STORAGE.temp.name_tag.name
+                if STORAGE.temp.name_tag.slot == "mainhand":
+                    item modify entity @s[gamemode=!creative] weapon.mainhand {function: "minecraft:set_count", count: -1, add: 1b}
+                else:
+                    item modify entity @s[gamemode=!creative] weapon.offhand {function: "minecraft:set_count", count: -1, add: 1b}
+            # function ray.on_step:
+            #     particle witch
+
+
+predicate ./holding_named_tag_while_sneaking {
+    "condition": "minecraft:entity_properties",
+    "entity": "this",
+    "predicate": {
+        "flags": {
+            "is_sneaking": true
+        },
+        "equipment": {
+            "mainhand": {
+                "items": "minecraft:name_tag",
+                "predicates": {
+                    "minecraft:custom_name": {}
+                }
+            }
+        }
+    }
+}
+
+
+append function SERVER_TICK:
+    execute function ./tick:
+        execute as @a[predicate=./holding_named_tag_while_sneaking] at @s anchored eyes positioned ^ ^-0.35 ^.25:
+            execute unless entity @n[type=interaction,distance=..0.2]:
+                with interaction_entity.summon():
+                    SELF.merge({height:0.5,width:0.5})
+                schedule function ./interaction_clean_up 1t replace
+
+
+function ./interaction_clean_up:
+    execute as @e[type=interaction,tag=interaction_entity.tag] at @s:
+        execute unless entity @p[distance=..1,predicate=./holding_named_tag_while_sneaking] return run kill @s
+        schedule function ./interaction_clean_up 5t replace

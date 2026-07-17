@@ -1,0 +1,97 @@
+from dataclasses import dataclass, field
+from functools import cached_property
+
+from ./player import tag_self
+
+@dataclass
+class raycast:
+    """A customizable raycast implementation using a context manager.
+    
+    Usage:
+    ```bolt
+    with raycast(steps=100, step_size=0.1, entity_args=["type=zombie"]) as ray:
+        function ray.on_step:
+            particle flame ~ ~ ~ 0 0 0 0 1
+            
+        function ray.on_block_hit:
+            say Hit a block!
+            
+        function ray.on_entity_hit:
+            say Hit an entity!
+    ```
+    """
+    steps: int
+    step_size: float
+    entity_args: list[str] = field(default_factory=list)
+
+    def __post_init__(self):
+        self._has_on_step = False
+        self._has_on_block_hit = False
+        self._has_on_entity_hit = False
+        # Create a unique path for this raycast instance
+        self.base_path = ~/raycast_{id(self)}
+
+    @cached_property
+    def on_step(self):
+        self._has_on_step = True
+        return f"{self.base_path}/on_step"
+
+    @cached_property
+    def on_block_hit(self):
+        self._has_on_block_hit = True
+        return f"{self.base_path}/on_block_hit"
+
+    @cached_property
+    def on_entity_hit(self):
+        self._has_on_entity_hit = True
+        return f"{self.base_path}/on_entity_hit"
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is not None:
+            return
+
+        # Start the raycast
+        with tag_self() as self_tag:
+            SCORE.temp["#raycast_hit"] = 0
+            SCORE.temp["#raycast_iter"] = 0
+            execute function f"{self.base_path}/iter":
+                SCORE.temp["#raycast_iter"] += 1
+                
+                if self._has_on_step:
+                    function self.on_step
+                    
+                if self._has_on_entity_hit:
+                    entity_selector_args = ",".join(self.entity_args)
+                    if entity_selector_args:
+                        entity_selector_args = f",{entity_selector_args}"
+                    
+                    execute positioned ~-0.05 ~-0.05 ~-0.05 as f"@e[tag=!{self_tag},dx=0{entity_selector_args}]" if function f"{self.base_path}/check_entity_hit":
+                        SCORE.temp["#raycast_hit"] = 1
+                        function self.on_entity_hit
+                        
+                if self._has_on_block_hit:
+                    execute unless block ~ ~ ~ air if score #raycast_hit temp matches 0:
+                        SCORE.temp["#raycast_hit"] = 1
+                        function self.on_block_hit
+                        
+                execute
+                    if block ~ ~ ~ air
+                    if score #raycast_hit temp matches 0
+                    if score #raycast_iter temp matches f"..{self.steps}"
+                    positioned f"^ ^ ^{self.step_size}"
+                    run function f"{self.base_path}/iter"
+
+        # Define the entity hit check helper if needed
+        if self._has_on_entity_hit:
+            function f"{self.base_path}/check_entity_hit":
+                execute
+                    if score #raycast_hit temp matches 0
+                    positioned ~-0.9 ~-0.9 ~-0.9
+                    if entity @s[dx=0]
+                    positioned ~0.95 ~0.95 ~0.95
+                    run return fail
+
+                return 1
