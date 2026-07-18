@@ -1,0 +1,87 @@
+"""Domination scoring, match clock, and arena-debug helpers."""
+
+from lib.text import Theme
+
+from kit:services/resupply import TICK_RESUPPLY_TIME
+from ../battlegrounds import PLAYER_TAG, TIME_LEFT
+from ./registry import BATTLEGROUND
+from ./registry import DEBUG_POINT_PARTICLES, DOMINATION_MAIN, UPDATE_CLOCK
+from ./registry import DOMINATION_BOSSBAR, GAME_SCORE, GAME_STATE, WIN_THRESHOLD
+from ./registry import DOMINATION_POINT_ENTITY, DOMINATION_POINT_POSITIONS, DOMINATION_POINT_TYPE
+from ./registry import RESPAWN_POINT_POSITIONS, RESUPPLY_CRATE_POSITIONS
+from ../stickers import WIN_A_GAME_STICKER
+
+
+def show_subtitle(message: str, color: str, quick: bool = False):
+    """Show a subtitle, optionally using the short countdown timing."""
+    if quick:
+        title @s times 1t 1s 1t
+    title @s subtitle {"text": message, "color": color}
+    title @s title {"text": ""}
+    title @s reset
+
+
+function DEBUG_POINT_PARTICLES:
+    """Render temporary particle columns for the hardcoded arena positions."""
+    for x, y, z in RESUPPLY_CRATE_POSITIONS:
+        for height in range(5):
+            particle dust{color:[1.0,0.2,0.6],scale:1.0} (x + 0.5) (y + height + 0.5) (z + 0.5) 0 0 0 0 1 force @a
+    for x, y, z in RESPAWN_POINT_POSITIONS:
+        for height in range(5):
+            particle dust{color:[0.2,1.0,0.2],scale:1.0} (x + 0.5) (y + height + 0.5) (z + 0.5) 0 0 0 0 1 force @a
+    for x, y, z in DOMINATION_POINT_POSITIONS:
+        for height in range(5):
+            particle dust{color:[0.2,0.4,1.0],scale:1.0} (x + 0.5) (y + height + 0.5) (z + 0.5) 0 0 0 0 1 force @a
+
+
+function DOMINATION_MAIN:
+    """Award progress to the team with more players near each control point."""
+    BATTLEGROUND.require_active()
+    function TICK_RESUPPLY_TIME
+
+    SCORE.temp["#domination_score_changed"] = 0
+    execute as @e[type=DOMINATION_POINT_TYPE,tag=DOMINATION_POINT_ENTITY] at @s:
+        # Counts are rebuilt per point and tick, so departed players cannot
+        # leave capture pressure behind.
+        SCORE.temp["#domination_team_1"] = 0
+        SCORE.temp["#domination_team_2"] = 0
+        execute as @a[tag=PLAYER_TAG,distance=..5,scores={game.team=1}] run scoreboard players add #domination_team_1 temp 1
+        execute as @a[tag=PLAYER_TAG,distance=..5,scores={game.team=2}] run scoreboard players add #domination_team_2 temp 1
+
+        if SCORE.temp["#domination_team_1"] > SCORE.temp["#domination_team_2"]:
+            GAME_STATE[GAME_SCORE] += 1
+            SCORE.temp["#domination_score_changed"] = 1
+        elif SCORE.temp["#domination_team_1"] < SCORE.temp["#domination_team_2"]:
+            GAME_STATE[GAME_SCORE] -= 1
+            SCORE.temp["#domination_score_changed"] = 1
+
+    # Skip the bossbar update and win checks when no point changed score.
+    if SCORE.temp["#domination_score_changed"] == 1:
+        execute store result bossbar DOMINATION_BOSSBAR value run scoreboard players get var GAME_STATE[GAME_SCORE]
+        if GAME_STATE[GAME_SCORE] <= 0:
+            advancement grant @a[tag=PLAYER_TAG,scores={game.team=1}] only WIN_A_GAME_STICKER
+        elif GAME_STATE[GAME_SCORE] >= WIN_THRESHOLD:
+            advancement grant @a[tag=PLAYER_TAG,scores={game.team=2}] only WIN_A_GAME_STICKER
+
+
+function UPDATE_CLOCK:
+    """Announce the final thirty seconds of an active Domination match."""
+    BATTLEGROUND.require_active()
+    schedule function UPDATE_CLOCK 20t
+
+    if TIME_LEFT == 40:
+        execute as @a[tag=PLAYER_TAG] at @s:
+            show_subtitle("30 seconds remaining!", Theme.Secondary)
+
+    # The final timer values 15 through 11 are the player-facing 5-to-1 count.
+    for timer_value, countdown_number in [(15, "5"), (14, "4"), (13, "3"), (12, "2"), (11, "1")]:
+        if TIME_LEFT == timer_value:
+            execute as @a[tag=PLAYER_TAG] at @s:
+                show_subtitle(countdown_number, Theme.Secondary, quick=True)
+                playsound minecraft:block.note_block.hat voice @s ~ ~ ~ 0.5 1.189207
+
+    if TIME_LEFT == 10:
+        execute as @a[tag=PLAYER_TAG] at @s:
+            show_subtitle("Time's up!", Theme.Failure)
+        # This is intentionally audible to nearby non-participants too.
+        playsound minecraft:item.goat_horn.sound.1 voice @a -98 81 118 5 0.5

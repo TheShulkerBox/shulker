@@ -5,7 +5,7 @@ from item:definitions/consumables/net import Net
 from item:definitions/food import Food
 from item:definitions/weapons/fishing_spear import FishingSpear
 
-Spearfisher = Kit(
+spearfisher = Kit(
     name="Spearfisher",
     tagline="Fisher of men",
     icon="trident",

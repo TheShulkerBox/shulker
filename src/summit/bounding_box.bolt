@@ -1,0 +1,39 @@
+"""Debug visualization for the booth bounding box."""
+
+import json
+
+
+with open("src/summit/definition.json") as f:
+    BOOTH_DEFINITION = json.load(f)
+
+
+function ./bounding_box/draw:
+    for box in BOOTH_DEFINITION["bounding_boxes"].values():
+        position = box["position"]
+        x_min = position["x"]["min"]
+        x_max = position["x"]["max"]
+        y_min = position["y"]["min"]
+        y_max = position["y"]["max"]
+        z_min = position["z"]["min"]
+        z_max = position["z"]["max"]
+
+        # X edges
+        for x in range(int(x_min), int(x_max)):
+            particle dust{color:[0.2,0.8,1.0],scale:0.8} x y_min z_min 0 0 0 0 1 force @a
+            particle dust{color:[0.2,0.8,1.0],scale:0.8} x y_min (z_max - 1) 0 0 0 0 1 force @a
+            particle dust{color:[0.2,0.8,1.0],scale:0.8} x (y_max - 1) z_min 0 0 0 0 1 force @a
+            particle dust{color:[0.2,0.8,1.0],scale:0.8} x (y_max - 1) (z_max - 1) 0 0 0 0 1 force @a
+
+        # Y edges
+        for y in range(int(y_min), int(y_max)):
+            particle dust{color:[0.2,0.8,1.0],scale:0.8} x_min y z_min 0 0 0 0 1 force @a
+            particle dust{color:[0.2,0.8,1.0],scale:0.8} x_min y (z_max - 1) 0 0 0 0 1 force @a
+            particle dust{color:[0.2,0.8,1.0],scale:0.8} (x_max - 1) y z_min 0 0 0 0 1 force @a
+            particle dust{color:[0.2,0.8,1.0],scale:0.8} (x_max - 1) y (z_max - 1) 0 0 0 0 1 force @a
+
+        # Z edges
+        for z in range(int(z_min), int(z_max)):
+            particle dust{color:[0.2,0.8,1.0],scale:0.8} x_min y_min z 0 0 0 0 1 force @a
+            particle dust{color:[0.2,0.8,1.0],scale:0.8} x_min (y_max - 1) z 0 0 0 0 1 force @a
+            particle dust{color:[0.2,0.8,1.0],scale:0.8} (x_max - 1) y_min z 0 0 0 0 1 force @a
+            particle dust{color:[0.2,0.8,1.0],scale:0.8} (x_max - 1) (y_max - 1) z 0 0 0 0 1 force @a

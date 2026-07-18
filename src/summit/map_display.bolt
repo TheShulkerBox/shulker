@@ -1,0 +1,44 @@
+MAP_TAG = "shulker.map_display"
+TITLE_TAG = "shulker.map_display.title"
+YEAR_TAG = "shulker.map_display.year"
+
+MAP_INDEX = Scoreboard("summit.map_display_index", criteria="dummy")
+
+LOAD = ./map_display/load
+CLOCK = ./map_display/clock
+DISPLAY_ROOT = ./map_display/show
+
+maps = ctx.meta["map_display_maps"]
+first_map = maps[0]
+first_path = f"{DISPLAY_ROOT}/{first_map.id}"
+
+
+prepend function_tag minecraft:load { "values": [LOAD] }
+
+
+function LOAD:
+    for display_map in maps:
+        display_path = f"{DISPLAY_ROOT}/{display_map.id}"
+        schedule clear display_path
+    MAP_INDEX["#current"] = 0
+    schedule function first_path 1s replace
+
+
+function CLOCK:
+    if MAP_INDEX["#current"] == len(maps) - 1:
+        MAP_INDEX["#current"] = 0
+    else:
+        MAP_INDEX["#current"] += 1
+
+    for index in range(len(maps)):
+        current_map = maps[index]
+        if MAP_INDEX["#current"] == index:
+            function f"{DISPLAY_ROOT}/{current_map.id}":
+                as @e[type=item_display, tag=MAP_TAG, limit=1]:
+                    SELF.item.components."minecraft:item_model" = current_map.item_model
+
+                as @e[type=text_display, tag=TITLE_TAG, limit=1]:
+                    SELF.text = f'{{"text":"{current_map.name}"}}'
+
+                as @e[type=text_display, tag=YEAR_TAG, limit=1]:
+                    SELF.text = f'{{"text":"{current_map.year}","color":"gray"}}'

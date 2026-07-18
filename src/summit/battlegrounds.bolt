@@ -1,4 +1,4 @@
-"""Typed helpers for integrating a booth with the Summit Battlegrounds API.
+"""Typed helpers for integrating Shulker with the Summit Battlegrounds API.
 
 The Summit lifecycle tags are global. ``Battleground`` registers guarded wrapper
 functions so booth callbacks only run while their booth owns the active session.
@@ -10,6 +10,7 @@ from functools import cached_property
 from server:core import SERVER_LOAD
 
 
+# Summit owns this tag and applies it to every current Battlegrounds participant.
 PLAYER_TAG = "summit.battlegrounds.player"
 
 BATTLEGROUNDS_SCORE = Scoreboard("summit.battlegrounds", criteria="dummy")
@@ -20,6 +21,8 @@ BLOCK_PLAYER_ENTER = BATTLEGROUNDS_SCORE["#block_player_enter"]
 DATABASE = Data.storage("summit.battlegrounds:database").root
 API_RESPONSE = Data.storage("summit.battlegrounds:api/response").root
 
+BATTLEGROUNDS_TICK: FunctionPath = ./tick
+
 
 @dataclass
 class Battleground:
@@ -29,14 +32,15 @@ class Battleground:
     wrappers enforce the handbook's active-session guard before dispatching to
     booth-owned code. ``booth_id`` must also be safe to embed in a resource path.
 
-    API methods return a shared temporary score; consume its value immediately.
+    ``arena`` is the only structure this battleground can install. API methods
+    return a shared temporary score; consume it immediately.
     """
 
     booth_id: str
     booth_name: str
     return_pos: str
     return_rot: str
-    structure_function: FunctionPath
+    arena: str
     kit_function: FunctionPath
     compatibility: str | None = None
 
@@ -51,24 +55,24 @@ class Battleground:
         if self.compatibility is None:
             self.compatibility = self.booth_id
 
-        booth_id = self.booth_id
-        booth_name = self.booth_name
-        return_pos = self.return_pos
-        return_rot = self.return_rot
-        structure_function = self.structure_function
-        compatibility = self.compatibility
-        kit_function = self.kit_function
+        function self._set_arena_function:
+            self.set_arena()
 
         append function SERVER_LOAD:
             function summit.battlegrounds:api/register_booth {
-                booth_id: booth_id,
-                booth_name: booth_name,
-                return_pos: return_pos,
-                return_rot: return_rot,
-                struct_function: structure_function,
-                compatibility: compatibility,
-                kit_function: kit_function
+                booth_id: self.booth_id,
+                booth_name: self.booth_name,
+                return_pos: self.return_pos,
+                return_rot: self.return_rot,
+                struct_function: self._set_arena_function,
+                compatibility: self.compatibility,
+                kit_function: self.kit_function
             }
+
+        # The booth's persistent clock is invoked by Summit. Only advance the
+        # Battlegrounds API while at least one player is currently participating.
+        prepend function self.tick():
+            self.require_active()
 
         self._register_callbacks()
 
@@ -76,26 +80,32 @@ class Battleground:
     def _event_root(self) -> FunctionPath:
         return ~/{self.booth_id}/event
 
+    @cached_property
+    def _set_arena_function(self) -> FunctionPath:
+        return ~/{self.booth_id}/set_arena
+
     def require_active(self):
         """Stop the current function unless this booth owns the active session."""
-        booth_id = self.booth_id
-        execute unless data storage summit.battlegrounds:database session{booth_id: booth_id} run return 0
+        execute unless data storage summit.battlegrounds:database session{booth_id: self.booth_id} run return 0
+
+    def tick(self):
+        return BATTLEGROUNDS_TICK
 
     def block_enter(self):
         """Block the player currently being processed by ``player_enter_attempt``."""
-        BATTLEGROUNDS_SCORE["#block_player_enter"] = 1
+        BLOCK_PLAYER_ENTER = 1
 
-    def set_structure(self, structure: str) -> ScoreSource:
-        """Replace the active arena structure and return the API result code."""
+    def set_arena(self) -> ScoreSource:
+        """Install this battleground's configured arena and return its result code."""
         result = SCORE.temp["#battlegrounds_api_result"]
         execute store result score var result run function summit.battlegrounds:api/set_structure {
             booth_id: self.booth_id,
-            structure: structure
+            structure: self.arena
         }
         return result
 
     def end_session(self) -> ScoreSource:
-        """End this booth's active session and return the API result code."""
+        """End this booth's active session and return its result code."""
         result = SCORE.temp["#battlegrounds_api_result"]
         execute store result score var result run function summit.battlegrounds:api/end_session {booth_id: self.booth_id}
         return result
@@ -106,7 +116,7 @@ class Battleground:
         kit_function: FunctionPath,
         kit_name: str | None = None,
     ) -> ScoreSource:
-        """Assign a kit and return the API result code."""
+        """Assign a kit and return its result code."""
         result = SCORE.temp["#battlegrounds_api_result"]
         if kit_name is None:
             execute store result score var result run function summit.battlegrounds:api/assign_kit {
@@ -124,7 +134,7 @@ class Battleground:
         return result
 
     def unassign_kit(self) -> ScoreSource:
-        """Restore the default kit and return the API result code."""
+        """Restore the default kit and return its result code."""
         result = SCORE.temp["#battlegrounds_api_result"]
         execute store result score var result run function summit.battlegrounds:api/unassign_kit
         return result

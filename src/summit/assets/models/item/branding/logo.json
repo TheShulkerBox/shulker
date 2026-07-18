@@ -1,0 +1,128 @@
+{
+	"credit": "Made with Blockbench",
+	"textures": {
+		"1": "shulker:item/branding/logo"
+	},
+	"elements": [
+		{
+			"from": [
+				-14,
+				0,
+				7.75
+			],
+			"to": [
+				30,
+				21,
+				7.75
+			],
+			"rotation": {
+				"angle": 0,
+				"axis": "y",
+				"origin": [
+					7,
+					0,
+					5.75
+				]
+			},
+			"faces": {
+				"north": {
+					"uv": [
+						0,
+						0,
+						16,
+						16
+					],
+					"texture": "#1"
+				},
+				"east": {
+					"uv": [
+						0,
+						0,
+						0,
+						2
+					],
+					"texture": "#1"
+				},
+				"south": {
+					"uv": [
+						16,
+						0,
+						0,
+						16
+					],
+					"texture": "#1"
+				},
+				"west": {
+					"uv": [
+						0,
+						0,
+						0,
+						2
+					],
+					"texture": "#1"
+				},
+				"up": {
+					"uv": [
+						2,
+						0,
+						0,
+						0
+					],
+					"texture": "#1"
+				},
+				"down": {
+					"uv": [
+						2,
+						0,
+						0,
+						0
+					],
+					"texture": "#1"
+				}
+			}
+		}
+	],
+	"display": {
+		"firstperson_righthand": {
+			"rotation": [
+				-180,
+				0.25,
+				-180
+			],
+			"translation": [
+				2.25,
+				0,
+				0
+			],
+			"scale": [
+				0.57031,
+				0.57031,
+				0.57031
+			]
+		},
+		"gui": {
+			"rotation": [
+				-180,
+				10.5,
+				-180
+			],
+			"translation": [
+				0.25,
+				-2,
+				0
+			],
+			"scale": [
+				0.40625,
+				0.80078,
+				0.40625
+			]
+		},
+		"head": {
+			"translation": [
+				0,
+				14.5,
+				-1.75
+			]
+		}
+	}
+}

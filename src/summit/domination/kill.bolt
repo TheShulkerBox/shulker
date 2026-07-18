@@ -1,0 +1,23 @@
+GENERIC_KILL: AdvancementPath | FunctionPath = "summit.sticker_book:shulker/kill"
+
+
+advancement GENERIC_KILL {
+    "criteria": {
+        "requirement": {
+            "trigger": "minecraft:player_killed_entity",
+            "conditions": {
+                "player": {
+                    "minecraft:entity_type": "minecraft:player",
+                    "minecraft:entity_tags": {
+                        "all_of": [
+                            "shulker.in_battlegrounds"
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    "reward": {
+        "function": GENERIC_KILL
+    }
+}

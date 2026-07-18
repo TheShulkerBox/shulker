@@ -1,0 +1,92 @@
+{
+    "namespace": "shulker",
+    "booth_name": "The Shulker Box",
+    "bounding_boxes": {
+        "top": {
+            "position": {
+                "x": {
+                    "min": -129.0,
+                    "max": -115.0
+                },
+                "y": {
+                    "min": 78.0,
+                    "max": 90.0
+                },
+                "z": {
+                    "min": 75.0,
+                    "max": 88.0
+                }
+            }
+        },
+        "cave": {
+            "position": {
+                "x": {
+                    "min": -128.0,
+                    "max": -105.0
+                },
+                "y": {
+                    "min": 64.0,
+                    "max": 78.0
+                },
+                "z": {
+                    "min": 58.0,
+                    "max": 94.0
+                }
+            }
+        },
+        "battlegrounds_room": {
+            "position": {
+                "x": {
+                    "min": -118.0,
+                    "max": -107.0
+                },
+                "y": {
+                    "min": 69.0,
+                    "max": 77.0
+                },
+                "z": {
+                    "min": 94.0,
+                    "max": 108.0
+                }
+            }
+        }
+    },
+    "ticking_functions": {
+        "shulker:summit/map_display/clock": "10s"
+    },
+    "persistent_tick": "shulker:summit/tick",
+    "sticker_book": {
+        "background_color": "#1a48c3",
+        "region": "textured_tropics",
+        "stickers": [
+            {
+                "sticker_id": "the_shulker_box",
+                "sticker_texture": "shulker:item/stickers/enter_booth",
+                "sticker_name": "The Shulker Box",
+                "unobtained_text": "Visit The Shulker Box",
+                "obtained_text": "Welcome to The Shulker Box!"
+            },
+            {
+                "sticker_id": "get_3_kills",
+                "sticker_texture": "shulker:item/stickers/get_3_kills",
+                "sticker_name": "Triple Threat",
+                "unobtained_text": "Get 3 kills in a game",
+                "obtained_text": "You got 3 kills in one game"
+            },
+            {
+                "sticker_id": "win_a_game",
+                "sticker_texture": "shulker:item/stickers/win_a_game",
+                "sticker_name": "Victory!",
+                "unobtained_text": "Win a game",
+                "obtained_text": "You won a game!"
+            },
+            {
+                "sticker_id": "kill_with_all_kits",
+                "sticker_texture": "shulker:item/stickers/kill_with_all_kits",
+                "sticker_name": "Kit Collector",
+                "unobtained_text": "Get a kill with every kit",
+                "obtained_text": "You got a kill with every kit!"
+            }
+        ]
+    }
+}

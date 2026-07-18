@@ -1,0 +1,42 @@
+"""Random-kit selection and the kit list used by Domination achievements."""
+
+from kit:definitions/archer import archer
+from kit:definitions/assassin import assassin
+from kit:definitions/barbarian import barbarian
+from kit:definitions/berserker import berserker
+from kit:definitions/footman import footman
+from kit:definitions/headsman import headsman
+from kit:definitions/juggernaut import juggernaut
+from kit:definitions/ranger import ranger
+from kit:definitions/spearfisher import spearfisher
+from kit:definitions/swashbuckler import swashbuckler
+from kit:definitions/warbowman import warbowman
+from kit:definitions/witch_doctor import witch_doctor
+
+from ./registry import GIVE_RANDOM_KIT
+
+
+# Keep this list in sync with the kits available through the Summit booth.
+DEFAULT_KITS = [
+    archer,
+    assassin,
+    barbarian,
+    berserker,
+    footman,
+    headsman,
+    juggernaut,
+    ranger,
+    spearfisher,
+    swashbuckler,
+    warbowman,
+    witch_doctor,
+]
+
+
+function GIVE_RANDOM_KIT:
+    """Apply one eligible kit, including its canonical kit identity."""
+    execute store result score var SCORE.temp["#summit_random_kit"] run random value (0, len(DEFAULT_KITS) - 1)
+
+    for index, kit in enumerate(DEFAULT_KITS):
+        kit_function = f"shulker:kit/loadout/{kit.id}/apply"
+        execute if score var SCORE.temp["#summit_random_kit"] matches index run return run function kit_function

@@ -12,3 +12,12 @@ import kit:definitions/swashbuckler as _
 import kit:definitions/ranger as _
 import kit:definitions/warbowman as _
 import kit:definitions/headsman as _
+
+import ./map_display as _
+import ./domination/game as _
+import ./domination/kill as _
+import ./domination/manager as _
+from ./stickers import ENTER_BOOTH_STICKER
+
+function ./booth/enter:
+    advancement grant @s only ENTER_BOOTH_STICKER

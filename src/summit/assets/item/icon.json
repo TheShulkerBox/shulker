@@ -1,0 +1,12 @@
+{
+    "model": {
+        "type": "minecraft:model",
+        "model": "shulker:item/branding/icon"
+    },
+    "tints": [
+        {
+            "type": "minecraft:constant",
+            "value": 66046
+        }
+    ]
+}

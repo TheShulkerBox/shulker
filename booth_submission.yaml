@@ -1,0 +1,34 @@
+# Build Summit's complete core pack, then process the local Shulker booth.
+#
+# Summit's core doesn't load any booths. Shulker compiles its Bolt sources in
+# ``base-beet.yaml``, after which this reproduces Summit's core pipeline and
+# registers only Shulker in the shared build context for the booth processors.
+# The core pack is loaded by a plugin because Beet's merged pack-load settings
+# would otherwise replace Summit's ``data_pack.load`` and ``resource_pack.load``.
+
+require:
+  - beet.contrib.model_merging
+  - beet.contrib.worldgen
+  - summit.plugins.biomes
+  - summit.plugins.booths.booth_definition
+  - summit.plugins.sync_settings.custom_resource
+
+pipeline:
+  - plugins.summit_core
+  - beet.contrib.minify_json
+  - mecha
+  - summit.plugins.load_third_party
+  - extend: ../Smithed/summit-26/summit/core/modules/beet.yaml
+  - plugins.summit_booth
+  - summit.plugins.booths.remove_tick_functions
+  - summit.plugins.booths.booth_hooks
+  - summit.plugins.booths.production_pack_filter
+  - summit.plugins.booths.sticker_book
+  - summit.plugins.booths.balloons
+  - summit.plugins.booths.process_schematics
+  - summit.plugins.sync_settings.validate
+  - summit.plugins.validate_textures
+
+meta:
+  mecha:
+    formatting: preserve

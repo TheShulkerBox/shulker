@@ -1,0 +1,7 @@
+"""Sticker Book advancements registered by The Shulker Box booth."""
+
+# AUTO-GENERATED STICKERS
+ENTER_BOOTH_STICKER: AdvancementPath = "summit.sticker_book:shulker/enter_booth"
+KILL_WITH_ALL_KITS_STICKER: AdvancementPath = "summit.sticker_book:shulker/kill_with_all_kits"
+GET_3_KILLS_STICKER: AdvancementPath = "summit.sticker_book:shulker/get_3_kills"
+WIN_A_GAME_STICKER: AdvancementPath = "summit.sticker_book:shulker/win_a_game"

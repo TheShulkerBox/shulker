@@ -1,7 +1,6 @@
 from itertools import chain
 from typing import ClassVar
 
-from lib:shulker_box import ShulkerBox
 from lib:helpers import deep_merge_dicts, nbt_dump
 from lib:rom import LOAD_ROM
 from server:core import SERVER_TICK, SERVER_LOAD

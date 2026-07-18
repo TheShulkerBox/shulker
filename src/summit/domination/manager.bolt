@@ -1,0 +1,71 @@
+"""Summit lifecycle callbacks and Domination sticker progress."""
+
+from ../battlegrounds import PLAYER_TAG
+from ../stickers import GET_3_KILLS_STICKER, KILL_WITH_ALL_KITS_STICKER
+from kit:base import KIT_ID
+from player:events import ON_KILL
+from ./kits import DEFAULT_KITS
+from ./registry import BATTLEGROUND
+from ./registry import ARENA_LOAD, ARENA_UNLOAD
+from ./registry import PLAYER_ENTER_SUCCESS, PLAYER_LEAVE
+from ./registry import DOMINATION_MAIN, UPDATE_CLOCK
+from ./registry import BOSSBAR_MIDDLE, DOMINATION_BOSSBAR, GAME_SCORE, GAME_STATE, WIN_THRESHOLD
+from ./registry import STICKER_GAME_KILLS
+
+
+function ARENA_LOAD:
+    """Start a fresh match after Summit marks this booth active."""
+    schedule function DOMINATION_MAIN 1t
+    schedule function UPDATE_CLOCK 1t
+    bossbar add DOMINATION_BOSSBAR [{text:'Red',color:"dark_red"},{text:'\s\s\s\s\s'},{text:' Team Victory Progress ',color:"white"},{text:'\s\s\s\s\s'},{text:'Blue',color:"dark_blue"}]
+    bossbar set DOMINATION_BOSSBAR style notched_20
+    bossbar set DOMINATION_BOSSBAR max WIN_THRESHOLD
+    bossbar set DOMINATION_BOSSBAR color white
+    GAME_STATE[GAME_SCORE] = BOSSBAR_MIDDLE
+    playsound minecraft:item.goat_horn.sound.0 voice @a -98 81 118 5 0.5
+
+
+function ARENA_UNLOAD:
+    """Remove match-only UI when Summit deactivates this booth."""
+    bossbar remove DOMINATION_BOSSBAR
+
+
+function PLAYER_ENTER_SUCCESS:
+    """Initialize a participant's match-local sticker state and UI."""
+    STICKER_GAME_KILLS["@s"] = 0
+    bossbar set DOMINATION_BOSSBAR players @a[tag=PLAYER_TAG]
+
+
+function PLAYER_LEAVE:
+    """Refresh the bossbar audience after a participant leaves."""
+    bossbar set DOMINATION_BOSSBAR players @a[tag=PLAYER_TAG]
+
+
+append function ON_KILL:
+    # This event is global; only count player kills during the active booth.
+    BATTLEGROUND.require_active()
+    execute unless entity @s[tag=PLAYER_TAG] run return 0
+
+    STICKER_GAME_KILLS["@s"] += 1
+    execute if score @s STICKER_GAME_KILLS matches 3.. run advancement grant @s only GET_3_KILLS_STICKER
+
+    # Persist every kit the player has scored a kill with across matches.
+    for kit in DEFAULT_KITS:
+        if KIT_ID["@s"] == kit.hashed_id:
+            tag @s add f"shulker.sticker.killed_as.{kit.id}"
+
+    # Award the collection sticker once the player has killed with every kit.
+    execute \
+        if entity @s[tag=shulker.sticker.killed_as.archer] \
+        if entity @s[tag=shulker.sticker.killed_as.assassin] \
+        if entity @s[tag=shulker.sticker.killed_as.barbarian] \
+        if entity @s[tag=shulker.sticker.killed_as.berserker] \
+        if entity @s[tag=shulker.sticker.killed_as.footman] \
+        if entity @s[tag=shulker.sticker.killed_as.headsman] \
+        if entity @s[tag=shulker.sticker.killed_as.juggernaut] \
+        if entity @s[tag=shulker.sticker.killed_as.ranger] \
+        if entity @s[tag=shulker.sticker.killed_as.spearfisher] \
+        if entity @s[tag=shulker.sticker.killed_as.swashbuckler] \
+        if entity @s[tag=shulker.sticker.killed_as.warbowman] \
+        if entity @s[tag=shulker.sticker.killed_as.witch_doctor] \
+        run advancement grant @s only KILL_WITH_ALL_KITS_STICKER

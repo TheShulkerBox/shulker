@@ -7,7 +7,6 @@ from item:definitions/armor import Armor
 from lib:helpers import id_to_number
 from lib:db import Database
 from lib:const import ARMOR_SLOTS
-from lib:shulker_box import ShulkerBox
 from server:core import SERVER_LOAD
 # from lib:inventory_management import hotbar_with_slots_modify
 from lib:rom import LOAD_ROM
@@ -104,6 +103,10 @@ class Kit:
         """Main generation logic for per-kit files"""
         function ./loadout:
             function ~/{self.id}/apply:
+                # Applying a loadout also establishes the player's active kit.
+                # External systems such as Summit invoke these functions
+                # directly, without going through the normal selection flow.
+                KIT_ID["@s"] = self.hashed_id
                 for slot, item in self:
                     if isinstance(item, ItemStack):
                         item replace entity @s slot with item item.count
