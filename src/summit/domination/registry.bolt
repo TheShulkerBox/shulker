@@ -11,33 +11,17 @@ from ../battlegrounds import Battleground
 # Booth identity and arena layout.
 BOOTH_ID = "shulker"
 ARENA = "shulker:battlegrounds/arena"
-DOMINATION_POINT_ENTITY = "shulker.domination_control_point"
-DOMINATION_POINT_TYPE = "marker"
 
-# The Battlegrounds API places the unrotated structure at this origin. These
-# positions replace marker blocks that are not currently present in the arena.
-ARENA_STRUCTURE_ORIGIN = (-118, 60, 97)
-RESUPPLY_CRATE_POSITIONS = [
-    (-100, 66, 115),
-    (-91, 64, 134),
-]
-RESPAWN_POINT_POSITIONS = [
-    (-116, 65, 117),
-    (-110, 62, 101),
-    (-88, 64, 138),
-    (-86, 64, 127),
-]
-DOMINATION_POINT_POSITIONS = [
-    (-110, 62, 134),
-    (-88, 62, 105),
-]
 
-# Match scoring.
-WIN_THRESHOLD: int = 100
-BOSSBAR_MIDDLE: int = 50
+# Match state shared by lifecycle and scoring functions.
 GAME_SCORE = "#shulker.domination.score"
+MATCH_TIME_LEFT = "#shulker.domination.time_left"
+SCORING_TIMER = "#shulker.domination.scoring_timer"
+POINT_REGEN_TIMER = "#shulker.domination.point_regen_timer"
+MATCH_FINISHED = "#shulker.domination.finished"
 DOMINATION_BOSSBAR = "shulker:game.domination.global_score"
 GAME_STATE = Scoreboard("shulker.domination.game_state", criteria="dummy")
+DOMINATION_TEAM = Scoreboard("shulker.summit.domination.team", criteria="dummy")
 STICKER_GAME_KILLS = Scoreboard("shulker.sticker_game_kills", criteria="dummy")
 
 # Stable function paths used by the Summit API and external debug commands.
@@ -45,10 +29,21 @@ ARENA_LOAD: FunctionPath = ./load
 ARENA_UNLOAD: FunctionPath = ./unload
 PLAYER_ENTER_SUCCESS: FunctionPath = ./player_enter_success
 PLAYER_LEAVE: FunctionPath = ./player_leave
+PLAYER_DIED: FunctionPath = ./player_died
 DOMINATION_MAIN: FunctionPath = ./main
+CAPTURE_POINTS: FunctionPath = ./capture_points
+AWARD_CONTROL_POINTS: FunctionPath = ./award_control_points
+RED_WIN: FunctionPath = ./red_win
+BLUE_WIN: FunctionPath = ./blue_win
+MATCH_DRAW: FunctionPath = ./match_draw
+MATCH_TIME_UP: FunctionPath = ./match_time_up
 DEBUG_POINT_PARTICLES: FunctionPath = ./debug_point_particles
-UPDATE_CLOCK: FunctionPath = ./clock
+REMOVE_BOSSBAR: FunctionPath = ./remove_bossbar
 GIVE_RANDOM_KIT: FunctionPath = ./give_random_kit
+RESET_RESUPPLY_TIMER: FunctionPath = ./reset_resupply_timer
+RESET_SUMMIT_KIT_STATE: FunctionPath = ./reset_summit_kit_state
+CLEANUP_SUMMIT_KIT_ENTITIES: FunctionPath = ./cleanup_summit_kit_entities
+SPAWN_FOR_TEAM: FunctionPath = ./spawn_for_team
 
 
 # This is the only Domination Battleground instance. Other modules import it
@@ -65,4 +60,5 @@ BATTLEGROUND = Battleground(
     on_inactive=ARENA_UNLOAD,
     on_enter=PLAYER_ENTER_SUCCESS,
     on_leave=PLAYER_LEAVE,
+    on_died=PLAYER_DIED,
 )

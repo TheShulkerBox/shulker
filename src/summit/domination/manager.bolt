@@ -1,71 +1,188 @@
-"""Summit lifecycle callbacks and Domination sticker progress."""
+"""Summit lifecycle callbacks, teams, spawns, and sticker progress."""
 
+from server:core import SERVER_LOAD
+from kit:services/resupply import RESUPPLY_TIMER, SUMMIT_RESUPPLY_CRATE_TAG
 from ../battlegrounds import PLAYER_TAG
-from ../stickers import GET_3_KILLS_STICKER, KILL_WITH_ALL_KITS_STICKER
-from kit:base import KIT_ID
-from player:events import ON_KILL
-from ./kits import DEFAULT_KITS
-from ./registry import BATTLEGROUND
-from ./registry import ARENA_LOAD, ARENA_UNLOAD
-from ./registry import PLAYER_ENTER_SUCCESS, PLAYER_LEAVE
-from ./registry import DOMINATION_MAIN, UPDATE_CLOCK
-from ./registry import BOSSBAR_MIDDLE, DOMINATION_BOSSBAR, GAME_SCORE, GAME_STATE, WIN_THRESHOLD
+from ./config import ARENA_CENTER, BLUE_RESPAWN_POSITIONS, BLUE_TEAM
+from ./config import BLUE_TEAM_NAME, DOMINATION_POINT_ENTITY
+from ./config import DOMINATION_POINTS, MATCH_DURATION_SECONDS
+from ./config import POINT_CAPTURE_HEALTH
+from ./config import RED_RESPAWN_POSITIONS, RED_TEAM, RED_TEAM_NAME
+from ./config import RESUPPLY_CRATE_POSITIONS, STARTING_SCORE, WIN_THRESHOLD
+from ./config import SUMMIT_BOOTH_ENTITY_TAG
+from ./registry import ARENA_LOAD, ARENA_UNLOAD, BATTLEGROUND, GIVE_RANDOM_KIT
+from ./registry import DOMINATION_BOSSBAR, DOMINATION_TEAM
+from ./registry import GAME_SCORE, GAME_STATE, MATCH_FINISHED, MATCH_TIME_LEFT
+from ./registry import PLAYER_DIED, PLAYER_ENTER_SUCCESS, PLAYER_LEAVE
+from ./registry import CLEANUP_SUMMIT_KIT_ENTITIES, REMOVE_BOSSBAR
+from ./registry import RESET_RESUPPLY_TIMER, RESET_SUMMIT_KIT_STATE, SCORING_TIMER
+from ./registry import POINT_REGEN_TIMER, SPAWN_FOR_TEAM
 from ./registry import STICKER_GAME_KILLS
 
 
+CREATE_RESUPPLY_CRATE: FunctionPath = "shulker:kit/resupply_crate/create"
+LEAVING_TAG = "shulker.domination.leaving"
+
+
+# Native teams provide colors and prevent teammates from damaging each other.
+append function SERVER_LOAD:
+    team add RED_TEAM_NAME "Domination Red"
+    team add BLUE_TEAM_NAME "Domination Blue"
+    team modify RED_TEAM_NAME color dark_red
+    team modify BLUE_TEAM_NAME color dark_blue
+    team modify RED_TEAM_NAME friendlyFire false
+    team modify BLUE_TEAM_NAME friendlyFire false
+
+
+function ./battlegrounds_room/enter:
+    """Prepare a visitor before Summit processes their arena entry."""
+    # Leave another booth's active game and kit selection alone.
+    execute if data storage summit.battlegrounds:database session unless data storage summit.battlegrounds:database session{compatibility: "shulker"} run return 0
+
+    # Summit needs this record before a player can activate or enter a session.
+    BATTLEGROUND.assign_kit(
+        kit_id="shulker:random",
+        kit_function=GIVE_RANDOM_KIT,
+        kit_name="Random Shulker Kit",
+    )
+
+
+
 function ARENA_LOAD:
-    """Start a fresh match after Summit marks this booth active."""
-    schedule function DOMINATION_MAIN 1t
-    schedule function UPDATE_CLOCK 1t
-    bossbar add DOMINATION_BOSSBAR [{text:'Red',color:"dark_red"},{text:'\s\s\s\s\s'},{text:' Team Victory Progress ',color:"white"},{text:'\s\s\s\s\s'},{text:'Blue',color:"dark_blue"}]
+    """Create a clean arena state after Summit activates this booth."""
+    schedule clear REMOVE_BOSSBAR
+
+    # Runtime objects cannot be stored in Summit's arena structure.
+    kill @e[type=marker,tag=SUMMIT_BOOTH_ENTITY_TAG,tag=DOMINATION_POINT_ENTITY]
+    kill @e[type=interaction,tag=SUMMIT_BOOTH_ENTITY_TAG,tag=SUMMIT_RESUPPLY_CRATE_TAG]
+
+    for point_name, point_tag, point_health, point_owner, point_capture_team, point_bossbar, position in DOMINATION_POINTS:
+        x, y, z = position
+        summon marker (x + 0.5) y (z + 0.5) {Tags:[SUMMIT_BOOTH_ENTITY_TAG, DOMINATION_POINT_ENTITY, point_tag]}
+
+        # Each nearby-player bar shows this point's remaining capture health.
+        bossbar add point_bossbar {text: f"Point {point_name} capture health", color: "yellow"}
+        bossbar set point_bossbar style notched_20
+        bossbar set point_bossbar max POINT_CAPTURE_HEALTH
+        bossbar set point_bossbar value POINT_CAPTURE_HEALTH
+        bossbar set point_bossbar color yellow
+        GAME_STATE[point_health] = POINT_CAPTURE_HEALTH
+        GAME_STATE[point_owner] = 0
+        GAME_STATE[point_capture_team] = 0
+
+    for x, y, z in RESUPPLY_CRATE_POSITIONS:
+        execute positioned x y z run function CREATE_RESUPPLY_CRATE
+
+    # The bar starts neutral and moves toward the team that controls points.
+    bossbar add DOMINATION_BOSSBAR [
+        {text: "Red", color: "dark_red"},
+        {text: "     Team Victory Progress     ", color: "white"},
+        {text: "Blue", color: "dark_blue"}
+    ]
     bossbar set DOMINATION_BOSSBAR style notched_20
     bossbar set DOMINATION_BOSSBAR max WIN_THRESHOLD
+    bossbar set DOMINATION_BOSSBAR value STARTING_SCORE
     bossbar set DOMINATION_BOSSBAR color white
-    GAME_STATE[GAME_SCORE] = BOSSBAR_MIDDLE
+    bossbar set DOMINATION_BOSSBAR players @a[tag=PLAYER_TAG]
+
+    GAME_STATE[GAME_SCORE] = STARTING_SCORE
+    GAME_STATE[MATCH_TIME_LEFT] = MATCH_DURATION_SECONDS * 20
+    GAME_STATE[SCORING_TIMER] = 0
+    GAME_STATE[POINT_REGEN_TIMER] = 0
+    GAME_STATE[MATCH_FINISHED] = 0
+
+    # Clear team data left behind by an interrupted development session.
+    team empty RED_TEAM_NAME
+    team empty BLUE_TEAM_NAME
+    DOMINATION_TEAM["*"].reset()
     playsound minecraft:item.goat_horn.sound.0 voice @a -98 81 118 5 0.5
 
 
 function ARENA_UNLOAD:
-    """Remove match-only UI when Summit deactivates this booth."""
+    """Remove objects and player state owned by this match."""
+    kill @e[type=marker,tag=SUMMIT_BOOTH_ENTITY_TAG,tag=DOMINATION_POINT_ENTITY]
+    kill @e[type=interaction,tag=SUMMIT_BOOTH_ENTITY_TAG,tag=SUMMIT_RESUPPLY_CRATE_TAG]
+
+    function CLEANUP_SUMMIT_KIT_ENTITIES
+
+    team empty RED_TEAM_NAME
+    team empty BLUE_TEAM_NAME
+    DOMINATION_TEAM["*"].reset()
+    RESUPPLY_TIMER[f"@a[tag={PLAYER_TAG}]"].reset()
+
+    # Player leave callbacks run just after this callback in Summit's API.
+    schedule function REMOVE_BOSSBAR 1t replace
+
+
+function REMOVE_BOSSBAR:
     bossbar remove DOMINATION_BOSSBAR
+    for point_name, point_tag, point_health, point_owner, point_capture_team, point_bossbar, position in DOMINATION_POINTS:
+        bossbar remove point_bossbar
 
 
 function PLAYER_ENTER_SUCCESS:
-    """Initialize a participant's match-local sticker state and UI."""
+    """Balance a new participant, then place them at their team spawn."""
+    DOMINATION_TEAM["@s"].reset()
+    team leave @s
+
+    SCORE.temp["#domination_red_team_size"] = 0
+    SCORE.temp["#domination_blue_team_size"] = 0
+    execute as @a[tag=PLAYER_TAG,scores={DOMINATION_TEAM=RED_TEAM}] run scoreboard players add #domination_red_team_size temp 1
+    execute as @a[tag=PLAYER_TAG,scores={DOMINATION_TEAM=BLUE_TEAM}] run scoreboard players add #domination_blue_team_size temp 1
+
+    if SCORE.temp["#domination_red_team_size"] <= SCORE.temp["#domination_blue_team_size"]:
+        DOMINATION_TEAM["@s"] = RED_TEAM
+        team join RED_TEAM_NAME @s
+        tellraw @s {text: "You joined Red Team", color: "dark_red"}
+    else:
+        DOMINATION_TEAM["@s"] = BLUE_TEAM
+        team join BLUE_TEAM_NAME @s
+        tellraw @s {text: "You joined Blue Team", color: "dark_blue"}
+
+    function SPAWN_FOR_TEAM
+    function RESET_RESUPPLY_TIMER
+    effect give @s minecraft:instant_health 1 10 true
+    effect give @s minecraft:saturation 1 10 true
     STICKER_GAME_KILLS["@s"] = 0
     bossbar set DOMINATION_BOSSBAR players @a[tag=PLAYER_TAG]
+    tellraw @s [
+        {text: "Domination: ", color: "gold"},
+        {text: "Capture the green points, then hold them to score. Use the supply crates when they are ready.", color: "white"}
+    ]
+
+
+function PLAYER_DIED:
+    """Keep the player's team after Summit reapplies their kit."""
+    function SPAWN_FOR_TEAM
+    function RESET_RESUPPLY_TIMER
 
 
 function PLAYER_LEAVE:
-    """Refresh the bossbar audience after a participant leaves."""
-    bossbar set DOMINATION_BOSSBAR players @a[tag=PLAYER_TAG]
+    """Clear match state and hide the bossbar from the leaving player."""
+    tag @s add LEAVING_TAG
+    bossbar set DOMINATION_BOSSBAR players @a[tag=PLAYER_TAG,tag=!LEAVING_TAG]
+    tag @s remove LEAVING_TAG
+    # Summit restores inventory but leaves kit state for the booth to clean.
+    function RESET_SUMMIT_KIT_STATE
+    effect give @s minecraft:instant_health 1 10 true
+    effect give @s minecraft:saturation 1 10 true
+    team leave @s
+    DOMINATION_TEAM["@s"].reset()
+    RESUPPLY_TIMER["@s"].reset()
 
 
-append function ON_KILL:
-    # This event is global; only count player kills during the active booth.
-    BATTLEGROUND.require_active()
-    execute unless entity @s[tag=PLAYER_TAG] run return 0
+function SPAWN_FOR_TEAM:
+    """Teleport the executing player to one spawn owned by their team."""
+    center_x, center_y, center_z = ARENA_CENTER
 
-    STICKER_GAME_KILLS["@s"] += 1
-    execute if score @s STICKER_GAME_KILLS matches 3.. run advancement grant @s only GET_3_KILLS_STICKER
+    if DOMINATION_TEAM["@s"] == RED_TEAM:
+        execute store result score var SCORE.temp["#domination_spawn"] run random value (0, len(RED_RESPAWN_POSITIONS) - 1)
+        for index, position in enumerate(RED_RESPAWN_POSITIONS):
+            x, y, z = position
+            execute if score var SCORE.temp["#domination_spawn"] matches index run tp @s x y z facing center_x center_y center_z
 
-    # Persist every kit the player has scored a kill with across matches.
-    for kit in DEFAULT_KITS:
-        if KIT_ID["@s"] == kit.hashed_id:
-            tag @s add f"shulker.sticker.killed_as.{kit.id}"
-
-    # Award the collection sticker once the player has killed with every kit.
-    execute \
-        if entity @s[tag=shulker.sticker.killed_as.archer] \
-        if entity @s[tag=shulker.sticker.killed_as.assassin] \
-        if entity @s[tag=shulker.sticker.killed_as.barbarian] \
-        if entity @s[tag=shulker.sticker.killed_as.berserker] \
-        if entity @s[tag=shulker.sticker.killed_as.footman] \
-        if entity @s[tag=shulker.sticker.killed_as.headsman] \
-        if entity @s[tag=shulker.sticker.killed_as.juggernaut] \
-        if entity @s[tag=shulker.sticker.killed_as.ranger] \
-        if entity @s[tag=shulker.sticker.killed_as.spearfisher] \
-        if entity @s[tag=shulker.sticker.killed_as.swashbuckler] \
-        if entity @s[tag=shulker.sticker.killed_as.warbowman] \
-        if entity @s[tag=shulker.sticker.killed_as.witch_doctor] \
-        run advancement grant @s only KILL_WITH_ALL_KITS_STICKER
+    elif DOMINATION_TEAM["@s"] == BLUE_TEAM:
+        execute store result score var SCORE.temp["#domination_spawn"] run random value (0, len(BLUE_RESPAWN_POSITIONS) - 1)
+        for index, position in enumerate(BLUE_RESPAWN_POSITIONS):
+            x, y, z = position
+            execute if score var SCORE.temp["#domination_spawn"] matches index run tp @s x y z facing center_x center_y center_z

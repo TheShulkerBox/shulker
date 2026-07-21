@@ -33,7 +33,7 @@ class Battleground:
     booth-owned code. ``booth_id`` must also be safe to embed in a resource path.
 
     ``arena`` is the only structure this battleground can install. API methods
-    return a shared temporary score; consume it immediately.
+    return a shared temporary score. Consume it immediately.
     """
 
     booth_id: str

@@ -12,10 +12,10 @@ from server:core import SERVER_LOAD
 from lib:rom import LOAD_ROM
 from lib:predicates import has_item_predicate
 
-KITS_ROM = Database(Data.storage("rom:main").root.kits)
+KITS_ROM = Database(Data.storage("shulker:rom/main").root.kits)
 
-KIT_ID_REQUEST = Scoreboard("kit.request_id", criteria="dummy")
-KIT_ID = Scoreboard("kit.id", criteria="dummy")
+KIT_ID_REQUEST = Scoreboard("shulker.kit_request_id", criteria="dummy")
+KIT_ID = Scoreboard("shulker.kit_id", criteria="dummy")
 
 item_type = KitItem | ItemStack
 

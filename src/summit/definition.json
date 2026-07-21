@@ -48,9 +48,11 @@
                     "min": 94.0,
                     "max": 108.0
                 }
-            }
+            },
+            "on_player_enter": "shulker:summit/battlegrounds_room/enter"
         }
     },
+    "on_player_enter": "shulker:summit/booth/enter",
     "ticking_functions": {
         "shulker:summit/map_display/clock": "10s"
     },

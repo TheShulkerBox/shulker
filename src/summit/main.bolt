@@ -17,7 +17,11 @@ import ./map_display as _
 import ./domination/game as _
 import ./domination/kill as _
 import ./domination/manager as _
+import ./domination/team_safety as _
+from ./domination/registry import BATTLEGROUND, GIVE_RANDOM_KIT
 from ./stickers import ENTER_BOOTH_STICKER
 
 function ./booth/enter:
     advancement grant @s only ENTER_BOOTH_STICKER
+
+

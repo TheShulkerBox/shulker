@@ -12,31 +12,125 @@ from kit:definitions/spearfisher import spearfisher
 from kit:definitions/swashbuckler import swashbuckler
 from kit:definitions/warbowman import warbowman
 from kit:definitions/witch_doctor import witch_doctor
+from kit:base import KIT_ID
+from kit:events import KIT_RESET
+from kit:services/resupply import RESUPPLY_SUCCEED, RESUPPLY_TIMER
+from lib:xp import XP
+from server:events import ON_PLAYER_RESET
+from item:definitions/consumables/net import NET_DISPLAY_TAG, NET_ITEM_TAG
+from item:definitions/consumables/net import NET_THROWER_TAG
+from item:definitions/weapons/cutlass import CUTLASS_COOLDOWN_TIMER
+from item:definitions/weapons/headsman_axe import BEHEADABLE, HEADSMAN
+from item:definitions/weapons/ranger_crossbow import RangerTripleCrossbow
+from item:definitions/weapons/ranger_crossbow import RANGER_CHAMBER
+from item:definitions/weapons/ranger_crossbow import RANGER_MAX_CHAMBER
+from item:definitions/weapons/ranger_crossbow import RANGER_RAPID_MODE_TAG
+from item:definitions/weapons/ranger_crossbow import RANGER_RAPID_SHOT_TAG
+from item:definitions/weapons/ranger_crossbow import RANGER_TRIPLE_SHOT_TAG
+from item:definitions/weapons/ranger_crossbow import crossbow_reload
+from item:definitions/weapons/ranger_sword import RANGER_SWORD_RELOAD
+from item:definitions/weapons/serrated_blade import HEALING_BLOCK
+from item:definitions/weapons/warbow import PROJECTILE_TAG
 
-from ./registry import GIVE_RANDOM_KIT
+from ../battlegrounds import PLAYER_TAG
+from ./config import ARENA_STRUCTURE_ORIGIN, ARENA_STRUCTURE_SIZE
+from ./config import SUMMIT_BOOTH_ENTITY_TAG
+from ./registry import CLEANUP_SUMMIT_KIT_ENTITIES, GIVE_RANDOM_KIT
+from ./registry import RESET_RESUPPLY_TIMER, RESET_SUMMIT_KIT_STATE
 
 
-# Keep this list in sync with the kits available through the Summit booth.
-DEFAULT_KITS = [
-    archer,
-    assassin,
-    barbarian,
-    berserker,
-    footman,
-    headsman,
-    juggernaut,
-    ranger,
-    spearfisher,
-    swashbuckler,
-    warbowman,
-    witch_doctor,
+RESTORE_RANGER: FunctionPath = ./restore_ranger
+RANGER_LOADED_ITEM = RangerTripleCrossbow.as_loot_table()
+RANGER_LOADED_ITEM["functions"] = [crossbow_reload(RANGER_MAX_CHAMBER)]
+
+
+# The second value is the crate cooldown in ticks after this kit resupplies.
+# These start from the original Shulker kit timings and are easy to rebalance.
+KIT_CONFIG = [
+    (archer, 900),
+    (assassin, 500),
+    (barbarian, 900),
+    (berserker, 440),
+    (footman, 400),
+    (headsman, 600),
+    (juggernaut, 600),
+    (ranger, 500),
+    (spearfisher, 700),
+    (swashbuckler, 650),
+    (warbowman, 700),
+    (witch_doctor, 350),
 ]
+
+DEFAULT_KITS = []
+for kit, cooldown in KIT_CONFIG:
+    DEFAULT_KITS.append(kit)
 
 
 function GIVE_RANDOM_KIT:
-    """Apply one eligible kit, including its canonical kit identity."""
+    """Clear the old life and apply one complete random kit."""
+    function RESET_SUMMIT_KIT_STATE
     execute store result score var SCORE.temp["#summit_random_kit"] run random value (0, len(DEFAULT_KITS) - 1)
 
     for index, kit in enumerate(DEFAULT_KITS):
         kit_function = f"shulker:kit/loadout/{kit.id}/apply"
-        execute if score var SCORE.temp["#summit_random_kit"] matches index run return run function kit_function
+        execute if score var SCORE.temp["#summit_random_kit"] matches index run function kit_function
+
+    # Ranger keeps its chamber in scoreboard state, then renders the loaded bow.
+    if KIT_ID["@s"] == ranger.hashed_id:
+        function RESTORE_RANGER
+
+
+function RESET_RESUPPLY_TIMER:
+    """Start the cooldown configured for the player's current kit."""
+    RESUPPLY_TIMER["@s"] = 600
+
+    for kit, cooldown in KIT_CONFIG:
+        if KIT_ID["@s"] == kit.hashed_id:
+            RESUPPLY_TIMER["@s"] = cooldown
+
+    # Crate resupply replaces Ranger's item before the chamber is rendered.
+    if KIT_ID["@s"] == ranger.hashed_id:
+        function RESTORE_RANGER
+
+
+function RESTORE_RANGER:
+    """Return Ranger to triple mode with a fully loaded chamber."""
+    tag @s remove RANGER_RAPID_MODE_TAG
+    RANGER_CHAMBER["@s"] = RANGER_MAX_CHAMBER
+    loot replace entity @s hotbar.1 loot RANGER_LOADED_ITEM
+
+
+function RESET_SUMMIT_KIT_STATE:
+    """Clear player state that Summit's inventory restore does not manage."""
+    function KIT_RESET
+    function ON_PLAYER_RESET
+    tag @s remove NET_THROWER_TAG
+    tag @s remove BEHEADABLE
+    tag @s remove HEADSMAN
+    KIT_ID["@s"].reset()
+    CUTLASS_COOLDOWN_TIMER["@s"].reset()
+    RANGER_SWORD_RELOAD["@s"].reset()
+    HEALING_BLOCK["@s"].reset()
+    XP.set_points(0)
+
+
+function CLEANUP_SUMMIT_KIT_ENTITIES:
+    """Remove projectiles and Net objects before Summit installs another arena."""
+    kill @e[type=block_display,tag=NET_DISPLAY_TAG,tag=SUMMIT_BOOTH_ENTITY_TAG]
+    kill @e[type=item,tag=NET_ITEM_TAG,tag=SUMMIT_BOOTH_ENTITY_TAG]
+    kill @e[tag=PROJECTILE_TAG,tag=SUMMIT_BOOTH_ENTITY_TAG]
+    kill @e[tag=RANGER_RAPID_SHOT_TAG,tag=SUMMIT_BOOTH_ENTITY_TAG]
+    kill @e[tag=RANGER_TRIPLE_SHOT_TAG,tag=SUMMIT_BOOTH_ENTITY_TAG]
+    tag @a[tag=PLAYER_TAG] remove NET_THROWER_TAG
+    tag @a[tag=PLAYER_TAG] remove BEHEADABLE
+    tag @a[tag=PLAYER_TAG] remove HEADSMAN
+
+    # Ordinary arrows and tridents have no item-specific ownership tag.
+    origin_x, origin_y, origin_z = ARENA_STRUCTURE_ORIGIN
+    size_x, size_y, size_z = ARENA_STRUCTURE_SIZE
+    kill @e[type=arrow,x=origin_x,y=origin_y,z=origin_z,dx=(size_x - 1),dy=(size_y - 1),dz=(size_z - 1)]
+    kill @e[type=trident,x=origin_x,y=origin_y,z=origin_z,dx=(size_x - 1),dy=(size_y - 1),dz=(size_z - 1)]
+
+
+append function RESUPPLY_SUCCEED:
+    execute if entity @s[tag=PLAYER_TAG] run function RESET_RESUPPLY_TIMER

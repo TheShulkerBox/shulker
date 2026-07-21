@@ -1,0 +1,102 @@
+"""Team-aware fixes for kit effects used by Summit Domination."""
+
+from item:definitions/consumables/net import NET_ACTIVE_TAG, NET_CATCH
+from item:definitions/consumables/net import NET_DESPAWN, NET_THROW, NET_THROWER_TAG
+from item:definitions/weapons/headsman_axe import BEHEADABLE, HEADSMAN
+from item:definitions/weapons/headsman_axe import HeadsmanAxe, TICK_HEADSMAN
+from item:definitions/weapons/headsman_axe import TICK_LOW_HEALTH
+from item:definitions/weapons/headsman_axe import VALIDATE_HEALTH_THRESHOLD
+from item:definitions/weapons/ranger_crossbow import RANGER_RAPID_FIRE
+from item:definitions/weapons/ranger_crossbow import RANGER_TRIPLE_FIRE
+from item:definitions/weapons/warbow import WARBOW_FIRE
+from lib:player import tag_self
+from lib:scores import HEALTH
+
+from ../battlegrounds import PLAYER_TAG
+from ./config import BLUE_TEAM_NAME, RED_TEAM_NAME, SUMMIT_BOOTH_ENTITY_TAG
+from ./registry import BATTLEGROUND
+
+
+IGNORE_FRIENDLY_NET: FunctionPath = ./ignore_friendly_net
+TAG_CURRENT_SUMMIT_RUNTIME_ENTITY: FunctionPath = ./tag_current_summit_runtime_entity
+APPLY_SUMMIT_NET_CATCH: FunctionPath = ./apply_summit_net_catch
+SUMMIT_TICK_LOW_HEALTH: FunctionPath = ./tick_low_health
+
+
+function TAG_CURRENT_SUMMIT_RUNTIME_ENTITY:
+    """Mark a kit entity and its passengers as owned by this booth."""
+    BATTLEGROUND.require_active()
+
+    with tag_self() as runtime_entity:
+        execute on origin \
+            if entity @s[tag=PLAYER_TAG] \
+            run tag @e[tag=runtime_entity] add SUMMIT_BOOTH_ENTITY_TAG
+
+    # Net displays ride their thrown item and need the same cleanup owner.
+    execute if entity @s[tag=SUMMIT_BOOTH_ENTITY_TAG] on passengers run tag @s add SUMMIT_BOOTH_ENTITY_TAG
+
+
+append function NET_THROW:
+    function TAG_CURRENT_SUMMIT_RUNTIME_ENTITY
+
+
+append function WARBOW_FIRE:
+    function TAG_CURRENT_SUMMIT_RUNTIME_ENTITY
+
+
+append function RANGER_TRIPLE_FIRE:
+    function TAG_CURRENT_SUMMIT_RUNTIME_ENTITY
+
+
+append function RANGER_RAPID_FIRE:
+    function TAG_CURRENT_SUMMIT_RUNTIME_ENTITY
+
+
+prepend function NET_CATCH:
+    # This is prepended to the global Net hook, so guard the nested Summit-only
+    # logic without returning from the normal Net catch behavior.
+    function APPLY_SUMMIT_NET_CATCH
+
+
+function APPLY_SUMMIT_NET_CATCH:
+    # Direct attacks respect friendly fire, but the Net applies effects itself.
+    BATTLEGROUND.require_active()
+
+    execute \
+        unless entity @s[tag=PLAYER_TAG] \
+        run return run function IGNORE_FRIENDLY_NET
+    execute \
+        if entity @s[team=RED_TEAM_NAME] \
+        if entity @a[tag=NET_THROWER_TAG,team=RED_TEAM_NAME] \
+        run return run function IGNORE_FRIENDLY_NET
+    execute \
+        if entity @s[team=BLUE_TEAM_NAME] \
+        if entity @a[tag=NET_THROWER_TAG,team=BLUE_TEAM_NAME] \
+        run return run function IGNORE_FRIENDLY_NET
+
+
+function IGNORE_FRIENDLY_NET:
+    """Consume a Net that landed on one of the thrower's teammates."""
+    execute as @n[type=item,tag=NET_ACTIVE_TAG,tag=SUMMIT_BOOTH_ENTITY_TAG,distance=(0, 2)] at @s run function NET_DESPAWN
+
+
+append function TICK_HEADSMAN:
+    # Replace the scheduled legacy team check while Domination is active.
+    BATTLEGROUND.require_active()
+    schedule clear TICK_LOW_HEALTH
+    function SUMMIT_TICK_LOW_HEALTH
+
+
+function SUMMIT_TICK_LOW_HEALTH:
+    """Show low-health enemies only to the opposing team's Headsmen."""
+    tag @a[tag=PLAYER_TAG] remove BEHEADABLE
+    tag @a[tag=PLAYER_TAG] remove HEADSMAN
+
+    execute as @a[tag=PLAYER_TAG]:
+        function VALIDATE_HEALTH_THRESHOLD
+        if HEALTH["@s"] <= SCORE.temp["#max_health"]:
+            tag @s add BEHEADABLE
+        execute if items entity @s weapon.mainhand (-HeadsmanAxe) run tag @s add HEADSMAN
+
+    execute as @a[tag=PLAYER_TAG,tag=BEHEADABLE,team=RED_TEAM_NAME] at @s run particle dust{color:[0.5,0.0,0.0],scale:1} ~ ~1 ~ 0.25 0.5 0.25 0 5 force @a[tag=PLAYER_TAG,tag=HEADSMAN,team=BLUE_TEAM_NAME,distance=(0, 15)]
+    execute as @a[tag=PLAYER_TAG,tag=BEHEADABLE,team=BLUE_TEAM_NAME] at @s run particle dust{color:[0.5,0.0,0.0],scale:1} ~ ~1 ~ 0.25 0.5 0.25 0 5 force @a[tag=PLAYER_TAG,tag=HEADSMAN,team=RED_TEAM_NAME,distance=(0, 15)]
