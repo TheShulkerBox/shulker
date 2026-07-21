@@ -20,9 +20,9 @@ CUTLASS_COOLDOWN_TIMER = Scoreboard("item.cutlass_cooldown", criteria="dummy")
 
 CUTLASS_IGNORE_UPGRADE = "item.cutlass_ignore_upgrade"
 
-CUTLASS_BLOCK_DURATION = "1.0s"
-CUTLASS_COOLDOWN_SUCCESS = "2.5s"
-CUTLASS_COOLDOWN_FAILURE = "3.5s"
+CUTLASS_BLOCK_DURATION = "1.6s"
+CUTLASS_COOLDOWN_SUCCESS = "2.4s"
+CUTLASS_COOLDOWN_FAILURE = "3.2s"
 
 CUTLASS_FAIL_MAX_DAMAGE = 5
 CUTLASS_DAMAGE_SCALE = 10
@@ -209,7 +209,6 @@ function CUTLASS_SUCCESS:
     glint(False)
 
     CUTLASS_PARRY_TIER["@s"] = SHIELD_BLOCKED_DAMAGE["@s"]
-    tellraw @a [SHIELD_BLOCKED_DAMAGE["@s"], "=>", CUTLASS_PARRY_TIER["@s"]]
 
     if CUTLASS_PARRY_TIER["@s"] <= cutlass_damage_score(CUTLASS_FAIL_MAX_DAMAGE):
         return run function CUTLASS_FAIL

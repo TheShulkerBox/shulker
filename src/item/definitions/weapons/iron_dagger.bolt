@@ -90,5 +90,5 @@ function ATTEMPT_ASSASSINATE:
         function SUCCEED_ASSASSINATE
 
 function SUCCEED_ASSASSINATE:
-    execute at @s run playsound minecraft:item.axe.wax_off voice @a ~ ~ ~ 0.5 2
+    execute at @s run playsound minecraft:item.axe.wax_off voice @a ~ ~ ~ 1 2
     damage @s 1000 BACKSTAB_DAMAGE_TYPE

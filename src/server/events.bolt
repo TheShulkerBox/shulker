@@ -44,27 +44,27 @@ append function SERVER_LOAD:
     ON_JOIN_SCORE["@a"] = 0
 
 
-function ON_FIRST_JOIN:
-    """
-    This detects first join based on the `time_played` stat scoreboard. We use a scoreboard
-    instead of an advancement because it's easier to reset when testing `on_first_join` logic.
-    """
-    playsound minecraft:ui.toast.challenge_complete master @s ~ ~ ~ 0.7 0.8 0.7
+# function ON_FIRST_JOIN:
+#     """
+#     This detects first join based on the `time_played` stat scoreboard. We use a scoreboard
+#     instead of an advancement because it's easier to reset when testing `on_first_join` logic.
+#     """
+#     playsound minecraft:ui.toast.challenge_complete master @s ~ ~ ~ 0.7 0.8 0.7
 
 
-function ON_JOIN:
-    """Called when a player joins (even if the server had crashed).
+# function ON_JOIN:
+#     """Called when a player joins (even if the server had crashed).
 
-    as/at @s: player
-    """
-    ON_JOIN_SCORE["@s"] = 0
+#     as/at @s: player
+#     """
+#     ON_JOIN_SCORE["@s"] = 0
 
-    execute function ~/welcome_message:
-        title @s title {text: small_caps("Welcome back"), color: Theme.Primary}
-        title @s subtitle {text: small_caps("The Shulker Box"), color: Theme.Secondary, bold: true}
+#     execute function ~/welcome_message:
+#         title @s title {text: small_caps("Welcome back"), color: Theme.Primary}
+#         title @s subtitle {text: small_caps("The Shulker Box"), color: Theme.Secondary, bold: true}
 
-        execute as @a[tag=STAFF_TAG] at @s playsound minecraft:entity.experience_orb.pickup master @s ~ ~ ~ 2 1.5
-        playsound block.end_portal_frame.fill master @s 0 65 0 2 0.5 1
+#         execute as @a[tag=STAFF_TAG] at @s playsound minecraft:entity.experience_orb.pickup master @s ~ ~ ~ 2 1.5
+#         playsound block.end_portal_frame.fill master @s 0 65 0 2 0.5 1
 
 
 append function SERVER_TICK:

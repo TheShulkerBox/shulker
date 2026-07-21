@@ -22,13 +22,13 @@ from lib.types import
     Remove
 
 SCORE = {
-    temp: Scoreboard("temp", criteria="dummy"),
-    const: Scoreboard("const", criteria="dummy"),
+    temp: Scoreboard("shulker.temp", criteria="dummy"),
+    const: Scoreboard("shulker.const", criteria="dummy"),
 }
 
 STORAGE = {
     temp: Data.storage("shulker:temp"),
-    rom: Data.storage("rom:main").root,
+    rom: Data.storage("shulker:rom/main").root,
 }
 STORAGE["macro"] = STORAGE.temp.macro
 SELF = Data.entity("@s")

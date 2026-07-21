@@ -1,4 +1,29 @@
-"""Balance settings and arena positions for Summit Domination."""
+"""Balance settings, palette, and arena positions for Summit Domination."""
+
+from lib.text import Theme
+
+
+DEBUG = True
+
+
+
+# Bossbar commands only accept Minecraft's named color values. All text colors
+# use hex so the presentation palette can be tuned in one place.
+NEUTRAL_BOSSBAR_COLOR = "yellow"
+
+RED_TEXT_COLOR = "#c12828"
+BLUE_TEXT_COLOR = "#1960c3"
+BODY_TEXT_COLOR = "#f6e7d7"
+HELP_HEADING_COLOR = "#d4ae03"
+SUBTITLE_COLOR = Theme.Secondary
+DRAW_TEXT_COLOR = Theme.Body
+
+# Dust particles require RGB float components rather than hex color values.
+RESUPPLY_DEBUG_PARTICLE_COLOR = [1.0, 0.2, 0.6]
+RESPAWN_DEBUG_PARTICLE_COLOR = [0.2, 1.0, 0.2]
+POINT_DEBUG_PARTICLE_COLOR = [0.2, 0.4, 1.0]
+CRATE_PARTICLE_COLOR = [0.8, 0.1, 0.8]
+HEADSMAN_PARTICLE_COLOR = [0.5, 0.0, 0.0]
 
 
 # Match pacing is kept here so it can be tuned without reading lifecycle code.
@@ -13,7 +38,7 @@ POINT_CAPTURE_HEALTH = POINT_CAPTURE_TIME_SECONDS * 20
 POINT_REGEN_INTERVAL_TICKS = 4
 
 # A captured point adds one score every half second for its owner.
-SCORING_INTERVAL_TICKS = 10
+SCORING_INTERVAL_TICKS = 40
 PROGRESS_PER_CONTROLLED_POINT = 1
 
 # Red pulls the shared bar toward zero. Blue pushes it toward the maximum.
@@ -75,3 +100,5 @@ RESPAWN_POINT_POSITIONS = [
     (-88, 64, 138),
     (-86, 64, 127),
 ]
+
+

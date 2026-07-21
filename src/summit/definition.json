@@ -56,7 +56,6 @@
     "ticking_functions": {
         "shulker:summit/map_display/clock": "10s"
     },
-    "persistent_tick": "shulker:summit/tick",
     "sticker_book": {
         "background_color": "#1a48c3",
         "region": "textured_tropics",

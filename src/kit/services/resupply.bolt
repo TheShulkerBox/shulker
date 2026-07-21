@@ -4,8 +4,8 @@ from lib:interaction import Interaction
 from lib.text import Theme
 
 RESUPPLY_CRATE_TAG = "ResupplyCrate"
-SUMMIT_PLAYER_TAG = "summit.battlegrounds.player"
-SUMMIT_RESUPPLY_CRATE_TAG = "summit_resupply_crate"
+BATTLEGROUNDS_PLAYER_TAG = "summit.battlegrounds.player"
+SUMMIT_RESUPPLY_CRATE_TAG = "shulker.summit_resupply_crate"
 SUMMIT_BOOTH_ENTITY_TAG = "summit.booth_entity.shulker"
 
 RESUPPLY_TIMER = Scoreboard("shulker.kit_resupply_timer",criteria="dummy")
@@ -13,13 +13,15 @@ RESUPPLY_TIMER = Scoreboard("shulker.kit_resupply_timer",criteria="dummy")
 TICK_RESUPPLY_TIME: FunctionPath = "shulker:kit/resupply/tick"
 RESUPPLY_SUCCEED: FunctionPath = "shulker:kit/resupply/succeed"
 RESUPPLY_FAIL: FunctionPath = "shulker:kit/resupply/fail"
+CREATE_SUMMIT_RESUPPLY_CRATE: FunctionPath = "shulker:kit/resupply_crate/create"
+DESTROY_SUMMIT_RESUPPLY_CRATE: FunctionPath = "shulker:summit/admin/resupply_crate/destroy"
 
 ResupplyCrate = Interaction(RESUPPLY_CRATE_TAG)
 SummitResupplyCrate = Interaction(SUMMIT_RESUPPLY_CRATE_TAG)
 
 function TICK_RESUPPLY_TIME:
     # Summit owns these cooldowns while its battleground is active.
-    execute as @a[tag=SUMMIT_PLAYER_TAG,scores={RESUPPLY_TIMER=1..}]:
+    execute as @a[tag=BATTLEGROUNDS_PLAYER_TAG,scores={RESUPPLY_TIMER=1..}]:
         RESUPPLY_TIMER["@s"] -= 1
         if RESUPPLY_TIMER["@s"] == 0:
             playsound minecraft:block.note_block.hat master @s ~ ~ ~ 1 0
@@ -39,60 +41,59 @@ function RESUPPLY_SUCCEED:
     tellraw @s {text: "Resupplied!", color: Theme.Success}
 
 
-function ResupplyCrate.on_right_click:
-    # Admin crates resupply immediately and do not share Summit's cooldown.
-    if KIT_ID["@s"] > 0:
-        function KIT_RESUPPLY
-        tellraw @s {text: "Resupplied!", color: Theme.Success}
+# function ResupplyCrate.on_right_click:
+#     # Admin crates resupply immediately and do not share Summit's cooldown.
+#     if KIT_ID["@s"] > 0:
+#         function KIT_RESUPPLY
+#         tellraw @s {text: "Resupplied!", color: Theme.Success}
 
 
-function ResupplyCrate.on_left_click:
-    title @s actionbar [
-        {text: "Press ", color: Theme.Primary},
-        {keybind: "key.use", color: Theme.Secondary},
-        {text: " to resupply!", color: Theme.Primary}
-    ]
+# function ResupplyCrate.on_left_click:
+#     title @s actionbar [
+#         {text: "Press ", color: Theme.Primary},
+#         {keybind: "key.use", color: Theme.Secondary},
+#         {text: " to resupply!", color: Theme.Primary}
+#     ]
 
 
 function SummitResupplyCrate.on_right_click:
-    execute unless entity @s[tag=SUMMIT_PLAYER_TAG] run return 0
+    on target:
+        execute unless entity @s[tag=BATTLEGROUNDS_PLAYER_TAG] run return 0
 
-    if RESUPPLY_TIMER["@s"] > 0:
-        function RESUPPLY_FAIL
-    elif KIT_ID["@s"] > 0:
-        # Only run post-success hooks after a valid active kit refills.
-        function KIT_RESUPPLY
-        function RESUPPLY_SUCCEED
+        if RESUPPLY_TIMER["@s"] > 0:
+            function RESUPPLY_FAIL
+        elif KIT_ID["@s"] > 0:
+            # Only run post-success hooks after a valid active kit refills.
+            function KIT_RESUPPLY
+            function RESUPPLY_SUCCEED
+            RESUPPLY_TIMER["@s"] = 440
 
 
 function SummitResupplyCrate.on_left_click:
-    execute unless entity @s[tag=SUMMIT_PLAYER_TAG] run return 0
+    on attacker:
+        execute unless entity @s[tag=BATTLEGROUNDS_PLAYER_TAG] run return 0
 
-    if RESUPPLY_TIMER["@s"] > 0:
-        function RESUPPLY_FAIL
-    else:
-        title @s actionbar [
-            {text: "Press ", color: Theme.Primary},
-            {keybind: "key.use", color: Theme.Secondary},
-            {text: " to resupply!", color: Theme.Primary}
-        ]
+        if RESUPPLY_TIMER["@s"] > 0:
+            function RESUPPLY_FAIL
+        else:
+            title @s actionbar [
+                {text: "Press ", color: Theme.Primary},
+                {keybind: "key.use", color: Theme.Secondary},
+                {text: " to resupply!", color: Theme.Primary}
+            ]
 
-function shulker:admin/resupply_crate/create:
-    execute align xyz positioned ~0.5 ~0.5 ~0.5:
-        summon interaction ~ ~ ~ {Tags:["NEW_SUMMON"]}
-        execute as @n[tag=NEW_SUMMON] run function shulker:admin/resupply_crate/init:
-            SELF.merge({Tags:[RESUPPLY_CRATE_TAG, Interaction.global_tag], response:1, width:1.2, height: 1.2})
-            tag @s remove NEW_SUMMON
+# function shulker:admin/resupply_crate/create:
+#     execute align xyz positioned ~0.5 ~0.5 ~0.5:
+#         with ResupplyCrate.summon() as self:
+#             SELF.merge({Tags:[RESUPPLY_CRATE_TAG, Interaction.global_tag], response:1, width:1.2, height: 1.2})
 
 
-function shulker:admin/resupply_crate/destroy:
-    execute as @n[type=interaction,tag=RESUPPLY_CRATE_TAG,distance=..10] at @s:
+function DESTROY_SUMMIT_RESUPPLY_CRATE:
+    execute as @n[type=interaction,tag=SUMMIT_RESUPPLY_CRATE_TAG,distance=..10] at @s:
         setblock ~ ~ ~ air
         kill @s
 
-function shulker:kit/resupply_crate/create:
+function CREATE_SUMMIT_RESUPPLY_CRATE:
     execute align xyz positioned ~0.5 ~0.5 ~0.5:
-        summon interaction ~ ~ ~ {Tags:["NEW_SUMMON"]}
-        execute as @n[tag=NEW_SUMMON] run function shulker:admin/resupply_crate/summit_init:
+        with SummitResupplyCrate.summon() as self:
             SELF.merge({Tags:[SUMMIT_RESUPPLY_CRATE_TAG, Interaction.global_tag, SUMMIT_BOOTH_ENTITY_TAG, "summit.interactable", "summit.static"], response:1, width:1.2, height: 1.2})
-            tag @s remove NEW_SUMMON

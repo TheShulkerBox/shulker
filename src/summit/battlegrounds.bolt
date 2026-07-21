@@ -89,6 +89,7 @@ class Battleground:
         execute unless data storage summit.battlegrounds:database session{booth_id: self.booth_id} run return 0
 
     def tick(self):
+        merge function_tag minecraft:tick {"values": [BATTLEGROUNDS_TICK]}
         return BATTLEGROUNDS_TICK
 
     def block_enter(self):

@@ -1,13 +1,17 @@
 """Summit lifecycle callbacks, teams, spawns, and sticker progress."""
 
 from server:core import SERVER_LOAD
-from kit:services/resupply import RESUPPLY_TIMER, SUMMIT_RESUPPLY_CRATE_TAG
+from kit:services/resupply import RESUPPLY_TIMER, CREATE_SUMMIT_RESUPPLY_CRATE, SUMMIT_RESUPPLY_CRATE_TAG
+from item:definitions/armor import Armor
+
 from ../battlegrounds import PLAYER_TAG
 from ./config import ARENA_CENTER, BLUE_RESPAWN_POSITIONS, BLUE_TEAM
+from ./config import BLUE_TEXT_COLOR, BODY_TEXT_COLOR
 from ./config import BLUE_TEAM_NAME, DOMINATION_POINT_ENTITY
-from ./config import DOMINATION_POINTS, MATCH_DURATION_SECONDS
+from ./config import DOMINATION_POINTS, HELP_HEADING_COLOR, MATCH_DURATION_SECONDS
+from ./config import NEUTRAL_BOSSBAR_COLOR
 from ./config import POINT_CAPTURE_HEALTH
-from ./config import RED_RESPAWN_POSITIONS, RED_TEAM, RED_TEAM_NAME
+from ./config import RED_RESPAWN_POSITIONS, RED_TEAM, RED_TEAM_NAME, RED_TEXT_COLOR
 from ./config import RESUPPLY_CRATE_POSITIONS, STARTING_SCORE, WIN_THRESHOLD
 from ./config import SUMMIT_BOOTH_ENTITY_TAG
 from ./registry import ARENA_LOAD, ARENA_UNLOAD, BATTLEGROUND, GIVE_RANDOM_KIT
@@ -19,9 +23,8 @@ from ./registry import RESET_RESUPPLY_TIMER, RESET_SUMMIT_KIT_STATE, SCORING_TIM
 from ./registry import POINT_REGEN_TIMER, SPAWN_FOR_TEAM
 from ./registry import STICKER_GAME_KILLS
 
-
-CREATE_RESUPPLY_CRATE: FunctionPath = "shulker:kit/resupply_crate/create"
 LEAVING_TAG = "shulker.domination.leaving"
+
 
 
 # Native teams provide colors and prevent teammates from damaging each other.
@@ -61,28 +64,29 @@ function ARENA_LOAD:
         summon marker (x + 0.5) y (z + 0.5) {Tags:[SUMMIT_BOOTH_ENTITY_TAG, DOMINATION_POINT_ENTITY, point_tag]}
 
         # Each nearby-player bar shows this point's remaining capture health.
-        bossbar add point_bossbar {text: f"Point {point_name} capture health", color: "yellow"}
+        bossbar add point_bossbar {text: f"Point {point_name} capture health", color: NEUTRAL_BOSSBAR_COLOR}
         bossbar set point_bossbar style notched_20
         bossbar set point_bossbar max POINT_CAPTURE_HEALTH
         bossbar set point_bossbar value POINT_CAPTURE_HEALTH
-        bossbar set point_bossbar color yellow
+        bossbar set point_bossbar color white
+        
         GAME_STATE[point_health] = POINT_CAPTURE_HEALTH
         GAME_STATE[point_owner] = 0
         GAME_STATE[point_capture_team] = 0
 
     for x, y, z in RESUPPLY_CRATE_POSITIONS:
-        execute positioned x y z run function CREATE_RESUPPLY_CRATE
+        execute positioned x y z run function CREATE_SUMMIT_RESUPPLY_CRATE
 
     # The bar starts neutral and moves toward the team that controls points.
     bossbar add DOMINATION_BOSSBAR [
-        {text: "Red", color: "dark_red"},
-        {text: "     Team Victory Progress     ", color: "white"},
-        {text: "Blue", color: "dark_blue"}
+        {text: "Red", color: RED_TEXT_COLOR},
+        {text: "     Team Victory Progress     ", color: BODY_TEXT_COLOR},
+        {text: "Blue", color: BLUE_TEXT_COLOR}
     ]
     bossbar set DOMINATION_BOSSBAR style notched_20
     bossbar set DOMINATION_BOSSBAR max WIN_THRESHOLD
     bossbar set DOMINATION_BOSSBAR value STARTING_SCORE
-    bossbar set DOMINATION_BOSSBAR color white
+    bossbar set DOMINATION_BOSSBAR color yellow
     bossbar set DOMINATION_BOSSBAR players @a[tag=PLAYER_TAG]
 
     GAME_STATE[GAME_SCORE] = STARTING_SCORE
@@ -124,31 +128,35 @@ function PLAYER_ENTER_SUCCESS:
     """Balance a new participant, then place them at their team spawn."""
     DOMINATION_TEAM["@s"].reset()
     team leave @s
+    effect clear @s
 
-    SCORE.temp["#domination_red_team_size"] = 0
-    SCORE.temp["#domination_blue_team_size"] = 0
-    execute as @a[tag=PLAYER_TAG,scores={DOMINATION_TEAM=RED_TEAM}] run scoreboard players add #domination_red_team_size temp 1
-    execute as @a[tag=PLAYER_TAG,scores={DOMINATION_TEAM=BLUE_TEAM}] run scoreboard players add #domination_blue_team_size temp 1
-
+    store result score var SCORE.temp["#domination_red_team_size"] if entity @a[tag=PLAYER_TAG,scores={DOMINATION_TEAM=RED_TEAM}]
+    store result score var SCORE.temp["#domination_blue_team_size"] if entity @a[tag=PLAYER_TAG,scores={DOMINATION_TEAM=BLUE_TEAM}]
+    
     if SCORE.temp["#domination_red_team_size"] <= SCORE.temp["#domination_blue_team_size"]:
         DOMINATION_TEAM["@s"] = RED_TEAM
         team join RED_TEAM_NAME @s
-        tellraw @s {text: "You joined Red Team", color: "dark_red"}
+        tellraw @s {text: "You joined Red Team", color: RED_TEXT_COLOR}
     else:
         DOMINATION_TEAM["@s"] = BLUE_TEAM
         team join BLUE_TEAM_NAME @s
-        tellraw @s {text: "You joined Blue Team", color: "dark_blue"}
+        tellraw @s {text: "You joined Blue Team", color: BLUE_TEXT_COLOR}
 
-    function SPAWN_FOR_TEAM
     function RESET_RESUPPLY_TIMER
+    
     effect give @s minecraft:instant_health 1 10 true
     effect give @s minecraft:saturation 1 10 true
+    
     STICKER_GAME_KILLS["@s"] = 0
+    
     bossbar set DOMINATION_BOSSBAR players @a[tag=PLAYER_TAG]
     tellraw @s [
-        {text: "Domination: ", color: "gold"},
-        {text: "Capture the green points, then hold them to score. Use the supply crates when they are ready.", color: "white"}
+        {text: "Domination: ", color: HELP_HEADING_COLOR},
+        {text: "Capture the green points, then hold them to score. Use the supply crates when they are ready.", color: BODY_TEXT_COLOR}
     ]
+    
+    item replace entity @s[scores={DOMINATION_TEAM=BLUE_TEAM}] armor.head with Armor(id="blue_wool")
+    item replace entity @s[scores={DOMINATION_TEAM=RED_TEAM}] armor.head with Armor(id="red_wool")
 
 
 function PLAYER_DIED:
@@ -159,14 +167,19 @@ function PLAYER_DIED:
 
 function PLAYER_LEAVE:
     """Clear match state and hide the bossbar from the leaving player."""
+    # keeps existing players
     tag @s add LEAVING_TAG
     bossbar set DOMINATION_BOSSBAR players @a[tag=PLAYER_TAG,tag=!LEAVING_TAG]
     tag @s remove LEAVING_TAG
+    
     # Summit restores inventory but leaves kit state for the booth to clean.
     function RESET_SUMMIT_KIT_STATE
+    
     effect give @s minecraft:instant_health 1 10 true
     effect give @s minecraft:saturation 1 10 true
+    
     team leave @s
+    
     DOMINATION_TEAM["@s"].reset()
     RESUPPLY_TIMER["@s"].reset()
 

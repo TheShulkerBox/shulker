@@ -114,6 +114,9 @@ class Kit:
                         item replace entity @s slot with item
                 # hotbar_with_slots_modify {function: "set_custom_data", tag: {taco: bell}}
 
+                if SCORE.temp["#ARMOR_STAND"]:
+                    item replace entity @s weapon.mainhand with self.hotbar[0]
+
             function ~/{self.id}/resupply:
                 for slot, item in self:
                     resupply = item.components.get("custom_data", {}).get("component", {}).get("resupply", {})

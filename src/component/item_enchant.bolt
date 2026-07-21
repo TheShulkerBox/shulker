@@ -22,7 +22,7 @@ class ItemEnchant(Component, base_type=dict[str, Any]):
         
         deep_merge_dicts(self._all_effects.setdefault(self.item.name, {}), effects, inplace=True)
 
-        return {"enchantments": {f"item:{self.item.name}": 1}}
+        return {"enchantments": {f"shulker:item/{self.item.name}": 1}}
     
     def post_build(self, _, item_obj: "ItemType"):
         if item_obj.name in self._built_items or item_obj.name not in self._all_effects:

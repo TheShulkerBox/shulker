@@ -1,7 +1,8 @@
 extend:
   - base-beet.yaml
+  - booth_submission.yaml
 
 resource_pack:
   zipped: true
 
-output: dist
+output: dist2

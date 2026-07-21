@@ -15,7 +15,9 @@ def deploy(ctx: click.Context, restart: bool):
     if restart:
         os.environ["DEPLOY_RESTART"] = "1"
     project = ctx.ensure_object(Project)
+    
     project.config_path = "beet-upload.yaml"
+    
     ctx.invoke(commands.build)
 
 

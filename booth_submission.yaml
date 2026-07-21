@@ -29,6 +29,6 @@ pipeline:
   - summit.plugins.sync_settings.validate
   - summit.plugins.validate_textures
 
-meta:
-  mecha:
-    formatting: preserve
+# meta:
+#   mecha:
+#     formatting: preserve

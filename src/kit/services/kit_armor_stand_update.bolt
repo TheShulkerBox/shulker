@@ -12,10 +12,20 @@ from lib:interaction import Interaction
 for _kit in Kit._all_kits:
     _interaction = Interaction(_kit.id)
 
-    function _interaction.on_right_click:
-        function f"kit:loadout/{_kit.id}/select"
-    function _interaction.on_left_click:
-        function f"kit:loadout/{_kit.id}/description"
+    function f"shulker:kit/interact/right/{_kit.id}":
+        with var SELF.data:
+            $execute on target run function summit.battlegrounds:api/assign_kit/v2 { \
+                booth_id:"shulker", \
+                kit_id: "shulker:$(kit_id)", \
+                kit_name: "$(kit_name)", \
+                kit_function: "shulker:kit/loadout/$(kit_id)/apply", \
+            }
+    function f"shulker:kit/interact/left/{_kit.id}":
+        execute on attacker run function f"shulker:kit/loadout/{_kit.id}/description"
+
+
+# function ./configure_kit_interaction:
+#     $data modify entity @s data.summit_interactable set value {on_right_click:"execute on target run function shulker:kit/services/kit_armor_stand_update/interact_$(id)/on_right_click",on_left_click:"execute on attacker run function shulker:kit/services/kit_armor_stand_update/interact_$(id)/on_left_click"}
 
 
 function shulker:admin/kit_armor_stand_modernizer:
@@ -49,6 +59,7 @@ function shulker:admin/kit_armor_stand_modernizer:
 function ./armor_stand_update:
     # -1: Cleanup invalid KIT_STAND_ERRATA entities
     execute function admin:validate_kit_stand_entities: 
+        tell Tallone55 (~/)
         function ~/vehicle:
             execute on vehicle if entity @s[type=armor_stand,tag=KIT_STAND] run return 1
             return fail
@@ -63,6 +74,7 @@ function ./armor_stand_update:
 # TODO Try to avoid splitting kit_armor_stand_update and armor_stand_update folders on compilation, append didn't work.
 function ./armor_stand_update/stand:
     kit_metadata = Kit.get(id=SELF.CustomName)
+    tellraw @a kit_metadata
     STORAGE.temp.stand_rotation = SELF.Rotation
     passenger_valid = SCORE.temp["#passenger_valid"]
     vehicle_valid = SCORE.temp["#vehicle_valid"]
@@ -71,7 +83,9 @@ function ./armor_stand_update/stand:
     # 1: Update Kit Loadouts using name data
     with var kit_metadata:
         SELF.DisabledSlots = 0
-        $function kit:loadout/$(id)/apply
+        SCORE.temp["#ARMOR_STAND"] = 1
+        $function shulker:kit/loadout/$(id)/apply
+        SCORE.temp["#ARMOR_STAND"] = 0
         SELF.DisabledSlots = 2039583
     
     
@@ -87,7 +101,13 @@ function ./armor_stand_update/stand:
         passenger_valid = 1
         execute function ./init_kit_interaction:
             SELF.merge({Tags:["KIT_INTERACTION","KIT_STAND_ERRATA",Interaction.global_tag], response:1, width:1.2, height: -2.9})
+            with var kit_metadata:
+                $data modify entity @s data.kit_id set value "$(id)"
+                $data modify entity @s data.kit_name set value "$(name)"
+                $data modify entity @s data.summit_interactable.on_right_click set value "function shulker:kit/interact/right/$(id)"
+                $data modify entity @s data.summit_interactable.on_left_click set value "function shulker:kit/interact/left/$(id)"
             SELF.Tags.append(kit_metadata.id)
+            # function ./configure_kit_interaction with var STORAGE.temp.resource
 
             execute at @s positioned ~ ~2 ~ run ride @s mount @n[type=armor_stand,tag=KIT_STAND]
             tag @s remove NEW_SUMMON

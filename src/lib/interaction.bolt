@@ -1,79 +1,58 @@
+from contextlib import contextmanager
 from dataclasses import dataclass
 from functools import cached_property
-from contextlib import contextmanager
 from typing import ClassVar
+
 
 @dataclass
 class Interaction:
-    """A helper for defining interaction entities and functions reacting to interacting with them.
+    """A compatibility wrapper for Summit's Interactions API.
 
-    Example:
-    
+    The public API intentionally matches the former local interaction helper:
+
         interaction = Interaction(tag="archer_stand")
 
-        summon interaction ~ ~ ~ {Tags: [interaction.tag]}
+        with interaction.summon() as entity:
+            entity.merge({height: 1.0, width: 1.0})
 
         function interaction.on_right_click:
             say hi
 
         function interaction.on_left_click:
             say hi
+
+    Summit dispatches the callback commands from ``data.summit_interactable``.
+    Right-click callbacks must switch to the interaction target and left-click
+    callbacks must switch to its attacker, so this wrapper adds that context.
     """
 
     tag: str
 
-    global_tag: ClassVar[str] = "INTERACTION_OBJECT"
-
-    def __post_init__(self):
-        advancement self.path {
-            "criteria": {
-                "interact": {
-                    "trigger": "minecraft:player_interacted_with_entity",
-                    "conditions": {
-                        "entity": {
-                            "entity_type": "minecraft:interaction",
-                            "entity_tags": {
-                                "all_of": [self.global_tag, self.tag]
-                            }
-                        }
-                    }
-                },
-                "attack": {
-                    "trigger": "minecraft:player_hurt_entity",
-                    "conditions": {
-                        "entity": {
-                            "entity_type": "minecraft:interaction",
-                            "entity_tags": {
-                                "all_of": [self.global_tag, self.tag]
-                            }
-                        }
-                    }
-                }
-            },
-            "requirements": [["interact", "attack"]],
-            "rewards": { "function": self.path }
-        }
-
-        function self.path:
-            execute if entity @s[advancements={self.path={interact=true}}] run function self.on_right_click
-            execute if entity @s[advancements={self.path={attack=true}}] run function self.on_left_click
-            advancement revoke @s only self.path
+    # Kept for callers which build interaction NBT themselves.
+    global_tag: ClassVar[str] = "summit.interactable"
 
     @cached_property
     def path(self):
         return ~/interact_{self.tag.lower()}
-    
+
     @cached_property
     def on_right_click(self):
         return f"{self.path}/on_right_click"
-    
+
     @cached_property
     def on_left_click(self):
         return f"{self.path}/on_left_click"
-    
+
     @contextmanager
     def summon(self):
         execute summon interaction:
-            tag @s add self.global_tag
-            tag @s add self.tag
+            SELF.merge({
+                Tags: [self.global_tag, self.tag],
+                data: {
+                    summit_interactable: {
+                        on_right_click: f"function {self.on_right_click}",
+                        on_left_click: f"function {self.on_left_click}"
+                    }
+                }
+            })
             yield SELF

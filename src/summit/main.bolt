@@ -23,5 +23,3 @@ from ./stickers import ENTER_BOOTH_STICKER
 
 function ./booth/enter:
     advancement grant @s only ENTER_BOOTH_STICKER
-
-

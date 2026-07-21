@@ -21,7 +21,6 @@ function LOAD:
         display_path = f"{DISPLAY_ROOT}/{display_map.id}"
         schedule clear display_path
     MAP_INDEX["#current"] = 0
-    schedule function first_path 1s replace
 
 
 function CLOCK:

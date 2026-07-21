@@ -13,7 +13,8 @@ from lib:player import tag_self
 from lib:scores import HEALTH
 
 from ../battlegrounds import PLAYER_TAG
-from ./config import BLUE_TEAM_NAME, RED_TEAM_NAME, SUMMIT_BOOTH_ENTITY_TAG
+from ./config import BLUE_TEAM_NAME, HEADSMAN_PARTICLE_COLOR, RED_TEAM_NAME
+from ./config import SUMMIT_BOOTH_ENTITY_TAG
 from ./registry import BATTLEGROUND
 
 
@@ -98,5 +99,5 @@ function SUMMIT_TICK_LOW_HEALTH:
             tag @s add BEHEADABLE
         execute if items entity @s weapon.mainhand (-HeadsmanAxe) run tag @s add HEADSMAN
 
-    execute as @a[tag=PLAYER_TAG,tag=BEHEADABLE,team=RED_TEAM_NAME] at @s run particle dust{color:[0.5,0.0,0.0],scale:1} ~ ~1 ~ 0.25 0.5 0.25 0 5 force @a[tag=PLAYER_TAG,tag=HEADSMAN,team=BLUE_TEAM_NAME,distance=(0, 15)]
-    execute as @a[tag=PLAYER_TAG,tag=BEHEADABLE,team=BLUE_TEAM_NAME] at @s run particle dust{color:[0.5,0.0,0.0],scale:1} ~ ~1 ~ 0.25 0.5 0.25 0 5 force @a[tag=PLAYER_TAG,tag=HEADSMAN,team=RED_TEAM_NAME,distance=(0, 15)]
+    execute as @a[tag=PLAYER_TAG,tag=BEHEADABLE,team=RED_TEAM_NAME] at @s run particle dust{color:HEADSMAN_PARTICLE_COLOR,scale:1} ~ ~1 ~ 0.25 0.5 0.25 0 5 force @a[tag=PLAYER_TAG,tag=HEADSMAN,team=BLUE_TEAM_NAME,distance=(0, 15)]
+    execute as @a[tag=PLAYER_TAG,tag=BEHEADABLE,team=BLUE_TEAM_NAME] at @s run particle dust{color:HEADSMAN_PARTICLE_COLOR,scale:1} ~ ~1 ~ 0.25 0.5 0.25 0 5 force @a[tag=PLAYER_TAG,tag=HEADSMAN,team=RED_TEAM_NAME,distance=(0, 15)]
