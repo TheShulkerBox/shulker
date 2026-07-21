@@ -1,6 +1,5 @@
 extend:
   - base-beet.yaml
-  - booth_submission.yaml
 
 resource_pack:
   zipped: true
