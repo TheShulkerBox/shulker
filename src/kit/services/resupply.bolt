@@ -89,11 +89,43 @@ function SummitResupplyCrate.on_left_click:
 
 
 function DESTROY_SUMMIT_RESUPPLY_CRATE:
-    execute as @n[type=interaction,tag=SUMMIT_RESUPPLY_CRATE_TAG,distance=..10] at @s:
-        setblock ~ ~ ~ air
+    execute as @n[type=interaction,tag=SUMMIT_RESUPPLY_CRATE_TAG,distance=..5] at @s:
+        fill ~-1 ~ ~-1 ~1 ~ ~1 air replace oak_wall_sign
+        fill ~ ~1 ~ ~ ~1 ~ air replace oak_pressure_plate
+        fill ~ ~ ~ ~ ~ ~ air replace note_block
         kill @s
 
 function CREATE_SUMMIT_RESUPPLY_CRATE:
-    execute align xyz positioned ~0.5 ~0.5 ~0.5:
+    execute align xyz positioned ~0.5 ~ ~0.5:
+        setblock ~ ~ ~ note_block
+        execute if block ~1 ~ ~ air run setblock ~1 ~ ~ minecraft:oak_wall_sign[facing=east]{
+            front_text: {
+                has_glowing_text: false,
+                color: "black",
+                messages: ["=                   =", {text:"Resupply", color: "blue"}, "", "=                   ="]
+            }
+        }
+        execute if block ~ ~ ~1 air run setblock ~ ~ ~1 minecraft:oak_wall_sign[facing=south]{
+            front_text: {
+                has_glowing_text: false,
+                color: "black",
+                messages: ["=                   =", {text:"Resupply", color: "blue"}, "", "=                   ="]
+            }
+        }
+        execute if block ~-1 ~ ~ air run setblock ~-1 ~ ~ minecraft:oak_wall_sign[facing=west]{
+            front_text: {
+                has_glowing_text: false,
+                color: "black",
+                messages: ["=                   =", {text:"Resupply", color: "blue"}, "", "=                   ="]
+            }
+        }
+        execute if block ~ ~ ~-1 air run setblock ~ ~ ~-1 minecraft:oak_wall_sign[facing=north]{
+            front_text: {
+                has_glowing_text: false,
+                color: "black",
+                messages: ["=                   =", {text:"Resupply", color: "blue"}, "", "=                   ="]
+            }
+        }
+        execute if block ~ ~1 ~ air run setblock ~ ~1 ~ minecraft:oak_pressure_plate[powered=true]
         with SummitResupplyCrate.summon() as self:
-            SELF.merge({Tags:[SUMMIT_RESUPPLY_CRATE_TAG, Interaction.global_tag, SUMMIT_BOOTH_ENTITY_TAG, "summit.interactable", "summit.static"], response:1, width:1.2, height: 1.2})
+            SELF.merge({Tags:[SUMMIT_RESUPPLY_CRATE_TAG, Interaction.global_tag, SUMMIT_BOOTH_ENTITY_TAG, "summit.interactable", "summit.static"], response:1, width:1.3, height: 1.1})

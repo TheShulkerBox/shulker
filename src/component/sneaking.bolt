@@ -8,7 +8,7 @@ from server:events import ON_PLAYER_RESET
 from ./item_enchant import ItemEnchant
 from ./type import Component, ComponentBuildError, RecursiveComponent
 
-SNEAKING_SCORE = Scoreboard("component.sneaking", criteria="dummy")
+SNEAKING_SCORE = Scoreboard("shulker.component.sneaking", criteria="dummy")
 
 
 class Sneaking(Component):

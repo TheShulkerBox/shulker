@@ -62,7 +62,7 @@ meta:
     prelude: ["shulker:server/prelude"]
 
   bolt_expressions:
-    temp_objective: "temp"
-    const_objective: "const"
+    temp_objective: "shulker.temp"
+    const_objective: "shulker.const"
     temp_storage: "bolt:temp"
     init_path: "core/load/init_objectives"

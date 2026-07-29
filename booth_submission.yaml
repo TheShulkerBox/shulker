@@ -22,7 +22,6 @@ pipeline:
   - plugins.summit_booth
   - summit.plugins.booths.remove_tick_functions
   - summit.plugins.booths.booth_hooks
-  - summit.plugins.booths.production_pack_filter
   - summit.plugins.booths.sticker_book
   - summit.plugins.booths.balloons
   - summit.plugins.booths.process_schematics

@@ -74,7 +74,6 @@ function ./armor_stand_update:
 # TODO Try to avoid splitting kit_armor_stand_update and armor_stand_update folders on compilation, append didn't work.
 function ./armor_stand_update/stand:
     kit_metadata = Kit.get(id=SELF.CustomName)
-    tellraw @a kit_metadata
     STORAGE.temp.stand_rotation = SELF.Rotation
     passenger_valid = SCORE.temp["#passenger_valid"]
     vehicle_valid = SCORE.temp["#vehicle_valid"]
@@ -131,7 +130,7 @@ function ./armor_stand_update/stand:
                     Tags:["KIT_NAME","KIT_STAND_ERRATA"],
                     text_opacity:255,
                     background:0,
-                    view_range:1.0,
+                    view_range:0.25,
                     billboard:"fixed",
                     see_through:false,
                     brightness:{

@@ -2,13 +2,21 @@ from item:definitions/weapon import Bow
 from item:definitions/consumables/blindness_dart import BlindnessDart
 
 ON_KILL: FunctionPath = item:iron_dagger/on_kill
-BLINDNESS_DART_COUNT = Scoreboard("item.blindness_dart_count", criteria="dummy")
+ON_FIRE: FunctionPath = item:blow_gun/on_fire
+BLINDNESS_DART_COUNT = Scoreboard("shulker.item.blindness_dart_count", criteria="dummy")
+
 
 class Blowgun(Bow):
     id = "bow"
     item_name = "Dart Caster"
     kill = {killer: ON_KILL}
+    bow = {fire: ON_FIRE}
+
 
 function ON_KILL:
     execute store result score @s BLINDNESS_DART_COUNT run clear @s (-BlindnessDart) 0
     execute if score @s BLINDNESS_DART_COUNT matches ..0 run give @s BlindnessDart
+
+
+function ON_FIRE:
+    SELF.pickup = 2

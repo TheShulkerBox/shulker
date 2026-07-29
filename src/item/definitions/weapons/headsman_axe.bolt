@@ -25,7 +25,7 @@ class HeadsmanAxe(Weapon):
     item_name = "Headsman Axe"
     melee = {damage: 3, speed: 1.0}
     minimum_attack_charge = 1.0
-    strike = {slot: "weapon.mainhand", victim: ATTEMPT_BEHEAD}
+    strike = {victim_slot: "weapon.mainhand", victim: ATTEMPT_BEHEAD}
     ticking = [
         {
             callback: TICK_HEADSMAN,

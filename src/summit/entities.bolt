@@ -1,0 +1,24 @@
+"""Summit booth entity lifecycle and shared entity tags."""
+
+BOOTH_ENTITY_TAG = "summit.booth_entity.shulker"
+DYNAMIC_ENTITY_TAG = "summit.dynamic"
+
+SUMMON_ENTITIES = ./entities/summon
+KILL_ENTITIES = ./entities/kill
+
+
+prepend function_tag summit.booth:shulker/entities/summon {
+    "values": [SUMMON_ENTITIES]
+}
+
+prepend function_tag summit.booth:shulker/entities/kill {
+    "values": [KILL_ENTITIES]
+}
+
+
+function SUMMON_ENTITIES:
+    function ./map_display/summon
+
+
+function KILL_ENTITIES:
+    function ./map_display/kill

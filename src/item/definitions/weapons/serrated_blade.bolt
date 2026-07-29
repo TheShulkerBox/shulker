@@ -14,7 +14,7 @@ class SerratedBlade(Weapon):
         speed: 1.6, 
         weight: "medium"
     }
-    strike = {slot: "weapon.mainhand", victim: APPLY_HEALING_BLOCK}
+    strike = {victim_slot: "weapon.mainhand", victim: APPLY_HEALING_BLOCK}
 
 function APPLY_HEALING_BLOCK:
     scoreboard players set @s HEALING_BLOCK 20

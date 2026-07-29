@@ -14,15 +14,17 @@ ARENA = "shulker:battlegrounds/arena"
 
 
 # Match state shared by lifecycle and scoring functions.
-GAME_SCORE = "#shulker.domination.score"
-MATCH_TIME_LEFT = "#shulker.domination.time_left"
-SCORING_TIMER = "#shulker.domination.scoring_timer"
-POINT_REGEN_TIMER = "#shulker.domination.point_regen_timer"
-MATCH_FINISHED = "#shulker.domination.finished"
+GAME_SCORE = "$shulker.domination.score"
+LAST_TIME_LEFT = "$shulker.domination.last_time_left"
+SCORING_TIMER = "$shulker.domination.scoring_timer"
+POINT_REGEN_TIMER = "$shulker.domination.point_regen_timer"
+MATCH_FINISHED = "$shulker.domination.finished"
 DOMINATION_BOSSBAR = "shulker:game.domination.global_score"
 GAME_STATE = Scoreboard("shulker.domination.game_state", criteria="dummy")
 DOMINATION_TEAM = Scoreboard("shulker.summit.domination.team", criteria="dummy")
-STICKER_GAME_KILLS = Scoreboard("shulker.sticker_game_kills", criteria="dummy")
+# Summit displays this shared objective below player names. Shulker owns each
+# participant's score only while they are in its Battlegrounds session.
+SESSION_KILLS = Scoreboard("summit.below_name")
 
 # Stable function paths used by the Summit API and external debug commands.
 ARENA_LOAD: FunctionPath = ./load
@@ -35,11 +37,15 @@ CAPTURE_POINTS: FunctionPath = ./capture_points
 AWARD_CONTROL_POINTS: FunctionPath = ./award_control_points
 RED_WIN: FunctionPath = ./red_win
 BLUE_WIN: FunctionPath = ./blue_win
+END_WITH_RED_WIN: FunctionPath = ./end_with_red_win
+END_WITH_BLUE_WIN: FunctionPath = ./end_with_blue_win
 MATCH_DRAW: FunctionPath = ./match_draw
 MATCH_TIME_UP: FunctionPath = ./match_time_up
 DEBUG_POINT_PARTICLES: FunctionPath = ./debug_point_particles
 REMOVE_BOSSBAR: FunctionPath = ./remove_bossbar
+APPLY_RANDOM_KIT: FunctionPath = ./apply_random_kit
 GIVE_RANDOM_KIT: FunctionPath = ./give_random_kit
+RANDOM_KIT_LOADOUT: FunctionPath = "shulker:kit/loadout/random/apply"
 RESET_RESUPPLY_TIMER: FunctionPath = ./reset_resupply_timer
 RESET_SUMMIT_KIT_STATE: FunctionPath = ./reset_summit_kit_state
 CLEANUP_SUMMIT_KIT_ENTITIES: FunctionPath = ./cleanup_summit_kit_entities
@@ -55,7 +61,7 @@ BATTLEGROUND = Battleground(
     return_rot="[-1.54d, -10.16d]",
     arena=ARENA,
     compatibility=BOOTH_ID,
-    kit_function=GIVE_RANDOM_KIT,
+    kit_function=RANDOM_KIT_LOADOUT,
     on_active=ARENA_LOAD,
     on_inactive=ARENA_UNLOAD,
     on_enter=PLAYER_ENTER_SUCCESS,

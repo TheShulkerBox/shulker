@@ -1,4 +1,4 @@
-from typing import Any, Union
+from typing import Any, Self, Union
 
 
 class ItemError(Exception):
@@ -80,9 +80,7 @@ class ComponentError(ItemError):
         super().__init__(msg)
 
     def __str__(self):
-        return str(
-            [getattr(self, elem) for elem in dir(self) if not elem.startswith("_")]
-        )
+        return self.msg or super().__str__()
 
 
 class NonExistentComponentError(ComponentError):
@@ -98,12 +96,59 @@ class NonExistentComponentError(ComponentError):
 class CustomComponentError(ComponentError):
     """Errors related to custom components"""
 
-    def __init__(self, msg: str, name: str, component: Any):
+    def __init__(
+        self,
+        msg: str,
+        name: str | Any | None = None,
+        component: Any | None = None,
+    ):
+        # Component authors can use either:
+        #   CustomComponentError("message", self)
+        #   CustomComponentError("message", "component_name", self)
+        # A message-only error is also valid; the item build pipeline backfills
+        # the component context before rendering it.
+        if component is None and name is not None and not isinstance(name, str):
+            component = name
+            name = None
+
+        if name is None and component is not None:
+            name = component.name()
+
+        name = name or "<unknown>"
         super().__init__(name, component, msg=msg)
+
+    def with_context(self, name: str, component: Any) -> Self:
+        """Fill context omitted by a component author without replacing it."""
+        if self.name == "<unknown>":
+            self.name = name
+        if self.component is None:
+            self.component = component
+        return self
 
 
 class CustomTransformerError(ComponentError):
     """Errors related to custom transformers"""
 
-    def __init__(self, msg: str, name: str, component: Any):
+    def __init__(
+        self,
+        msg: str,
+        name: str | Any | None = None,
+        component: Any | None = None,
+    ):
+        if component is None and name is not None and not isinstance(name, str):
+            component = name
+            name = None
+
+        if name is None and component is not None:
+            name = component.name()
+
+        name = name or "<unknown>"
         super().__init__(name, component, msg=msg)
+
+    def with_context(self, name: str, component: Any) -> Self:
+        """Fill context omitted by a transformer author without replacing it."""
+        if self.name == "<unknown>":
+            self.name = name
+        if self.component is None:
+            self.component = component
+        return self

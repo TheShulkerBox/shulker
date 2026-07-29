@@ -1,10 +1,11 @@
 
-from kit:base import Kit
+from kit:base import Kit, KIT_ID
 from item:base import KitItem
 from item:definitions/armor import Armor
-from item:definitions/weapons/cutlass import Cutlass
+from item:definitions/weapons/cutlass import Cutlass, CUTLASS_REPAIR_DURABILITY
 
 from item:definitions/weapons/musket import Musket
+from player:events import ON_KILL
 
 swashbuckler = Kit(
     name="Swashbuckler",
@@ -22,6 +23,12 @@ swashbuckler = Kit(
         KitItem(id="cooked_chicken", count=3)
     ]
 )
+
+
+append function ON_KILL:
+    if KIT_ID["@s"] == swashbuckler.hashed_id:
+        function CUTLASS_REPAIR_DURABILITY
+
 
 # # Swashbuckler [id:#316]
 

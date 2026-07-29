@@ -1,10 +1,10 @@
-from ../core import SERVER_TICK
+from shulker:summit/battlegrounds import BATTLEGROUNDS_TICK
 
 ARROW_PROCESSED_TAG = "arrow.processed"
 ARROW_DESPAWN_TIMER = Scoreboard("arrow.despawn_timer", criteria="dummy")
 
 
-append function SERVER_TICK:
+append function BATTLEGROUNDS_TICK:
     execute as @e[type=arrow, tag=!ARROW_PROCESSED_TAG] at @s run function ./process_arrow:
         """Process newly fired arrows"""
         # 2b means only creative mode players can pick up the arrows

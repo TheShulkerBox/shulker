@@ -1,8 +1,9 @@
 from item:definitions/weapon import Weapon
 
 from kit:events import KIT_RESET
+from lib:xp import XP
 
-RAGE_CHARGES = Scoreboard("item.rage_battleaxe_charges", criteria="dummy")
+RAGE_CHARGES = Scoreboard("shulker.item.rage_battleaxe_charges", criteria="dummy")
 RAGE_ACTIVATE: FunctionPath = item:rage_battleaxe/activate
 RAGE_ACCUMULATE: FunctionPath = item:rage_battleaxe/accumulate
 RAGE_RESET: FunctionPath = item:rage_battleaxe/reset
@@ -69,9 +70,26 @@ function RAGE_ACTIVATE:
         effect give @s minecraft:haste 5 1
 
     RAGE_CHARGES["@s"].reset()
+    XP.set_points(0)
 
 function RAGE_ACCUMULATE:
     RAGE_CHARGES["@s"] += 1
+    if RAGE_CHARGES["@s"] == 1:
+        title @s actionbar {text: "You feel rageful.", color: "#ff5555"}
+        XP.set_points(20)
+    elif RAGE_CHARGES["@s"] == 2:
+        title @s actionbar {text: "Your rage grows.", color: "#dd3333"}
+        XP.set_points(40)
+    elif RAGE_CHARGES["@s"] == 3:
+        title @s actionbar {text: "Rage surges through you.", color: "#bb2222"}
+        XP.set_points(60)
+    elif RAGE_CHARGES["@s"] == 4:
+        title @s actionbar {text: "Your rage is overwhelming.", color: "#991111"}
+        XP.set_points(80)
+    else:
+        title @s actionbar {text: "You are consumed by rage.", color: "#770000", bold: true}
+        XP.set_points(100)
+
     if RAGE_CHARGES["@s"] >= 5:
         playsound minecraft:entity.arrow.hit_player master @s ~ ~ ~ 1 1.2
         effect give @s minecraft:saturation 1 4 true
@@ -80,3 +98,4 @@ function RAGE_ACCUMULATE:
 append function KIT_RESET:
     execute function RAGE_RESET:
         RAGE_CHARGES["@s"].reset()
+        XP.set_points(0)

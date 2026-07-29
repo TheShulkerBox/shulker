@@ -9,10 +9,89 @@ from beet import Context, ItemModel, Model, Texture
 from PIL import Image, ImageDraw
 
 
-BORDER_COLORS = [*(["#1C262A"] * 6), *(["#BA55D3"] * 3)]
-MAP_HEIGHT = 512
+BORDER_COLORS = ["#1C262A"] * 9
+MAP_HEIGHT = 256
 OPAQUE_WITHOUT_GLINT = 253
 MAP_FILENAME = re.compile(r"^(?P<name>.+)_(?P<year>\d{4})$")
+FLAT_TEMPLATE = "shulker:item/map_display/template"
+FRAME_MODEL = "shulker:item/map_display/frame"
+FRAME_ITEM_MODEL = "shulker:map_display/frame"
+FRAME_TEXTURE = "shulker:item/map_display/frame_gray"
+FRAME_LIGHT_EMISSION = 8
+MAP_LIGHT_EMISSION = 15
+
+
+def model_face(texture: str) -> dict:
+    return {
+        "uv": [0, 0, 16, 16],
+        "texture": texture,
+    }
+
+
+def raised_frame_elements() -> list[dict]:
+    # The map occupies [8, 8, 8] to [24, 17, 8]. The frame is 75% of the previous
+    # width and only overlaps the baked nine-pixel border. The rest extends
+    # outward so the frame doesn't hide map content. Full-height side rails own
+    # all four corners so their exterior faces remain closed.
+    border_overlap = 0.328125
+    rail_width = 0.5625
+    inner_min_x = 8 + border_overlap
+    inner_max_x = 24 - border_overlap
+    inner_min_y = 8 + border_overlap
+    inner_max_y = 17 - border_overlap
+    rail_min_x = inner_min_x - rail_width
+    rail_max_x = inner_max_x + rail_width
+    rail_min_y = inner_min_y - rail_width
+    rail_max_y = inner_max_y + rail_width
+    back_z = 8
+    front_z = 8.5
+
+    return [
+        {
+            "light_emission": FRAME_LIGHT_EMISSION,
+            "from": [rail_min_x, rail_min_y, back_z],
+            "to": [inner_min_x, rail_max_y, front_z],
+            "faces": {
+                "south": model_face("#frame"),
+                "east": model_face("#frame"),
+                "west": model_face("#frame"),
+                "up": model_face("#frame"),
+                "down": model_face("#frame"),
+            },
+        },
+        {
+            "light_emission": FRAME_LIGHT_EMISSION,
+            "from": [inner_max_x, rail_min_y, back_z],
+            "to": [rail_max_x, rail_max_y, front_z],
+            "faces": {
+                "south": model_face("#frame"),
+                "east": model_face("#frame"),
+                "west": model_face("#frame"),
+                "up": model_face("#frame"),
+                "down": model_face("#frame"),
+            },
+        },
+        {
+            "light_emission": FRAME_LIGHT_EMISSION,
+            "from": [inner_min_x, inner_max_y, back_z],
+            "to": [inner_max_x, rail_max_y, front_z],
+            "faces": {
+                "south": model_face("#frame"),
+                "up": model_face("#frame"),
+                "down": model_face("#frame"),
+            },
+        },
+        {
+            "light_emission": FRAME_LIGHT_EMISSION,
+            "from": [inner_min_x, rail_min_y, back_z],
+            "to": [inner_max_x, inner_min_y, front_z],
+            "faces": {
+                "south": model_face("#frame"),
+                "up": model_face("#frame"),
+                "down": model_face("#frame"),
+            },
+        },
+    ]
 
 
 @dataclass(frozen=True)
@@ -48,7 +127,7 @@ def render_map(path: Path) -> bytes:
         aspect_ratio = source.width / source.height
         width = max(16, int(MAP_HEIGHT * aspect_ratio) // 16 * 16)
         image = source.convert("RGBA").resize(
-            (width, MAP_HEIGHT), Image.Resampling.NEAREST
+            (width, MAP_HEIGHT), Image.Resampling.LANCZOS
         )
 
     draw = ImageDraw.Draw(image)
@@ -80,6 +159,14 @@ def render_branding(path: Path) -> bytes:
     return output.getvalue()
 
 
+def render_frame_texture() -> bytes:
+    image = Image.new("RGBA", (16, 16), "#555B60")
+
+    output = io.BytesIO()
+    image.save(output, format="PNG", optimize=True)
+    return output.getvalue()
+
+
 def item_model(model: str) -> ItemModel:
     return ItemModel(
         {
@@ -105,14 +192,19 @@ def beet_default(ctx: Context):
         raise ValueError("Map display image names must produce unique resource ids.")
 
     ctx.meta["map_display_maps"] = maps
+    ctx.meta["map_display_frame_item_model"] = FRAME_ITEM_MODEL
+
+    ctx.generate(FRAME_TEXTURE, Texture(render_frame_texture()))
 
     ctx.generate(
-        "shulker:item/map_display/template",
+        FLAT_TEMPLATE,
         Model(
             {
                 "textures": {"map": "#texture"},
                 "elements": [
                     {
+                        "light_emission": MAP_LIGHT_EMISSION,
+                        "shade": False,
                         "from": [8, 8, 8],
                         "to": [24, 17, 8],
                         "faces": {
@@ -127,6 +219,20 @@ def beet_default(ctx: Context):
         ),
     )
 
+    ctx.generate(
+        FRAME_MODEL,
+        Model(
+            {
+                "textures": {
+                    "frame": FRAME_TEXTURE,
+                    "particle": "#frame",
+                },
+                "elements": raised_frame_elements(),
+            }
+        ),
+    )
+    ctx.generate(FRAME_ITEM_MODEL, item_model(FRAME_MODEL))
+
     for display_map, path in maps_by_path:
         resource = f"shulker:item/map_display/maps/{display_map.id}"
         ctx.generate(resource, Texture(render_map(path)))
@@ -134,7 +240,7 @@ def beet_default(ctx: Context):
             resource,
             Model(
                 {
-                    "parent": "shulker:item/map_display/template",
+                    "parent": FLAT_TEMPLATE,
                     "textures": {"texture": resource},
                 }
             ),

@@ -8,6 +8,7 @@ from kit:definitions/footman import footman
 from kit:definitions/headsman import headsman
 from kit:definitions/juggernaut import juggernaut
 from kit:definitions/ranger import ranger
+from kit:definitions/random import random_kit
 from kit:definitions/spearfisher import spearfisher
 from kit:definitions/swashbuckler import swashbuckler
 from kit:definitions/warbowman import warbowman
@@ -35,7 +36,8 @@ from item:definitions/weapons/warbow import PROJECTILE_TAG
 from ../battlegrounds import PLAYER_TAG
 from ./config import ARENA_STRUCTURE_ORIGIN, ARENA_STRUCTURE_SIZE
 from ./config import SUMMIT_BOOTH_ENTITY_TAG
-from ./registry import CLEANUP_SUMMIT_KIT_ENTITIES, GIVE_RANDOM_KIT
+from ./registry import APPLY_RANDOM_KIT, CLEANUP_SUMMIT_KIT_ENTITIES
+from ./registry import GIVE_RANDOM_KIT, RANDOM_KIT_LOADOUT
 from ./registry import RESET_RESUPPLY_TIMER, RESET_SUMMIT_KIT_STATE
 
 
@@ -44,8 +46,6 @@ RANGER_LOADED_ITEM = RangerTripleCrossbow.as_loot_table()
 RANGER_LOADED_ITEM["functions"] = [crossbow_reload(RANGER_MAX_CHAMBER)]
 
 
-# The second value is the crate cooldown in ticks after this kit resupplies.
-# These start from the original Shulker kit timings and are easy to rebalance.
 KIT_CONFIG = [
     (archer, 900),
     (assassin, 500),
@@ -66,9 +66,22 @@ for kit, cooldown in KIT_CONFIG:
     DEFAULT_KITS.append(kit)
 
 
+# Random is a normal registered Kit, but its placeholder loadout must never be
+# installed. Patch only that generated function and preserve every other kit.
+prepend function RANDOM_KIT_LOADOUT:
+    if SCORE.temp["#ARMOR_STAND"]:
+        return run function APPLY_RANDOM_KIT
+    return run function GIVE_RANDOM_KIT
+
+
 function GIVE_RANDOM_KIT:
-    """Clear the old life and apply one complete random kit."""
+    """Reset player-only state, then apply one complete random kit."""
     function RESET_SUMMIT_KIT_STATE
+    function APPLY_RANDOM_KIT
+
+
+function APPLY_RANDOM_KIT:
+    """Sample and apply a concrete kit without player-only reset behavior."""
     execute store result score var SCORE.temp["#summit_random_kit"] run random value (0, len(DEFAULT_KITS) - 1)
 
     for index, kit in enumerate(DEFAULT_KITS):
@@ -76,8 +89,9 @@ function GIVE_RANDOM_KIT:
         execute if score var SCORE.temp["#summit_random_kit"] matches index run function kit_function
 
     # Ranger keeps its chamber in scoreboard state, then renders the loaded bow.
-    if KIT_ID["@s"] == ranger.hashed_id:
-        function RESTORE_RANGER
+    if not SCORE.temp["#ARMOR_STAND"]:
+        if KIT_ID["@s"] == ranger.hashed_id:
+            function RESTORE_RANGER
 
 
 function RESET_RESUPPLY_TIMER:

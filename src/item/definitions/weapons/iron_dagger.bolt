@@ -27,7 +27,7 @@ class IronDaggerStab(IronDaggerBase):
         weight: "medium"
     }
     swing_animation = {type: "stab", duration: 10}
-    strike = {slot: "weapon.mainhand", victim: ATTEMPT_ASSASSINATE}
+    strike = {victim_slot: "weapon.mainhand", victim: ATTEMPT_ASSASSINATE}
     enchantment_glint_override = True
     useable = {
         delay: 0.25,
@@ -91,4 +91,5 @@ function ATTEMPT_ASSASSINATE:
 
 function SUCCEED_ASSASSINATE:
     execute at @s run playsound minecraft:item.axe.wax_off voice @a ~ ~ ~ 1 2
+    execute on attacker run advancement grant @s only summit.sticker_book:shulker/assassin_fox
     damage @s 1000 BACKSTAB_DAMAGE_TYPE

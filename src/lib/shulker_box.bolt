@@ -1,4 +1,4 @@
-loot_table minecraft:blocks/yellow_shulker_box {
+ loot_table minecraft:blocks/yellow_shulker_box {
     "type": "minecraft:block",
     "pools": [
         {

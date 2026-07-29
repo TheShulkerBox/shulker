@@ -1,10 +1,9 @@
 from functools import cached_property
 
-from server:core import SERVER_TICK
-from player:services import PLAYER_TICK
 from lib:xp import XP
 from lib:predicates import has_item_predicate
 from item:type import ItemType
+from shulker:summit/battlegrounds import BATTLEGROUNDS_PLAYER_TICK
 
 from ./type import Component
 
@@ -20,7 +19,7 @@ class Ammo(Component):
     reload_ticks: Annotated[int, "Reload duration, used to display progress on the XP bar"]
 
     def build(self):
-        append function PLAYER_TICK:
+        append function BATTLEGROUNDS_PLAYER_TICK:
             # Check the cheap timer state first so idle players carrying reserve ammo
             # don't evaluate the inventory predicate every tick. If ammo disappears
             # mid-reload, the positive timer remains paused until ammo is reacquired.

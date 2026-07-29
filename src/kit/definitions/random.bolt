@@ -1,0 +1,14 @@
+from kit:base import Kit
+from item:base import KitItem
+
+
+# The generated stand loadout expects every kit to have a first hotbar item.
+# Summit intercepts this kit's apply function before this placeholder is given.
+random_kit = Kit(
+    name="Random",
+    tagline="A different kit every life",
+    icon="bundle",
+    hotbar=[
+        KitItem(id="barrier", item_name="Random Kit Placeholder"),
+    ],
+)

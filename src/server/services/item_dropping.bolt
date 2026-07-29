@@ -1,10 +1,10 @@
 from component:droppable import Droppable
-from ../core import SERVER_TICK
+from shulker:summit/battlegrounds import BATTLEGROUNDS_TICK
 from ./item_dropping_tags import ITEM_PROCESSED_TAG
 
 HANDLE_ITEM = ./handle_item
 
-append function SERVER_TICK:
+append function BATTLEGROUNDS_TICK:
     execute as @e[type=item, tag=!ITEM_PROCESSED_TAG] at @s run function HANDLE_ITEM:
         """Handles items that have been processed by item dropping services."""
         tag @s add ITEM_PROCESSED_TAG

@@ -3,7 +3,7 @@ from typing import ClassVar
 
 from lib:helpers import deep_merge_dicts, nbt_dump
 from lib:rom import LOAD_ROM
-from server:core import SERVER_TICK, SERVER_LOAD
+from server:core import SERVER_LOAD
 import component:all as _
 
 from ./type import ItemType
@@ -13,7 +13,7 @@ TEMP_ITEM = STORAGE.temp.item
 
 ItemType.ctx = ctx
 
-dynamic_key = Scoreboard("item.dynamic_key", criteria="dummy")
+dynamic_key = Scoreboard("shulker.item.dynamic_key", criteria="dummy")
 
 
 class Item(metaclass=ItemType):
@@ -92,3 +92,13 @@ class Item(metaclass=ItemType):
 
 class KitItem(Item):
     """Base for all kit items"""
+
+    _base_lore = [
+        {
+            "translate": "shulker.tooltip",
+            "font": "shulker:tooltip",
+            "color": "white",
+            "italic": false,
+        }
+    ]
+    lore = _base_lore

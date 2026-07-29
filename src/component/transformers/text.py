@@ -13,7 +13,7 @@ class Lore(Transformer, base_type=str | list[str] | list[dict[str, Any]] | Any):
         if type(lore := self.base_type) is str:
             lore = [lore]
 
-        return [
+        transformed_lore = [
             (
                 {"text": line, "color": Theme.Secondary, "italic": False}
                 if type(line) is str
@@ -21,3 +21,10 @@ class Lore(Transformer, base_type=str | list[str] | list[dict[str, Any]] | Any):
             )
             for line in lore
         ]
+
+        for item_type in reversed(self.item.__mro__):
+            for line in item_type.__dict__.get("_base_lore", []):
+                if line not in transformed_lore:
+                    transformed_lore.append(line)
+
+        return transformed_lore

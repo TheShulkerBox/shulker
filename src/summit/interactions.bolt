@@ -1,0 +1,30 @@
+function shulker:summit/interactable/discord:
+    dialog show @s {
+        type: "minecraft:multi_action",
+        title: "The Shulker Box",
+        body: {
+            type: "minecraft:plain_message",
+            contents: {
+                text: "Our community is centered in our Discord, so join us if you are interested in a fun, tight-knit community related to novel kit-pvp minigames.",
+                extra: [
+                    "\n\n",
+                    "The current server is live at ",
+                    {
+                        text: "play.theshulkerbox.com",
+                        color: "light_purple"
+                    },
+                    " for version 1.20.4. The rewrite is being worked on and will be released later this year on the latest version."
+                ]
+            }
+        },
+        can_close_with_escape: 1,
+        actions: [
+            {
+                label: "Discord",
+                action: {
+                    type: "minecraft:open_url",
+                    url: "https://discord.theshulkerbox.com"
+                }
+            }
+        ]
+    }

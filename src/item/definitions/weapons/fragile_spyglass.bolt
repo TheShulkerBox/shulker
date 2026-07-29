@@ -14,7 +14,7 @@ class FragileSpyglass(KitItem):
         knockback: 3,
     }
     strike = {
-        slot: "weapon.mainhand",
+        attacker_slot: "weapon.mainhand",
         attacker: SPYGLASS_BONK
     }
     enchantment_glint_override = true

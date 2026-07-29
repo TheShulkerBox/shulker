@@ -1,18 +1,29 @@
 """Balance settings, palette, and arena positions for Summit Domination."""
 
+from typing import NamedTuple
+
 from lib.text import Theme
 
 
 DEBUG = True
 
+class Point(NamedTuple):
+    name: str
+    tag: str
+    health: str
+    owner: str
+    capturing_team: str
+    contested: str
+    position: tuple[int, int, int]
+    entity: tuple[str, list[int]]
 
 
 # Bossbar commands only accept Minecraft's named color values. All text colors
 # use hex so the presentation palette can be tuned in one place.
 NEUTRAL_BOSSBAR_COLOR = "yellow"
 
-RED_TEXT_COLOR = "#c12828"
-BLUE_TEXT_COLOR = "#1960c3"
+RED_TEXT_COLOR = "#e95858"
+BLUE_TEXT_COLOR = "#4683d8"
 BODY_TEXT_COLOR = "#f6e7d7"
 HELP_HEADING_COLOR = "#d4ae03"
 SUBTITLE_COLOR = Theme.Secondary
@@ -26,9 +37,7 @@ CRATE_PARTICLE_COLOR = [0.8, 0.1, 0.8]
 HEADSMAN_PARTICLE_COLOR = [0.5, 0.0, 0.0]
 
 
-# Match pacing is kept here so it can be tuned without reading lifecycle code.
-MATCH_DURATION_SECONDS = 180
-CAPTURE_RADIUS = 5
+CAPTURE_RADIUS = 3
 
 # A point takes twelve uninterrupted seconds to capture. Its health is restored
 # much more slowly when the attackers leave it alone.
@@ -38,12 +47,12 @@ POINT_CAPTURE_HEALTH = POINT_CAPTURE_TIME_SECONDS * 20
 POINT_REGEN_INTERVAL_TICKS = 4
 
 # A captured point adds one score every half second for its owner.
-SCORING_INTERVAL_TICKS = 40
+SCORING_INTERVAL_TICKS = 4
 PROGRESS_PER_CONTROLLED_POINT = 1
 
 # Red pulls the shared bar toward zero. Blue pushes it toward the maximum.
-WIN_THRESHOLD = 100
-STARTING_SCORE = 50
+WIN_THRESHOLD = 1000
+STARTING_SCORE = 500
 RED_TEAM = 1
 BLUE_TEAM = 2
 RED_TEAM_NAME = "shulker_red"
@@ -55,31 +64,34 @@ ARENA_STRUCTURE_SIZE = (39, 17, 45)
 DOMINATION_POINT_ENTITY = "shulker.domination_control_point"
 DOMINATION_POINT_TYPE = "marker"
 SUMMIT_BOOTH_ENTITY_TAG = "summit.booth_entity.shulker"
+POINT_DISPLAY_TAG = "shulker.point_displays"
 # Every point uses its own fake players so capture state survives independently.
 DOMINATION_POINTS = [
-    (
+    Point(
         "A",
         "shulker.domination.point_a",
         "$shulker.domination.point_a_health",
         "$shulker.domination.point_a_owner",
-        "$shulker.domination.point_a_capture_team",
-        "shulker:game.domination.point_a_capture",
+        "$shulker.domination.point_a_capturing_team",
+        "$shulker.domination.point_a_contested",
         (-110, 62, 134),
+        ("22a7db93-c76f-4fba-be09-a5807d9b42d6", [581426067,-949006406,-1106664064,2107327190]),
     ),
-    (
+    Point(
         "B",
         "shulker.domination.point_b",
         "$shulker.domination.point_b_health",
         "$shulker.domination.point_b_owner",
-        "$shulker.domination.point_b_capture_team",
-        "shulker:game.domination.point_b_capture",
+        "$shulker.domination.point_b_capturing_team",
+        "$shulker.domination.point_b_contested",
         (-88, 62, 105),
+        ("cb3a40b6-b433-4a51-9143-bef48aa426e0", [-885374794,-1271707055,-1857831180,-1968953632]),
     ),
 ]
 
 RESUPPLY_CRATE_POSITIONS = [
-    (-100, 66, 115),
-    (-91, 64, 134),
+    (-100.0, 66.0, 115.0),
+    (-91.0, 64.0, 134.0),
 ]
 
 # Each side has two spawn options and faces the middle of the arena.
@@ -100,5 +112,22 @@ RESPAWN_POINT_POSITIONS = [
     (-88, 64, 138),
     (-86, 64, 127),
 ]
+# Fixed armor stand in the built Summit booth's Battlegrounds room.
+RANDOM_KIT_STAND_UUID = "48961418-ab09-490c-8f47-7afb4a5af91b"
 
+class Banner:
+    def set(name: str, banner_color: str = "light_gray"):
+        data modify entity name item set value {id: f"minecraft:{banner_color}_banner"}
 
+    def set_contested(name: str, banner_color: str = "light_gray"):
+        data modify entity name item set value {
+            id: f"minecraft:{banner_color}_banner",
+            components: {
+                "minecraft:banner_patterns": [
+                    {color: "white", pattern: "minecraft:cross"},
+                    {color: "brown", pattern: "minecraft:stripe_top"},
+                    {color: banner_color, pattern: "minecraft:triangle_top"},
+                    {color: banner_color, pattern: "minecraft:border"}
+                ]
+            }
+        }

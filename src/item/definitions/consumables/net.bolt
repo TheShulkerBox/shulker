@@ -19,8 +19,8 @@ NET_THROWER_TAG = "item.net.thrower"
 
 TIME_IN_NET = "5s"
 SLOWNESS_AMPLIFIER = 3
-NET_TIMER = Scoreboard("item.net_timer", criteria="dummy")
-NET_DAMAGE_TAKEN = Scoreboard("item.net_damage_taken", criteria="minecraft.custom:minecraft.damage_taken")
+NET_TIMER = Scoreboard("shulker.item.net_timer", criteria="dummy")
+NET_DAMAGE_TAKEN = Scoreboard("shulker.item.net_damage_taken", criteria="minecraft.custom:minecraft.damage_taken")
 NET_WEAKNESS_ATTR = "item.net_weakness"
 
 def weakness_modifier(value: int) -> dict[str, Any]:

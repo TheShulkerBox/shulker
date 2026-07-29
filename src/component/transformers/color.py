@@ -1,7 +1,7 @@
 from typing import Any
 
 from component.type import Transformer
-from lib.errors import CustomComponentError
+from lib.errors import CustomTransformerError
 
 
 def parse_hex_color(color: str, component: Transformer) -> int:
@@ -10,9 +10,8 @@ def parse_hex_color(color: str, component: Transformer) -> int:
     if len(color) == 8:
         color = color[:6]  # handles VSCode auto-picker adding transparency
     elif len(color) != 6:
-        raise CustomComponentError(
+        raise CustomTransformerError(
             f"Color needs to be in form '#aabbcc' (received: '{color}')",
-            component.name(),
             component,
         )
 

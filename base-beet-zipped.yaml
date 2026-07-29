@@ -1,0 +1,17 @@
+extend:
+  - base-beet.yaml
+
+require:
+  - plugins.packsquash
+
+resource_pack:
+  zipped: true
+  compression_level: 9
+
+output: dist2
+
+meta:
+  packsquash:
+    executable: packsquash
+    options_file: packsquash.toml
+    packs: [resource_pack]

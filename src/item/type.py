@@ -402,6 +402,7 @@ class ItemType(type):
                         raise ComponentError(name, data, field_errors)
 
                     # Attempt to instantiate and builder the component
+                    constructed_component = None
                     try:
                         # TODO: convert to pydantic ;_;
                         constructed_component: Component = component(
@@ -423,6 +424,8 @@ class ItemType(type):
                         constructed_components.append(constructed_component)
 
                     except Exception as err:
+                        if isinstance(err, CustomComponentError):
+                            err.with_context(name, constructed_component or data)
                         source_info = self._component_sources.get(name)
                         raise ComponentError(
                             name,
@@ -500,6 +503,7 @@ class ItemType(type):
                     raise ComponentError(name, data, field_errors)
 
                 # Attempt to instantiate and build the transformer
+                constructed_transformer = None
                 try:
                     constructed_transformer = transformer(
                         item=self,
@@ -513,6 +517,8 @@ class ItemType(type):
                         resolved_components[name] = data
                     constructed_transformers.append(constructed_transformer)
                 except Exception as err:
+                    if isinstance(err, CustomTransformerError):
+                        err.with_context(name, constructed_transformer or data)
                     source_info = self._component_sources.get(name)
                     raise ComponentError(
                         name,
@@ -545,6 +551,7 @@ class ItemType(type):
             name = transformer.name()
 
             try:
+                constructed_transformer = None
                 try:
                     constructed_transformer = transformer(
                         item=self,
@@ -562,6 +569,10 @@ class ItemType(type):
 
                     constructed_transformers.append(constructed_transformer)
                 except Exception as err:
+                    if isinstance(err, CustomTransformerError):
+                        err.with_context(
+                            name, constructed_transformer or resolved_components
+                        )
                     raise ComponentError(
                         name,
                         resolved_components,

@@ -7,9 +7,9 @@ from server:events import ON_PLAYER_RESET
 from ./item_enchant import ItemEnchant
 from ./type import Component, RecursiveComponent
 
-CROSSBOW_CHARGE = Scoreboard("component.crossbow_charge", criteria="dummy")
-LAST_CROSSBOW_CHARGE = Scoreboard("component.crossbow_last_charging", criteria="dummy")
-CROSSBOW_HAND = Scoreboard("component.crossbow_hand", criteria="dummy")
+CROSSBOW_CHARGE = Scoreboard("shulker.component.crossbow_charge", criteria="dummy")
+LAST_CROSSBOW_CHARGE = Scoreboard("shulker.component.crossbow_last_charging", criteria="dummy")
+CROSSBOW_HAND = Scoreboard("shulker.component.crossbow_hand", criteria="dummy")
 
 CROSSBOW_MAINHAND = 1
 CROSSBOW_OFFHAND = 2
@@ -22,18 +22,22 @@ class Crossbow(Component):
     charging: Annotated[FunctionPath | None, "Runs as the player while charging"] = None
     loaded: Annotated[FunctionPath | None, "Runs as the player when a loads a crossbow"] = None
     unnock: Annotated[FunctionPath | None, "Runs as the player when charging stops without loading"] = None
-    fire: Annotated[FunctionPath | None, "Runs as the player when the crossbow fires"] = None
+    fire: Annotated[FunctionPath | None, "Runs as the arrow fired"] = None
     tick_arrow: Annotated[FunctionPath | None, "Runs on fired arrows every tick"] = None
     hit: Annotated[FunctionPath | None, "Runs as the victim of an arrow shot"] = None
     hit_block: Annotated[FunctionPath | None, "Runs as the arrow when it hits a block"] = None
 
     def build(self):
         if self.item.id not in ("crossbow", "minecraft:crossbow"):
-            raise CustomComponentError("Crossbow component can only be applied to items with id 'minecraft:crossbow'")
+            raise CustomComponentError(
+                "Crossbow component can only be applied to items with id 'minecraft:crossbow'",
+                self,
+            )
 
         if not (self.nock or self.charging or self.loaded or self.unnock or self.fire or self.hit or self.hit_block):
             raise CustomComponentError(
-                "At least one of `nock`, `charging`, `loaded`, `unnock`, `fire`, `hit`, or `hit_block` must be defined"
+                "At least one of `nock`, `charging`, `loaded`, `unnock`, `fire`, `hit`, or `hit_block` must be defined",
+                self,
             )
 
         advancement self.charge_advancement {

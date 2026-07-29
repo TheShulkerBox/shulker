@@ -1,27 +1,29 @@
 """Summit lifecycle callbacks, teams, spawns, and sticker progress."""
 
 from server:core import SERVER_LOAD
-from kit:services/resupply import RESUPPLY_TIMER, CREATE_SUMMIT_RESUPPLY_CRATE, SUMMIT_RESUPPLY_CRATE_TAG
+from lib:flying_text import FLYING_TEXT_CLEANUP
+from kit:definitions/random import random_kit
+from kit:services/resupply import RESUPPLY_TIMER, CREATE_SUMMIT_RESUPPLY_CRATE, DESTROY_SUMMIT_RESUPPLY_CRATE, SUMMIT_RESUPPLY_CRATE_TAG
 from item:definitions/armor import Armor
 
-from ../battlegrounds import PLAYER_TAG
+from ../battlegrounds import PLAYER_TAG, SHULKER_PLAYER_TAG
 from ./config import ARENA_CENTER, BLUE_RESPAWN_POSITIONS, BLUE_TEAM
 from ./config import BLUE_TEXT_COLOR, BODY_TEXT_COLOR
 from ./config import BLUE_TEAM_NAME, DOMINATION_POINT_ENTITY
-from ./config import DOMINATION_POINTS, HELP_HEADING_COLOR, MATCH_DURATION_SECONDS
+from ./config import DOMINATION_POINTS, HELP_HEADING_COLOR
 from ./config import NEUTRAL_BOSSBAR_COLOR
 from ./config import POINT_CAPTURE_HEALTH
 from ./config import RED_RESPAWN_POSITIONS, RED_TEAM, RED_TEAM_NAME, RED_TEXT_COLOR
 from ./config import RESUPPLY_CRATE_POSITIONS, STARTING_SCORE, WIN_THRESHOLD
-from ./config import SUMMIT_BOOTH_ENTITY_TAG
-from ./registry import ARENA_LOAD, ARENA_UNLOAD, BATTLEGROUND, GIVE_RANDOM_KIT
+from ./config import SUMMIT_BOOTH_ENTITY_TAG, POINT_DISPLAY_TAG
+from ./registry import ARENA_LOAD, ARENA_UNLOAD, BATTLEGROUND, RANDOM_KIT_LOADOUT
 from ./registry import DOMINATION_BOSSBAR, DOMINATION_TEAM
-from ./registry import GAME_SCORE, GAME_STATE, MATCH_FINISHED, MATCH_TIME_LEFT
+from ./registry import GAME_SCORE, GAME_STATE, LAST_TIME_LEFT, MATCH_FINISHED
 from ./registry import PLAYER_DIED, PLAYER_ENTER_SUCCESS, PLAYER_LEAVE
 from ./registry import CLEANUP_SUMMIT_KIT_ENTITIES, REMOVE_BOSSBAR
 from ./registry import RESET_RESUPPLY_TIMER, RESET_SUMMIT_KIT_STATE, SCORING_TIMER
 from ./registry import POINT_REGEN_TIMER, SPAWN_FOR_TEAM
-from ./registry import STICKER_GAME_KILLS
+from ./registry import SESSION_KILLS
 
 LEAVING_TAG = "shulker.domination.leaving"
 
@@ -44,9 +46,9 @@ function ./battlegrounds_room/enter:
 
     # Summit needs this record before a player can activate or enter a session.
     BATTLEGROUND.assign_kit(
-        kit_id="shulker:random",
-        kit_function=GIVE_RANDOM_KIT,
-        kit_name="Random Shulker Kit",
+        kit_id=f"shulker:{random_kit.id}",
+        kit_function=RANDOM_KIT_LOADOUT,
+        kit_name=random_kit.name,
     )
 
 
@@ -56,41 +58,48 @@ function ARENA_LOAD:
     schedule clear REMOVE_BOSSBAR
 
     # Runtime objects cannot be stored in Summit's arena structure.
-    kill @e[type=marker,tag=SUMMIT_BOOTH_ENTITY_TAG,tag=DOMINATION_POINT_ENTITY]
     kill @e[type=interaction,tag=SUMMIT_BOOTH_ENTITY_TAG,tag=SUMMIT_RESUPPLY_CRATE_TAG]
 
-    for point_name, point_tag, point_health, point_owner, point_capture_team, point_bossbar, position in DOMINATION_POINTS:
-        x, y, z = position
-        summon marker (x + 0.5) y (z + 0.5) {Tags:[SUMMIT_BOOTH_ENTITY_TAG, DOMINATION_POINT_ENTITY, point_tag]}
-
-        # Each nearby-player bar shows this point's remaining capture health.
-        bossbar add point_bossbar {text: f"Point {point_name} capture health", color: NEUTRAL_BOSSBAR_COLOR}
-        bossbar set point_bossbar style notched_20
-        bossbar set point_bossbar max POINT_CAPTURE_HEALTH
-        bossbar set point_bossbar value POINT_CAPTURE_HEALTH
-        bossbar set point_bossbar color white
+    for point in DOMINATION_POINTS:
+        x, y, z = point.position
         
-        GAME_STATE[point_health] = POINT_CAPTURE_HEALTH
-        GAME_STATE[point_owner] = 0
-        GAME_STATE[point_capture_team] = 0
+        summon item_display (x + 0.5) (y + 1.19) (z + 0.5) {
+            billboard: "vertical",
+            UUID: point.entity[1],
+            item: { id: "minecraft:light_gray_banner" },
+            item_display: "fixed",
+            transformation: {
+                left_rotation: [0.0f, 0.0f, 0.0f, 1.0f],
+                right_rotation: [0.0f, 0.0f, 0.0f, 1.0f],
+                scale: [2.4375f, 2.4375005f, 2.4375002f],
+                translation: [0.0f, -0.6093752f, 0.0f],
+            },
+            Tags: [SUMMIT_BOOTH_ENTITY_TAG, POINT_DISPLAY_TAG]
+        }
+
+        GAME_STATE[point.health] = POINT_CAPTURE_HEALTH
+        GAME_STATE[point.owner] = 0
+        GAME_STATE[point.capturing_team] = 0
+        GAME_STATE[point.contested] = 0
 
     for x, y, z in RESUPPLY_CRATE_POSITIONS:
         execute positioned x y z run function CREATE_SUMMIT_RESUPPLY_CRATE
 
-    # The bar starts neutral and moves toward the team that controls points.
+    # The bar starts neutral and moves toward the team that controls point..
     bossbar add DOMINATION_BOSSBAR [
         {text: "Red", color: RED_TEXT_COLOR},
-        {text: "     Team Victory Progress     ", color: BODY_TEXT_COLOR},
+        # Twelve spaces on each side preserve the original full title width.
+        {text: "            Domination            ", color: BODY_TEXT_COLOR},
         {text: "Blue", color: BLUE_TEXT_COLOR}
     ]
     bossbar set DOMINATION_BOSSBAR style notched_20
     bossbar set DOMINATION_BOSSBAR max WIN_THRESHOLD
     bossbar set DOMINATION_BOSSBAR value STARTING_SCORE
-    bossbar set DOMINATION_BOSSBAR color yellow
+    bossbar set DOMINATION_BOSSBAR color white
     bossbar set DOMINATION_BOSSBAR players @a[tag=PLAYER_TAG]
 
     GAME_STATE[GAME_SCORE] = STARTING_SCORE
-    GAME_STATE[MATCH_TIME_LEFT] = MATCH_DURATION_SECONDS * 20
+    GAME_STATE[LAST_TIME_LEFT] = -2
     GAME_STATE[SCORING_TIMER] = 0
     GAME_STATE[POINT_REGEN_TIMER] = 0
     GAME_STATE[MATCH_FINISHED] = 0
@@ -104,8 +113,12 @@ function ARENA_LOAD:
 
 function ARENA_UNLOAD:
     """Remove objects and player state owned by this match."""
-    kill @e[type=marker,tag=SUMMIT_BOOTH_ENTITY_TAG,tag=DOMINATION_POINT_ENTITY]
-    kill @e[type=interaction,tag=SUMMIT_BOOTH_ENTITY_TAG,tag=SUMMIT_RESUPPLY_CRATE_TAG]
+    function FLYING_TEXT_CLEANUP
+    tag @a[tag=SHULKER_PLAYER_TAG] remove SHULKER_PLAYER_TAG
+    kill @e[type=item_display,tag=SUMMIT_BOOTH_ENTITY_TAG,tag=POINT_DISPLAY_TAG]
+
+    execute at @e[type=interaction,tag=SUMMIT_BOOTH_ENTITY_TAG,tag=SUMMIT_RESUPPLY_CRATE_TAG]:
+        function DESTROY_SUMMIT_RESUPPLY_CRATE
 
     function CLEANUP_SUMMIT_KIT_ENTITIES
 
@@ -113,6 +126,7 @@ function ARENA_UNLOAD:
     team empty BLUE_TEAM_NAME
     DOMINATION_TEAM["*"].reset()
     RESUPPLY_TIMER[f"@a[tag={PLAYER_TAG}]"].reset()
+    SESSION_KILLS[f"@a[tag={PLAYER_TAG}]"].reset()
 
     # Player leave callbacks run just after this callback in Summit's API.
     schedule function REMOVE_BOSSBAR 1t replace
@@ -120,13 +134,13 @@ function ARENA_UNLOAD:
 
 function REMOVE_BOSSBAR:
     bossbar remove DOMINATION_BOSSBAR
-    for point_name, point_tag, point_health, point_owner, point_capture_team, point_bossbar, position in DOMINATION_POINTS:
-        bossbar remove point_bossbar
 
 
 function PLAYER_ENTER_SUCCESS:
     """Balance a new participant, then place them at their team spawn."""
+    tag @s add SHULKER_PLAYER_TAG
     DOMINATION_TEAM["@s"].reset()
+
     team leave @s
     effect clear @s
 
@@ -137,22 +151,25 @@ function PLAYER_ENTER_SUCCESS:
         DOMINATION_TEAM["@s"] = RED_TEAM
         team join RED_TEAM_NAME @s
         tellraw @s {text: "You joined Red Team", color: RED_TEXT_COLOR}
+        title @s subtitle {text: "Red Team", color: RED_TEXT_COLOR}
     else:
         DOMINATION_TEAM["@s"] = BLUE_TEAM
         team join BLUE_TEAM_NAME @s
         tellraw @s {text: "You joined Blue Team", color: BLUE_TEXT_COLOR}
+        title @s subtitle {text: "Blue Team", color: BLUE_TEXT_COLOR}
 
+    title @s title {text: "Domination", color: BODY_TEXT_COLOR}
     function RESET_RESUPPLY_TIMER
     
-    effect give @s minecraft:instant_health 1 10 true
-    effect give @s minecraft:saturation 1 10 true
+    effect give @s minecraft:resistance 2 4 true
+    effect give @s minecraft:saturation 1 5 true
     
-    STICKER_GAME_KILLS["@s"] = 0
+    SESSION_KILLS["@s"] = 0
     
     bossbar set DOMINATION_BOSSBAR players @a[tag=PLAYER_TAG]
     tellraw @s [
         {text: "Domination: ", color: HELP_HEADING_COLOR},
-        {text: "Capture the green points, then hold them to score. Use the supply crates when they are ready.", color: BODY_TEXT_COLOR}
+        {text: "Dominate the points marked by banners. Retaining control will earn your team progress toward victory! You can resupply at the crates within the arena.", color: BODY_TEXT_COLOR}
     ]
     
     item replace entity @s[scores={DOMINATION_TEAM=BLUE_TEAM}] armor.head with Armor(id="blue_wool")
@@ -163,10 +180,14 @@ function PLAYER_DIED:
     """Keep the player's team after Summit reapplies their kit."""
     function SPAWN_FOR_TEAM
     function RESET_RESUPPLY_TIMER
+    item replace entity @s[scores={DOMINATION_TEAM=BLUE_TEAM}] armor.head with Armor(id="blue_wool")
+    item replace entity @s[scores={DOMINATION_TEAM=RED_TEAM}] armor.head with Armor(id="red_wool")
 
 
 function PLAYER_LEAVE:
     """Clear match state and hide the bossbar from the leaving player."""
+    tag @s remove SHULKER_PLAYER_TAG
+
     # keeps existing players
     tag @s add LEAVING_TAG
     bossbar set DOMINATION_BOSSBAR players @a[tag=PLAYER_TAG,tag=!LEAVING_TAG]
@@ -182,6 +203,7 @@ function PLAYER_LEAVE:
     
     DOMINATION_TEAM["@s"].reset()
     RESUPPLY_TIMER["@s"].reset()
+    SESSION_KILLS["@s"].reset()
 
 
 function SPAWN_FOR_TEAM:

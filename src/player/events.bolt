@@ -1,4 +1,4 @@
-DEATH_SCORE = Scoreboard("player.death_count", criteria="deathCount")
+DEATH_SCORE = Scoreboard("shulker.player.death_count", criteria="deathCount")
 
 ON_DEATH = ./on_death
 ON_KILL = ./on_kill

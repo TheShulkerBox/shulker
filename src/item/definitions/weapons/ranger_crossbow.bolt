@@ -4,7 +4,7 @@ from item:definitions/weapon import Crossbow
 from lib:helpers import deep_merge_dicts, clamp
 from lib:text import shadow_rgba
 from lib:inventory_management import mass_modify
-from player:services import PLAYER_TICK
+from shulker:summit/battlegrounds import BATTLEGROUNDS_PLAYER_TICK
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -34,7 +34,7 @@ RANGER_ACTIONBAR: FunctionPath = item:ranger_crossbow/actionbar
 RANGER_RAPID_RESUPPLY: FunctionPath = item:ranger_crossbow/rapid_resupply
 RANGER_TRIPLE_RESUPPLY: FunctionPath = item:ranger_crossbow/triple_resupply
 
-RANGER_CHAMBER = Scoreboard("item.ranger_chamber", criteria="dummy")
+RANGER_CHAMBER = Scoreboard("shulker.item.ranger_chamber", criteria="dummy")
 RANGER_MAX_CHAMBER = 3
 
 RANGER_RAPID_MODE_TAG = "ranger_rapid"
@@ -249,7 +249,7 @@ function RANGER_RAPID_FIRE:
 
 # ── Actionbar ───────────────────────────────────────────────────────────────────
 
-append function PLAYER_TICK:
+append function BATTLEGROUNDS_PLAYER_TICK:
     execute if items entity @s weapon.mainhand (-RangerCrossbow) run function RANGER_ACTIONBAR
 
 

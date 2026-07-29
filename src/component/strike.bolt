@@ -15,53 +15,57 @@ class Strike(Component):
     """
     attacker: FunctionPath | None = None
     victim: FunctionPath | None = None
-    slot: Annotated[str, "Whether you have to get the strike with said item equipped or not"] = "hotbar.*"
+    attacker_slot: Annotated[str, "Slot the attacker must have the item equipped in"] = "hotbar.*"
+    victim_slot: Annotated[str, "Slot the attacking player must have the item equipped in"] = "hotbar.*"
     crit: Annotated[bool, "Whether the strike was a critical hit or not"] = False
     # assistant: str = ""
 
     def build(self):
-        if bool(self.attacker) == bool(self.victim):
+        if not (self.attacker or self.victim):
             raise CustomComponentError(
-                "One and only one of `attacker` or `victim` must be defined"
+                "At least one of `attacker` or `victim` must be defined"
             )
-
-        # TODO: update advancement logic in 26.2 as it's changed syntax
-        
-        criteria = {}
-        requirements = []
 
         # attacker: we did the strike, so the item-holder is the `player`
         if self.attacker:
-            criteria["attacker"] = {
-                "trigger": "minecraft:player_hurt_entity",
-                "conditions": { "entity": { "entity_type": "player" }, "player": item_match(self.item, self.slot) }
+            attacker_advancement = f"{self.path}/attacker"
+            attacker_reward = f"{attacker_advancement}/reward"
+
+            advancement attacker_advancement {
+                "parent": ROOT_ADVANCEMENT,
+                "criteria": {
+                    "attacker": {
+                        "trigger": "minecraft:player_hurt_entity",
+                        "conditions": {
+                            "entity": { "entity_type": "player" },
+                            "player": item_match(self.item, self.attacker_slot)
+                        }
+                    }
+                },
+                "rewards": { "function": attacker_reward }
             }
-            requirements.append("attacker")
+
+            function attacker_reward:
+                advancement revoke @s only attacker_advancement
+                function self.attacker
 
         # victim: the attacker is the `entity`, so merge the match into it
         if self.victim:
-            criteria["victim"] = {
-                "trigger": "minecraft:entity_hurt_player",
-                "conditions": { "damage": {"source_entity": { "entity_type": "player" } | item_match(self.item, self.slot)} }
+            victim_advancement = f"{self.path}/victim"
+            victim_reward = f"{victim_advancement}/reward"
+            victim_source = { "entity_type": "player" } | item_match(self.item, self.victim_slot)
+
+            advancement victim_advancement {
+                "parent": ROOT_ADVANCEMENT,
+                "criteria": {
+                    "victim": {
+                        "trigger": "minecraft:entity_hurt_player",
+                        "conditions": { "damage": { "source_entity": victim_source } }
+                    }
+                },
+                "rewards": { "function": victim_reward }
             }
-            requirements.append("victim")
 
-        advancement_data = {
-            "parent": ROOT_ADVANCEMENT,
-            "criteria": criteria,
-            "rewards": { "function": self.path }
-        }
-
-        if len(requirements) > 1:
-            advancement_data["requirements"] = [requirements]
-
-        advancement self.path advancement_data
-        
-        function self.path:
-            advancement revoke @s only self.path
-
-            if self.attacker:
-                function self.attacker
-            
-            if self.victim:
+            function victim_reward:
+                advancement revoke @s only victim_advancement
                 function self.victim

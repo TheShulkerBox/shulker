@@ -7,12 +7,16 @@ functions so booth callbacks only run while their booth owns the active session.
 from dataclasses import dataclass
 from functools import cached_property
 
-from server:core import SERVER_LOAD
+from server:core import SERVER_LOAD, SERVER_TICK
 
 
 # Summit owns this tag and applies it to every current Battlegrounds participant.
 PLAYER_TAG = "summit.battlegrounds.player"
+# Shulker owns this tag and applies it only while a participant is in its arena.
+SHULKER_PLAYER_TAG = "shulker.battlegrounds.player"
 
+# Summit owns this API objective. Do not namespace it: Summit updates these
+# shared fake-player scores and Shulker only reads/writes the documented fields.
 BATTLEGROUNDS_SCORE = Scoreboard("summit.battlegrounds", criteria="dummy")
 PLAYER_COUNT = BATTLEGROUNDS_SCORE["$players"]
 TIME_LEFT = BATTLEGROUNDS_SCORE["$time_left"]
@@ -22,6 +26,15 @@ DATABASE = Data.storage("summit.battlegrounds:database").root
 API_RESPONSE = Data.storage("summit.battlegrounds:api/response").root
 
 BATTLEGROUNDS_TICK: FunctionPath = ./tick
+BATTLEGROUNDS_PLAYER_TICK: FunctionPath = ./player_tick
+
+
+append function SERVER_TICK:
+    function BATTLEGROUNDS_TICK
+
+append function BATTLEGROUNDS_TICK:
+    execute unless data storage summit.battlegrounds:database session{booth_id: "shulker"} run return 0
+    execute as @a[tag=PLAYER_TAG] at @s run function BATTLEGROUNDS_PLAYER_TICK
 
 
 @dataclass
@@ -89,7 +102,6 @@ class Battleground:
         execute unless data storage summit.battlegrounds:database session{booth_id: self.booth_id} run return 0
 
     def tick(self):
-        merge function_tag minecraft:tick {"values": [BATTLEGROUNDS_TICK]}
         return BATTLEGROUNDS_TICK
 
     def block_enter(self):

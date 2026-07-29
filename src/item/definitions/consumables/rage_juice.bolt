@@ -6,7 +6,7 @@ JUICE_EXPIRE: FunctionPath = item:rage_juice/expire
 JUICE_RESET: FunctionPath = item:rage_juice/juice_reset
 JUICE_TICK: FunctionPath = item:rage_juice/tick
 
-RAGE_JUICE_TIMER = Scoreboard("item.rage_juice_timer", criteria="dummy")
+RAGE_JUICE_TIMER = Scoreboard("shulker.item.rage_juice_timer", criteria="dummy")
 
 SPEED_ATTR = "rage_juice_movement_speed"
 ATTACK_ATTR = "rage_juice_attack_damage"

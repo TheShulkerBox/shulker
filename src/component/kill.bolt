@@ -28,7 +28,8 @@ class Kill(Component):
     def build(self):
         if bool(self.killer) == bool(self.victim):
             raise CustomComponentError(
-                "One and only one of `killer` or `victim` must be defined"
+                "One and only one of `killer` or `victim` must be defined",
+                self,
             )
 
         # TODO: update advancement logic in 26.2 as it's changed syntax

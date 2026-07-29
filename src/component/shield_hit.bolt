@@ -2,7 +2,6 @@ from functools import cached_property
 
 from lib:helpers import ticks
 from lib:player import tag_self
-from server:core import SPAWN_ENTITIES_LOADED
 from server:events import ON_PLAYER_RESET
 
 from ./using import Using
@@ -11,35 +10,12 @@ from ./type import ComponentBuildError
 
 
 SHIELD_BLOCKED_DAMAGE = Scoreboard(
-    "component.shield_hit.blocked",
+    "shulker.component.shield_hit.blocked",
     criteria="minecraft.custom:minecraft.damage_blocked_by_shield",
 )
-SHIELD_BLOCK_HAND = Scoreboard("component.shield_hit.hand", criteria="dummy")
+SHIELD_BLOCK_HAND = Scoreboard("shulker.component.shield_hit.hand", criteria="dummy")
 
-SHIELD_DISABLE_STAND_TAG = "component.shield_hit.disable_stand"
 SHIELD_DISABLED_TAG = "component.shield_hit.disabled"
-
-append function SPAWN_ENTITIES_LOADED:
-    execute positioned 0.0 0.0 0.0 run function ./init_stand:
-        execute unless entity @e[type=armor_stand, tag=SHIELD_DISABLE_STAND_TAG, limit=1]:
-            summon armor_stand ~ ~ ~ {
-                Tags: [SHIELD_DISABLE_STAND_TAG],
-                Marker: true,
-                Health: 1000.0f,
-                Silent: true,
-                NoGravity: true,
-                DeathLootTable: "minecraft:empty",
-                Invulnerable: true,
-                ShowArms: true,
-                equipment: {
-                    mainhand: {
-                        id: "iron_sword", components: {
-                            "minecraft:weapon": {disable_blocking_for_seconds: 1.0},
-                            "minecraft:item_model": "air",
-                        }
-                    }
-                }
-            }
 
 
 function ./clear_disabled_tags:
@@ -157,11 +133,27 @@ class ShieldHit(Using):
         """
         with tag_self() as PLAYER_TAG:
             tag @s add SHIELD_DISABLED_TAG
-            execute rotated as @s as @e[type=armor_stand, tag=SHIELD_DISABLE_STAND_TAG, limit=1]:
+            execute rotated as @s summon armor_stand:
+                SELF.merge({
+                    Marker: true,
+                    Silent: true,
+                    NoGravity: true,
+                    DeathLootTable: "minecraft:empty",
+                    Invulnerable: true,
+                    ShowArms: true,
+                    equipment: {
+                        mainhand: {
+                            id: "iron_sword", components: {
+                                "minecraft:weapon": {disable_blocking_for_seconds: 1.0},
+                                "minecraft:item_model": "air",
+                            }
+                        }
+                    }
+                })
                 tp @s ^ ^ ^1.0
                 SELF.equipment.mainhand.components."minecraft:weapon".disable_blocking_for_seconds = ticks(period) / 20
                 damage @p[tag=PLAYER_TAG] 1.0 minecraft:player_attack by @s
-                tp @s 0.0 0.0 0.0
+                kill @s
             schedule function ./clear_disabled_tags 2t replace
 
 

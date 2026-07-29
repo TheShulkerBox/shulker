@@ -2,7 +2,6 @@ from item:base import KitItem
 from item:definitions/weapon import Bow
 from lib:helpers import ticks
 from lib:xp import XP
-from server:core import SERVER_TICK
 from server:events import ON_PLAYER_RESET
 from component:bow import BOW_CHARGE, BOW_PRECISION, VANILLA_ACCURACY
 from player:events import ON_HURT
@@ -15,11 +14,11 @@ WARBOW_TICK_ARROW: FunctionPath = item:warbow/tick_projectile
 WARBOW_HIT_BLOCK: FunctionPath = item:warbow/hit_block
 WARBOW_FUMBLE_FOCUS: FunctionPath = item:warbow/fumble_focus
 
-WARBOW_RELOAD = Scoreboard("item.warbow_reload", criteria="dummy")
-WARBOW_DAMAGE_TAKEN = Scoreboard("item.warbow_damage_taken", criteria="minecraft.custom:minecraft.damage_taken")
-WARBOW_LAST_DAMAGE_TAKEN = Scoreboard("item.warbow_last_damage_taken", criteria="dummy")
-WARBOW_PROJECTILE_TIMER = Scoreboard("item.warbow_projectile_timer", criteria="dummy")
-WARBOW_GRAVITY_TIMER = Scoreboard("item.warbow_projectile_sound_timer", criteria="dummy")
+WARBOW_RELOAD = Scoreboard("shulker.item.warbow_reload", criteria="dummy")
+WARBOW_DAMAGE_TAKEN = Scoreboard("shulker.item.warbow_damage_taken", criteria="minecraft.custom:minecraft.damage_taken")
+WARBOW_LAST_DAMAGE_TAKEN = Scoreboard("shulker.item.warbow_last_damage_taken", criteria="dummy")
+WARBOW_PROJECTILE_TIMER = Scoreboard("shulker.item.warbow_projectile_timer", criteria="dummy")
+WARBOW_GRAVITY_TIMER = Scoreboard("shulker.item.warbow_projectile_sound_timer", criteria="dummy")
 
 FOCUS_TAG = "warbow.focus"
 FUMBLED_FOCUS_TAG = "warbow.fumbled_focus"
@@ -27,6 +26,7 @@ PROJECTILE_TAG = "warbow.projectile"
 FOCUSED_PROJECTILE_TAG = "warbow.focused_projectile"
 
 WARBOW_RELOAD_TICKS = ticks("45t")
+WARBOW_PROJECTILE_LIFETIME_TICKS = ticks("8t")
 WARBOW_VELOCITY_AMPLIFIER = 2
 HUNGER_AMPLIFIER = 1
 HUNGER_TICKS = ticks("2.5s")
@@ -207,7 +207,8 @@ function WARBOW_TICK_ARROW:
         playsound minecraft:item.trident.riptide_3 master @a ~ ~ ~ 0.3 2
 
     # death timer
-    kill @s[scores={WARBOW_PROJECTILE_TIMER=500..}]
+    if WARBOW_PROJECTILE_TIMER["@s"] >= WARBOW_PROJECTILE_LIFETIME_TICKS:
+        kill @s
 
 
 function WARBOW_HIT_BLOCK:

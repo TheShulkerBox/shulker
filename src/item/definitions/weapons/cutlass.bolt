@@ -7,6 +7,7 @@ from lib:helpers import ticks
 
 CUTLASS_BREAK: FunctionPath = item:cutlass/break
 CUTLASS_REPAIR: FunctionPath = item:cutlass/repair
+CUTLASS_REPAIR_DURABILITY: FunctionPath = item:cutlass/repair_durability
 CUTLASS_RESET: FunctionPath = item:cutlass/reset
 CUTLASS_START: FunctionPath = item:cutlass/parry/start
 CUTLASS_USING: FunctionPath = item:cutlass/parry/using
@@ -14,9 +15,9 @@ CUTLASS_SUCCESS: FunctionPath = item:cutlass/parry/success
 CUTLASS_FAIL: FunctionPath = item:cutlass/parry/fail
 CUTLASS_COOLDOWN_LOOP: FunctionPath = item:cutlass/cooldown_loop
 
-CUTLASS_PARRY_TIER = Scoreboard("item.cutlass_parry_tier", criteria="dummy")
-CUTLASS_PREVIOUS_TIER = Scoreboard("item.cutlass_previous_tier", criteria="dummy")
-CUTLASS_COOLDOWN_TIMER = Scoreboard("item.cutlass_cooldown", criteria="dummy")
+CUTLASS_PARRY_TIER = Scoreboard("shulker.item.cutlass_parry_tier", criteria="dummy")
+CUTLASS_PREVIOUS_TIER = Scoreboard("shulker.item.cutlass_previous_tier", criteria="dummy")
+CUTLASS_COOLDOWN_TIMER = Scoreboard("shulker.item.cutlass_cooldown", criteria="dummy")
 
 CUTLASS_IGNORE_UPGRADE = "item.cutlass_ignore_upgrade"
 
@@ -276,6 +277,10 @@ function CUTLASS_REPAIR:
             execute function ~/{cutlass['class_name'].lower()}/set:
                 item replace entity @s weapon.mainhand with cutlass["item"]
                 glint(False)
+
+
+function CUTLASS_REPAIR_DURABILITY:
+    item modify entity @s hotbar.0 {function: "set_components", components: {damage: 0}}
 
 
 function CUTLASS_BREAK:

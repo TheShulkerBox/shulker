@@ -12,7 +12,7 @@ from ./using import Using
 from ./type import ComponentBuildError, RecursiveComponent
 from ./droppable import Droppable
 
-CHARGE_METER = Scoreboard("component.throwable_charge", criteria="dummy")
+CHARGE_METER = Scoreboard("shulker.component.throwable_charge", criteria="dummy")
 THROWABLE_ITEM_TAG = "component.throwable.item"
 THROWABLE_ITEM_TAG_INIT = "component.throwable.item_init"
 THROWABLE_CHARGE_SCALE = 1000
@@ -105,7 +105,19 @@ class Throwable(Using):
         
     
     def post_build(self, output_components: dict[str, Any], item_obj: ItemType):
+        cancel_throw = f"{self.on_throw}/cancel"
+        function cancel_throw:
+            XP.set_points(0)
+            CHARGE_METER["@s"].reset()
+
         function self.on_throw:
+            # Stopping use also fires when the player scrolls away from the item.
+            # Cancel the release unless this throwable is still held in either hand.
+            execute
+                unless items entity @s weapon.mainhand (-item_obj)
+                unless items entity @s weapon.offhand (-item_obj)
+                return run function cancel_throw
+
             CHARGE_METER["@s"] += 0
             if CHARGE_METER["@s"] >= self.minimum_charge_ticks:
                 execute function ~/reduce_count:

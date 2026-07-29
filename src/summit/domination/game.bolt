@@ -1,12 +1,16 @@
 """Domination scoring, match clock, and victory handling."""
 
+from functools import cache
+
 from kit:services/resupply import TICK_RESUPPLY_TIME
-from ../battlegrounds import PLAYER_TAG
+from lib:helpers import clamp
+
+from ../battlegrounds import PLAYER_TAG, TIME_LEFT
 from ../stickers import WIN_A_GAME_STICKER
-from ./config import BLUE_TEAM, BLUE_TEXT_COLOR
+from ./config import BLUE_TEAM, BLUE_TEXT_COLOR, BODY_TEXT_COLOR
 from ./config import CAPTURE_RADIUS, CRATE_PARTICLE_COLOR, DOMINATION_POINTS
 from ./config import DOMINATION_POINT_ENTITY
-from ./config import DOMINATION_POINT_TYPE, MATCH_DURATION_SECONDS
+from ./config import DOMINATION_POINT_TYPE
 from ./config import DRAW_TEXT_COLOR
 from ./config import POINT_DEBUG_PARTICLE_COLOR
 from ./config import POINT_CAPTURE_DAMAGE_PER_TICK, POINT_CAPTURE_HEALTH
@@ -16,14 +20,27 @@ from ./config import RESPAWN_DEBUG_PARTICLE_COLOR, RESUPPLY_DEBUG_PARTICLE_COLOR
 from ./config import RESPAWN_POINT_POSITIONS, RESUPPLY_CRATE_POSITIONS
 from ./config import SCORING_INTERVAL_TICKS
 from ./config import STARTING_SCORE, SUMMIT_BOOTH_ENTITY_TAG, WIN_THRESHOLD
-from ./config import SUBTITLE_COLOR, DEBUG
+from ./config import SUBTITLE_COLOR, DEBUG, Banner
 from ./registry import BATTLEGROUND
 from ./registry import AWARD_CONTROL_POINTS, BLUE_WIN, CAPTURE_POINTS
 from ./registry import DEBUG_POINT_PARTICLES
 from ./registry import DOMINATION_BOSSBAR, DOMINATION_MAIN, DOMINATION_TEAM
-from ./registry import GAME_SCORE, GAME_STATE, MATCH_DRAW, MATCH_FINISHED
-from ./registry import MATCH_TIME_LEFT, MATCH_TIME_UP, POINT_REGEN_TIMER, RED_WIN
+from ./registry import END_WITH_BLUE_WIN, END_WITH_RED_WIN
+from ./registry import GAME_SCORE, GAME_STATE, LAST_TIME_LEFT, MATCH_DRAW, MATCH_FINISHED
+from ./registry import MATCH_TIME_UP, POINT_REGEN_TIMER, RED_WIN
 from ./registry import SCORING_TIMER
+
+
+@cache
+def slow_tick(rate: int):
+    path = f"shulker:slow_tick{rate}"
+    predicate path {
+        "condition": "minecraft:entity_properties",
+        "entity": "this",
+        "predicate": {"minecraft:periodic_tick": rate}
+    }
+    return path
+    
 
 
 def show_subtitle(message: str, color: str, quick: bool = False):
@@ -37,47 +54,42 @@ def show_subtitle(message: str, color: str, quick: bool = False):
     title @s title {text: ""}
 
 
-function DEBUG_POINT_PARTICLES:
-    """Render temporary columns for the configured arena positions."""
-    # for x, y, z in RESUPPLY_CRATE_POSITIONS:
-    #     for height in range(5):
-    #         particle dust{color:RESUPPLY_DEBUG_PARTICLE_COLOR,scale:1.0} (x + 0.5) (y + height + 0.5) (z + 0.5) 0 0 0 0 1 force @a
-    # for x, y, z in RESPAWN_POINT_POSITIONS:
-    #     for height in range(5):
-    #         particle dust{color:RESPAWN_DEBUG_PARTICLE_COLOR,scale:1.0} (x + 0.5) (y + height + 0.5) (z + 0.5) 0 0 0 0 1 force @a
-    # for point_name, point_tag, point_health, point_owner, point_capture_team, point_bossbar, position in DOMINATION_POINTS:
-    #     x, y, z = position
-    #     for height in range(5):
-    #         particle dust{color:POINT_DEBUG_PARTICLE_COLOR,scale:1.0} (x + 0.5) (y + height + 0.5) (z + 0.5) 0 0 0 0 1 force @a
-
 
 # Summit invokes this persistent function every tick. Battleground adds the
 # active-session guard before this game function is called.
 append function BATTLEGROUND.tick():
     """Advance cooldowns, the match timer, and control point scoring."""
-    execute if score var GAME_STATE[MATCH_FINISHED] matches 1 run return 0
+    if GAME_STATE[MATCH_FINISHED] == 1:
+        return 0
 
     function TICK_RESUPPLY_TIME
 
-    if GAME_STATE[MATCH_TIME_LEFT] > 0:
-        GAME_STATE[MATCH_TIME_LEFT] -= 1
+    # Summit owns the match clock in seconds. Remember the last observed value
+    # only to avoid repeating announcements during the 20 ticks of each second.
+    if GAME_STATE[LAST_TIME_LEFT] != TIME_LEFT:
+        GAME_STATE[LAST_TIME_LEFT] = TIME_LEFT
 
-    if GAME_STATE[MATCH_TIME_LEFT] == 600:
-        execute as @a[tag=PLAYER_TAG]:
-            show_subtitle("30 seconds remaining!", SUBTITLE_COLOR)
-
-    for ticks_left, countdown_number in [(100, "5"), (80, "4"), (60, "3"), (40, "2"), (20, "1")]:
-        if GAME_STATE[MATCH_TIME_LEFT] == ticks_left:
+        if TIME_LEFT == 30:
             execute as @a[tag=PLAYER_TAG]:
-                show_subtitle(countdown_number, SUBTITLE_COLOR, quick=True)
-                playsound minecraft:block.note_block.hat voice @s ~ ~ ~ 0.5 1.189207
+                show_subtitle("30 seconds remaining!", SUBTITLE_COLOR)
 
-    execute if score var GAME_STATE[MATCH_TIME_LEFT] matches 0 run return run function MATCH_TIME_UP
+        for seconds_left, countdown_number in [(5, "5"), (4, "4"), (3, "3"), (2, "2"), (1, "1")]:
+            if TIME_LEFT == seconds_left:
+                execute as @a[tag=PLAYER_TAG]:
+                    show_subtitle(countdown_number, SUBTITLE_COLOR, quick=True)
+                    playsound minecraft:block.note_block.hat voice @s ~ ~ ~ 0.5 1.189207
+
+    # Summit uses -1 while an active arena is waiting for its timer to start.
+    # Only 0 means the match timer has actually expired.
+    if TIME_LEFT == 0:
+        return run function MATCH_TIME_UP
 
     # Point health changes every tick, while owned points score twice a second.
     function CAPTURE_POINTS
+
     GAME_STATE[SCORING_TIMER] += 1
     GAME_STATE[POINT_REGEN_TIMER] += 1
+
     if GAME_STATE[POINT_REGEN_TIMER] >= POINT_REGEN_INTERVAL_TICKS:
         GAME_STATE[POINT_REGEN_TIMER] = 0
 
@@ -86,106 +98,172 @@ append function BATTLEGROUND.tick():
 
         # Magenta particles make the two crate hitboxes easy to find.
         for x, y, z in RESUPPLY_CRATE_POSITIONS:
-            particle dust{color:CRATE_PARTICLE_COLOR,scale:1.1} (x + 0.5) (y + 0.6) (z + 0.5) 0.3 0.4 0.3 0 8 force @a[tag=PLAYER_TAG]
+            particle dust{color:CRATE_PARTICLE_COLOR,scale:1.1} (x + 0.5) (y + 0.6) (z + 0.5) 0.3 0.4 0.3 0 8 normal @a[tag=PLAYER_TAG]
 
         function AWARD_CONTROL_POINTS
 
 
 function CAPTURE_POINTS:
-    """Update capture progress, ownership, and the point's nearby-player bossbar."""
-    for point_name, point_tag, point_health, point_owner, point_capture_team, point_bossbar, position in DOMINATION_POINTS:
-        if DEBUG:
-            positioned position:
-                for height in range(5):
-                    height += 0.5
-                    particle dust{color:POINT_DEBUG_PARTICLE_COLOR,scale:1.0} ~ ~height ~ 0 0 0 0 1 force @a[tag=PLAYER_TAG]
+    """Update capture progress, ownership, and the point's nearby-players."""
+    for point in DOMINATION_POINTS:
+        x, y, z = point.position
 
-        # Count each team's players inside the point and show the bossbar to them.
-        positioned position store result score var SCORE.temp["#domination_red_players"] if entity @a[tag=PLAYER_TAG,distance=(0, CAPTURE_RADIUS),scores={DOMINATION_TEAM=RED_TEAM}]
-        positioned position store result score var SCORE.temp["#domination_blue_players"] if entity @a[tag=PLAYER_TAG,distance=(0, CAPTURE_RADIUS),scores={DOMINATION_TEAM=BLUE_TEAM}]
-                
-        positioned position bossbar set point_bossbar players @a[tag=PLAYER_TAG,distance=(0, CAPTURE_RADIUS)]
-
-        # The team with a player majority damages the point toward its capture.
-        if SCORE.temp["#domination_red_players"] > SCORE.temp["#domination_blue_players"]:
-            if GAME_STATE[point_owner] != RED_TEAM:
-                if GAME_STATE[point_capture_team] != RED_TEAM:
-                    GAME_STATE[point_capture_team] = RED_TEAM
-                    GAME_STATE[point_health] = POINT_CAPTURE_HEALTH
-                GAME_STATE[point_health] -= POINT_CAPTURE_DAMAGE_PER_TICK
-                bossbar set point_bossbar color red
-        
-        elif SCORE.temp["#domination_blue_players"] > SCORE.temp["#domination_red_players"]:
-            if GAME_STATE[point_owner] != BLUE_TEAM:
-                if GAME_STATE[point_capture_team] != BLUE_TEAM:
-                    GAME_STATE[point_capture_team] = BLUE_TEAM
-                    GAME_STATE[point_health] = POINT_CAPTURE_HEALTH
-                GAME_STATE[point_health] -= POINT_CAPTURE_DAMAGE_PER_TICK
-                bossbar set point_bossbar color blue
-        
-        # With nobody contesting the point, unfinished capture progress regenerates.
-        elif SCORE.temp["#domination_red_players"] == 0:
-            if GAME_STATE[point_capture_team] != 0 and GAME_STATE[POINT_REGEN_TIMER] == 0:
-                GAME_STATE[point_health] += POINT_CAPTURE_DAMAGE_PER_TICK
-                if GAME_STATE[point_health] >= POINT_CAPTURE_HEALTH:
-                    GAME_STATE[point_health] = POINT_CAPTURE_HEALTH
-                    GAME_STATE[point_capture_team] = 0
-
-        # A defending majority cancels the attack and restores full capture health.
-        if GAME_STATE[point_owner] == RED_TEAM and SCORE.temp["#domination_red_players"] > SCORE.temp["#domination_blue_players"]:
-            GAME_STATE[point_capture_team] = 0
-            GAME_STATE[point_health] = POINT_CAPTURE_HEALTH
-        elif GAME_STATE[point_owner] == BLUE_TEAM and SCORE.temp["#domination_blue_players"] > SCORE.temp["#domination_red_players"]:
-            GAME_STATE[point_capture_team] = 0
-            GAME_STATE[point_health] = POINT_CAPTURE_HEALTH
-
-        # Complete the capture when health reaches zero, then refresh the bar color.
-        if GAME_STATE[point_health] <= 0:
-            GAME_STATE[point_owner] = GAME_STATE[point_capture_team]
-            GAME_STATE[point_capture_team] = 0
-            GAME_STATE[point_health] = POINT_CAPTURE_HEALTH
-            if GAME_STATE[point_owner] == RED_TEAM:
-                tellraw @a[tag=PLAYER_TAG] {text: f"Red captured Point {point_name}!", color: RED_TEXT_COLOR}
-                bossbar set point_bossbar color red
-            elif GAME_STATE[point_owner] == BLUE_TEAM:
-                tellraw @a[tag=PLAYER_TAG] {text: f"Blue captured Point {point_name}!", color: BLUE_TEXT_COLOR}
-                bossbar set point_bossbar color blue
-        
-        # otherwise, show the point's owner color or neutral yellow if unowned.
-        elif GAME_STATE[point_capture_team] == 0:
-            if GAME_STATE[point_owner] == RED_TEAM:
-                bossbar set point_bossbar color red
-            elif GAME_STATE[point_owner] == BLUE_TEAM:
-                bossbar set point_bossbar color blue
+        # handles dynamic point taking noises
+        def taking_point_noise(point, team_score: int):
+            if GAME_STATE[point.health] < 120:
+                rate = 8
+                playsound minecraft:entity.zombie.attack_wooden_door voice @a[scores={DOMINATION_TEAM=team_score},predicate=slow_tick(rate),distance=..12] x y z 1 0.75
+            elif GAME_STATE[point.health] < 60:
+                rate = 6
+                playsound minecraft:entity.zombie.attack_wooden_door voice @a[scores={DOMINATION_TEAM=team_score},predicate=slow_tick(rate),distance=..12] x y z 1 0.75
+            elif GAME_STATE[point.health] < 30:
+                rate = 4
+                playsound minecraft:entity.zombie.attack_wooden_door voice @a[scores={DOMINATION_TEAM=team_score},predicate=slow_tick(rate),distance=..12] x y z 1 0.75
+            elif GAME_STATE[point.health] == 1:
+                rate = -1
+                playsound minecraft:entity.zombie.break_wooden_door voice @a[scores={DOMINATION_TEAM=team_score},distance=..24] x y z 1 1
             else:
-                bossbar set point_bossbar color yellow
+                rate = 10
+                playsound minecraft:entity.zombie.attack_wooden_door voice @a[scores={DOMINATION_TEAM=team_score},predicate=slow_tick(rate),distance=..12] x y z 1 0.75
+            
+        # Count each team's players inside the point and show the bossbar to them.
+        execute
+            positioned point.position 
+            store result score var SCORE.temp["#domination_red_players"]
+            if entity @a[tag=PLAYER_TAG,distance=(0, CAPTURE_RADIUS),scores={DOMINATION_TEAM=RED_TEAM}]
+        execute
+            positioned point.position 
+            store result score var SCORE.temp["#domination_blue_players"]
+            if entity @a[tag=PLAYER_TAG,distance=(0, CAPTURE_RADIUS),scores={DOMINATION_TEAM=BLUE_TEAM}]
+                
 
-        execute store result bossbar point_bossbar value run scoreboard players get var GAME_STATE[point_health]
+        #> Contested
+        # if both teams have atleast one player on the flag, it's contested
+        if (SCORE.temp["#domination_red_players"] > 0) and (SCORE.temp["#domination_blue_players"] > 0):
+            GAME_STATE[point.contested] = 1
+            
+            if GAME_STATE[point.owner] == 1:
+                Banner.set_contested(point.entity[0], "red")
+            elif GAME_STATE[point.owner] == 2:
+                Banner.set_contested(point.entity[0], "blue")
+            else:
+                Banner.set_contested(point.entity[0])
+        
+        #> Not Contested
+        else:
+            # Reset banner back to normal
+            if GAME_STATE[point.contested] == 1:
+                if GAME_STATE[point.owner] == 1:
+                    Banner.set(point.entity[0], "red")
+                elif GAME_STATE[point.owner] == 2:
+                    Banner.set(point.entity[0], "blue")
+                else:
+                    Banner.set(point.entity[0])
 
+            GAME_STATE[point.contested] = 0
+
+            #> Red Capturing
+            # otherwise, red has someone on the flag
+            if (GAME_STATE[point.owner] != RED_TEAM) and (SCORE.temp["#domination_red_players"] > 0):
+                taking_point_noise(point, RED_TEAM)
+                GAME_STATE[point.capturing_team] = RED_TEAM
+                GAME_STATE[point.health] -= POINT_CAPTURE_DAMAGE_PER_TICK
+            
+            #> Blue Capturing
+            # or lastly, only blue has someone on the flag
+            elif (GAME_STATE[point.owner] != BLUE_TEAM) and (SCORE.temp["#domination_blue_players"] > 0):
+                taking_point_noise(point, BLUE_TEAM)
+                GAME_STATE[point.capturing_team] = BLUE_TEAM
+                GAME_STATE[point.health] -= POINT_CAPTURE_DAMAGE_PER_TICK
+            
+            #> No one capturing (regen / trickle)
+            # With nobody contesting the point, unfinished capture progress regenerates until full.
+            elif GAME_STATE[point.health] < POINT_CAPTURE_HEALTH:
+                GAME_STATE[point.capturing_team] = 0
+
+                # tick up health on a timer
+                if GAME_STATE[POINT_REGEN_TIMER] == 0:
+                    GAME_STATE[point.health] += POINT_CAPTURE_DAMAGE_PER_TICK
+
+            #> Point Captured
+            # Complete the capture when health reaches zero, then refresh the bar color.
+            # Capturing team marked by `point.capturing_team`
+            if GAME_STATE[point.health] <= 0:
+                GAME_STATE[point.owner] = GAME_STATE[point.capturing_team]
+                GAME_STATE[point.capturing_team] = 0
+                GAME_STATE[point.health] = POINT_CAPTURE_HEALTH
+                
+                if GAME_STATE[point.owner] == RED_TEAM:
+                    # Sound for team that lost control
+                    playsound minecraft:entity.ravager.celebrate voice @a[team=BLUE_TEAM] x y z 1 2
+                    # Sound for team that gained control
+                    playsound minecraft:entity.villager.yes voice @a[team=RED_TEAM] x y z 1 1.2
+                    tellraw @a[tag=PLAYER_TAG] {text: f"Red captured Point {point.name}!", color: RED_TEXT_COLOR}
+                    execute as @a[tag=PLAYER_TAG]:
+                        show_subtitle(f"Red captured Point {point.name}!", RED_TEXT_COLOR)
+                    Banner.set(point.entity[0], "red")
+            
+                elif GAME_STATE[point.owner] == BLUE_TEAM:
+                    # Sound for team that lost control
+                    playsound minecraft:entity.ravager.celebrate voice @a[team=RED_TEAM] x y z 1 2
+                    # Sound for team that gained control
+                    playsound minecraft:entity.villager.yes voice @a[team=BLUE_TEAM] x y z 1 1.2
+                    tellraw @a[tag=PLAYER_TAG] {text: f"Blue captured Point {point.name}!", color: BLUE_TEXT_COLOR}
+                    execute as @a[tag=PLAYER_TAG]:
+                        show_subtitle(f"Blue captured Point {point.name}!", BLUE_TEXT_COLOR)
+                    Banner.set(point.entity[0], "blue")
+        
 
 function AWARD_CONTROL_POINTS:
     """Award one shared score for every point a team already owns."""
     SCORE.temp["#domination_score_changed"] = 0
 
-    for point_name, point_tag, point_health, point_owner, point_capture_team, point_bossbar, position in DOMINATION_POINTS:
-        if GAME_STATE[point_owner] == RED_TEAM:
-            GAME_STATE[GAME_SCORE] -= PROGRESS_PER_CONTROLLED_POINT
-            SCORE.temp["#domination_score_changed"] = 1
-        elif GAME_STATE[point_owner] == BLUE_TEAM:
-            GAME_STATE[GAME_SCORE] += PROGRESS_PER_CONTROLLED_POINT
-            SCORE.temp["#domination_score_changed"] = 1
+    for point in DOMINATION_POINTS:
+        if not GAME_STATE[point.contested]:
+            if GAME_STATE[point.owner] == RED_TEAM:
+                GAME_STATE[GAME_SCORE] -= PROGRESS_PER_CONTROLLED_POINT
+                SCORE.temp["#domination_score_changed"] = 1
+            elif GAME_STATE[point.owner] == BLUE_TEAM:
+                GAME_STATE[GAME_SCORE] += PROGRESS_PER_CONTROLLED_POINT
+                SCORE.temp["#domination_score_changed"] = 1
 
     if SCORE.temp["#domination_score_changed"] == 1:
-        if GAME_STATE[GAME_SCORE] <= 0:
-            GAME_STATE[GAME_SCORE] = 0
-        elif GAME_STATE[GAME_SCORE] >= WIN_THRESHOLD:
-            GAME_STATE[GAME_SCORE] = WIN_THRESHOLD
+        # clamp the value
+        GAME_STATE[GAME_SCORE] = clamp(GAME_STATE[GAME_SCORE], 0, WIN_THRESHOLD)
 
-        execute store result bossbar DOMINATION_BOSSBAR value run scoreboard players get var GAME_STATE[GAME_SCORE]
+        execute 
+            store result bossbar DOMINATION_BOSSBAR value
+            run scoreboard players get var GAME_STATE[GAME_SCORE]
+
+        # The fill direction is subtle at a glance, so make the team currently
+        # ahead stand out in the bossbar title as well.
+        if GAME_STATE[GAME_SCORE] < STARTING_SCORE:
+            bossbar set DOMINATION_BOSSBAR name [
+                "",
+                {text: "Red", color: RED_TEXT_COLOR, bold: true},
+                {text: "            Domination            ", color: BODY_TEXT_COLOR},
+                {text: "Blue", color: BLUE_TEXT_COLOR}
+            ]
+        elif GAME_STATE[GAME_SCORE] > STARTING_SCORE:
+            bossbar set DOMINATION_BOSSBAR name [
+                "",
+                {text: "Red", color: RED_TEXT_COLOR},
+                {text: "            Domination            ", color: BODY_TEXT_COLOR},
+                {text: "Blue", color: BLUE_TEXT_COLOR, bold: true}
+            ]
+        else:
+            bossbar set DOMINATION_BOSSBAR name [
+                "",
+                {text: "Red", color: RED_TEXT_COLOR},
+                {text: "            Domination            ", color: BODY_TEXT_COLOR},
+                {text: "Blue", color: BLUE_TEXT_COLOR}
+            ]
+        
+        # detect win
         if GAME_STATE[GAME_SCORE] <= 0:
-            return run function RED_WIN
+            return run function END_WITH_RED_WIN
         elif GAME_STATE[GAME_SCORE] >= WIN_THRESHOLD:
-            return run function BLUE_WIN
+            return run function END_WITH_BLUE_WIN
 
 
 function MATCH_TIME_UP:
@@ -198,32 +276,41 @@ function MATCH_TIME_UP:
 
 
 function RED_WIN:
-    """Award Red once and ask Summit to end the active session."""
+    """Declare Red the winner without changing Summit's lifecycle."""
     GAME_STATE[MATCH_FINISHED] = 1
     advancement grant @a[tag=PLAYER_TAG,scores={DOMINATION_TEAM=RED_TEAM}] only WIN_A_GAME_STICKER
     execute as @a[tag=PLAYER_TAG]:
         show_subtitle("Red wins!", RED_TEXT_COLOR)
     playsound minecraft:item.goat_horn.sound.0 voice @a[tag=PLAYER_TAG] ~ ~ ~ 0.8 0.8
-    tellraw @a[tag=PLAYER_TAG] {text: "Red controlled the arena!", color: RED_TEXT_COLOR}
-    BATTLEGROUND.end_session()
+    tellraw @a[tag=PLAYER_TAG] {text: "Red dominated the arena!", color: RED_TEXT_COLOR}
 
 
 function BLUE_WIN:
-    """Award Blue once and ask Summit to end the active session."""
+    """Declare Blue the winner without changing Summit's lifecycle."""
     GAME_STATE[MATCH_FINISHED] = 1
     advancement grant @a[tag=PLAYER_TAG,scores={DOMINATION_TEAM=BLUE_TEAM}] only WIN_A_GAME_STICKER
     execute as @a[tag=PLAYER_TAG]:
         show_subtitle("Blue wins!", BLUE_TEXT_COLOR)
     playsound minecraft:item.goat_horn.sound.0 voice @a[tag=PLAYER_TAG] ~ ~ ~ 0.8 1.2
-    tellraw @a[tag=PLAYER_TAG] {text: "Blue controlled the arena!", color: BLUE_TEXT_COLOR}
+    tellraw @a[tag=PLAYER_TAG] {text: "Blue dominated the arena!", color: BLUE_TEXT_COLOR}
+
+
+function END_WITH_RED_WIN:
+    """Declare an early Red victory, then ask Summit to end the session."""
+    function RED_WIN
+    BATTLEGROUND.end_session()
+
+
+function END_WITH_BLUE_WIN:
+    """Declare an early Blue victory, then ask Summit to end the session."""
+    function BLUE_WIN
     BATTLEGROUND.end_session()
 
 
 function MATCH_DRAW:
-    """End a tied match without awarding the victory sticker."""
+    """Declare a timed draw without awarding the victory sticker."""
     GAME_STATE[MATCH_FINISHED] = 1
     execute as @a[tag=PLAYER_TAG]:
         show_subtitle("Draw!", SUBTITLE_COLOR)
     playsound minecraft:item.goat_horn.sound.1 voice @a[tag=PLAYER_TAG] ~ ~ ~ 0.8 1.0
-    tellraw @a[tag=PLAYER_TAG] {text: "Neither team controlled the arena.", color: DRAW_TEXT_COLOR}
-    BATTLEGROUND.end_session()
+    tellraw @a[tag=PLAYER_TAG] {text: "Neither team dominated the arena.", color: DRAW_TEXT_COLOR}

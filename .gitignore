@@ -3,3 +3,4 @@ __pycache__
 .DS_Store
 .env
 src/shulker.egg-info/
+{condition:"minecraft:entity_properties",entity:"this",predicate:{"minecraft:periodic_tick":60}}

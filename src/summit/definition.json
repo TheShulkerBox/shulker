@@ -53,8 +53,11 @@
         }
     },
     "on_player_enter": "shulker:summit/booth/enter",
+    "persistent_tick": "shulker:server/tick",
     "ticking_functions": {
-        "shulker:summit/map_display/clock": "10s"
+        "shulker:summit/map_display/clock": "5s",
+        "shulker:summit/random_kit_stand/tick": "3s",
+        "shulker:summit/stickers/tick_kit_progress": "1t"
     },
     "sticker_book": {
         "background_color": "#1a48c3",
@@ -73,6 +76,13 @@
                 "sticker_name": "Triple Threat",
                 "unobtained_text": "Get 3 kills in a game",
                 "obtained_text": "You got 3 kills in one game"
+            },
+            {
+                "sticker_id": "assassin_fox",
+                "sticker_texture": "shulker:item/stickers/assassin_fox",
+                "sticker_name": "Oak's Assassin",
+                "unobtained_text": "Get this sticker by successfully doing a backstab",
+                "obtained_text": "You got a backstab with Oak's favorite kit!"
             },
             {
                 "sticker_id": "win_a_game",

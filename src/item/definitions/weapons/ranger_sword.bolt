@@ -3,15 +3,16 @@ from lib:helpers import ticks
 from lib:predicates import has_item_predicate
 from lib:xp import XP
 from player:events import ON_HURT_BY_PLAYER
-from player:services import PLAYER_TICK
+from shulker:summit/battlegrounds import BATTLEGROUNDS_PLAYER_TICK
 
 
-RANGER_READY_SWORD_STRIKE: FunctionPath = item:ranger/ready_sword_strike
+RANGER_SHARPENED_STRIKE: FunctionPath = item:ranger/sharpened_strike
 RANGER_LOSE_SWORD_EDGE: FunctionPath = item:ranger/lose_sword_edge
 RANGER_TICK: FunctionPath = item:ranger/tick
 RANGER_RESTORE_SWORD_EDGE: FunctionPath = item:ranger/restore_sword_edge
+RANGER_REPLACE_SPENT_SWORD: FunctionPath = item:ranger/replace_spent_sword
 
-RANGER_SWORD_RELOAD = Scoreboard("item.ranger_sword_reload", criteria="dummy")
+RANGER_SWORD_RELOAD = Scoreboard("shulker.item.ranger_sword_reload", criteria="dummy")
 RANGER_SWORD_RELOAD_TICKS = ticks("75t")
 
 
@@ -21,20 +22,24 @@ class SharpenedSword(Weapon):
     lore = "Strike cleanly to spend its honed edge."
     melee = {damage: 7, speed: 1.6}
     enchantment_glint_override = true
-    strike = {slot: "weapon.mainhand", victim: RANGER_READY_SWORD_STRIKE}
-    max_stack_size = 1
+    strike = {
+        attacker: RANGER_SHARPENED_STRIKE,
+        attacker_slot: "weapon.mainhand",
+    }
 
 
-class SpentSword(SharpenedSword):
+class SpentSword(Weapon):
+    id = "wooden_sword"
     item_name = "Spent Shortsword"
     lore = "Its edge will return after a short recovery."
     melee = {damage: 4, speed: 1.6}
     enchantment_glint_override = false
-    strike = None
 
 
-function RANGER_READY_SWORD_STRIKE:
-    execute on attacker run function RANGER_LOSE_SWORD_EDGE
+function RANGER_SHARPENED_STRIKE:
+    function RANGER_LOSE_SWORD_EDGE
+    playsound minecraft:item.trident.throw master @s ~ ~ ~ 1 1.4
+    playsound minecraft:block.grindstone.use master @s ~ ~ ~ 0.7 1.7
 
 
 function RANGER_LOSE_SWORD_EDGE:
@@ -42,20 +47,31 @@ function RANGER_LOSE_SWORD_EDGE:
     item replace entity @s weapon.mainhand with SpentSword
     RANGER_SWORD_RELOAD["@s"] = RANGER_SWORD_RELOAD_TICKS
     XP.set_points(0)
-    playsound minecraft:item.trident.throw master @s ~ ~ ~ 1 1.4
-    playsound minecraft:block.grindstone.use master @s ~ ~ ~ 0.7 1.7
 
 
 function RANGER_RESTORE_SWORD_EDGE:
-    clear @s (-SpentSword) 1
-    give @s SharpenedSword
+    execute unless function RANGER_REPLACE_SPENT_SWORD run return fail
     RANGER_SWORD_RELOAD["@s"].reset()
     XP.set_points(0)
     playsound minecraft:item.trident.throw master @s ~ ~ ~ 1 2
     title @s actionbar {text: "Shortsword edge restored", color: Theme.Success}
 
 
-append function PLAYER_TICK:
+function RANGER_REPLACE_SPENT_SWORD:
+    for slot in ["weapon.mainhand", "weapon.offhand"]:
+        execute if items entity @s slot (-SpentSword) run return run item replace entity @s slot with SharpenedSword
+
+    for index in range(36):
+        slot = f"container.{index}"
+        execute if items entity @s slot (-SpentSword) run return run item replace entity @s slot with SharpenedSword
+
+    for slot in ["player.cursor", "player.crafting.0", "player.crafting.1", "player.crafting.2", "player.crafting.3"]:
+        execute if items entity @s slot (-SpentSword) run return run item replace entity @s slot with SharpenedSword
+
+    return fail
+
+
+append function BATTLEGROUNDS_PLAYER_TICK:
     execute if predicate has_item_predicate(SpentSword.conditional_dict()) run function RANGER_TICK
 
 

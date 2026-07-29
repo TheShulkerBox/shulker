@@ -9,11 +9,12 @@
 from contextlib import contextmanager
 from dataclasses import dataclass
 
-from server:core import clock
 from server:services/item_dropping_tags import ITEM_PROCESSED_TAG, SUMMIT_DROPPABLE_IGNORE_DATA
 
 TEXT_TAG = "flying_text.text_display"
 ITEM_TAG = "flying_text.item_vehicle"
+FLYING_TEXT_CLEANUP: FunctionPath = ./flying_text/cleanup
+FLYING_TEXT_ANIMATE: FunctionPath = ./flying_text/animate
 
 # used for more decimals in motion
 PRECISION = int(1e6)
@@ -95,9 +96,9 @@ class FlyingText:
             }
             yield SELF
         
-        schedule function ~/flying_text/animate 1t replace
+        schedule function FLYING_TEXT_ANIMATE 1t replace
 
-        function ~/flying_text/animate:
+        function FLYING_TEXT_ANIMATE:
             execute as @e[type=text_display, tag=TEXT_TAG]:
                 # loop this function if any of our text displays exist
                 schedule function ~/ 1t replace
@@ -113,9 +114,8 @@ class FlyingText:
                 kill @s
 
 
-append function clock('4t'):
-    execute function ./cleanup:
-        execute as @e[type=text_display, tag=TEXT_TAG]:
-            # only don't kill entities that aren't riding anything
-            execute on vehicle run return 1
-            kill @s
+function FLYING_TEXT_CLEANUP:
+    """Remove every active flying-text object when Shulker's arena unloads."""
+    schedule clear FLYING_TEXT_ANIMATE
+    kill @e[type=text_display,tag=TEXT_TAG]
+    kill @e[type=item,tag=ITEM_TAG]

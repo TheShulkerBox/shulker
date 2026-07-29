@@ -4,8 +4,9 @@
 #
 # Inspired from @itsduck__ from mcc
 from lib:flying_text import FlyingText
+from shulker:summit/battlegrounds import SHULKER_PLAYER_TAG
 
-DAMAGE_TAKEN = Scoreboard("player.damage_taken", criteria="minecraft.custom:minecraft.damage_taken")
+DAMAGE_TAKEN = Scoreboard("shulker.player.damage_taken", criteria="minecraft.custom:minecraft.damage_taken")
 damage_text = FlyingText(motion=(0.1, 0.35, 0.1))
 
 
@@ -17,9 +18,19 @@ advancement ./on_hurt {
 
 function ./on_hurt:
     advancement revoke @s only ./on_hurt
+
+    # Reset the cumulative vanilla criterion for every player, including those
+    # outside Shulker, while retaining this hit long enough to render it.
+    SCORE.temp["#flying_text_damage_taken"] = DAMAGE_TAKEN["@s"]
+    DAMAGE_TAKEN["@s"].reset()
+
+    # This advancement is global, but Shulker damage text belongs exclusively
+    # to participants in Shulker's currently active Battleground session.
+    execute unless entity @s[tag=SHULKER_PLAYER_TAG] run return 0
+    execute unless data storage summit.battlegrounds:database session{booth_id: "shulker"} run return 0
     
     # convert to hearts (round) (`@s` needs to resolve here)
-    SCORE.temp["#hearts_damaged"] = DAMAGE_TAKEN["@s"] / 10
+    SCORE.temp["#hearts_damaged"] = SCORE.temp["#flying_text_damage_taken"] / 10
 
     # make the text fly from further up
     execute positioned ~ ~1 ~:
@@ -36,6 +47,3 @@ function ./on_hurt:
             self.transformation.scale[0] += min(2, SCORE.temp["#hearts_damaged"] / 8)
             self.transformation.scale[1] += min(2, SCORE.temp["#hearts_damaged"] / 8)
             self.transformation.scale[2] += min(2, SCORE.temp["#hearts_damaged"] / 8)
-    
-    # reset to avoid accumulation
-    DAMAGE_TAKEN["@s"].reset()

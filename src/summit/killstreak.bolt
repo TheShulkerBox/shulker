@@ -1,0 +1,121 @@
+"""Short multikill rewards for active Shulker Battlegrounds players.
+
+The values in this first section are the intended customization surface. A kill
+refreshes the window, and damaging another player extends an active window.
+Dying, leaving, entering a match, or resetting the player clears the streak.
+"""
+
+from player:events import ON_DAMAGE_DEALT, ON_KILL
+from server:events import ON_PLAYER_RESET
+
+from ./battlegrounds import PLAYER_TAG
+from ./domination/registry import BATTLEGROUND
+from ./domination/registry import PLAYER_DIED, PLAYER_ENTER_SUCCESS, PLAYER_LEAVE
+
+
+# A player has this many ticks after each kill to earn the next reward.
+KILL_WINDOW_TICKS = 15 * 20
+
+# Each hit extends an existing window by this many ticks, up to the full window.
+DAMAGE_TIME_BONUS_TICKS = 3 * 20
+
+KILLSTREAK = Scoreboard("shulker.killstreak", criteria="dummy")
+KILLSTREAK_TIMER = Scoreboard("shulker.killstreak_timer", criteria="dummy")
+
+RESET: FunctionPath = ./killstreak/reset
+DOUBLE_KILL: FunctionPath = ./killstreak/double_kill
+TRIPLE_KILL: FunctionPath = ./killstreak/triple_kill
+QUAD_KILL: FunctionPath = ./killstreak/quad_kill
+PENTAKILL: FunctionPath = ./killstreak/pentakill
+
+
+function RESET:
+    KILLSTREAK["@s"].reset()
+    KILLSTREAK_TIMER["@s"].reset()
+
+
+function DOUBLE_KILL:
+    tellraw @s {text: "Double kill!", color: "red", bold: true}
+    effect give @s minecraft:saturation 1 3
+    execute at @s run playsound minecraft:block.end_portal.spawn master @a[tag=PLAYER_TAG] ~ ~ ~ 0.1 1.4
+
+
+function TRIPLE_KILL:
+    tellraw @s {text: "Triple kill!", color: "red", bold: true}
+    effect give @s minecraft:regeneration 3 2
+    execute at @s run playsound minecraft:block.end_portal.spawn master @a[tag=PLAYER_TAG] ~ ~ ~ 0.3 1.6
+
+
+function QUAD_KILL:
+    tellraw @a[tag=PLAYER_TAG] [
+        {selector: "@s"},
+        {text: " just got a ", color: "gray"},
+        {text: "QUAD KILL!", color: "red", bold: true},
+    ]
+    effect give @s minecraft:resistance 10 0
+    execute at @s run playsound minecraft:block.end_portal.spawn master @a[tag=PLAYER_TAG] ~ ~ ~ 0.5 1.8
+
+
+function PENTAKILL:
+    tellraw @a[tag=PLAYER_TAG] [
+        {selector: "@s"},
+        {text: " just got a ", color: "gray"},
+        {text: "PENTAKILL!", color: "red", bold: true},
+    ]
+    effect give @s minecraft:strength 10 0
+    execute at @s run playsound minecraft:block.end_portal.spawn master @a[tag=PLAYER_TAG] ~ ~ ~ 0.7 2.0
+
+
+append function ON_KILL:
+    """Count player kills only while Shulker owns the active Battleground."""
+    BATTLEGROUND.require_active()
+    execute unless entity @s[tag=PLAYER_TAG] run return 0
+
+    KILLSTREAK["@s"] += 1
+    KILLSTREAK_TIMER["@s"] = KILL_WINDOW_TICKS
+
+    if KILLSTREAK["@s"] == 2:
+        function DOUBLE_KILL
+    elif KILLSTREAK["@s"] == 3:
+        function TRIPLE_KILL
+    elif KILLSTREAK["@s"] == 4:
+        function QUAD_KILL
+    elif KILLSTREAK["@s"] == 5:
+        function PENTAKILL
+
+
+append function ON_DAMAGE_DEALT:
+    """Give an active Shulker player's streak window three more seconds."""
+    BATTLEGROUND.require_active()
+    execute unless entity @s[tag=PLAYER_TAG,scores={KILLSTREAK_TIMER=1..}] run return 0
+
+    KILLSTREAK_TIMER["@s"] += DAMAGE_TIME_BONUS_TICKS
+    if KILLSTREAK_TIMER["@s"] > KILL_WINDOW_TICKS:
+        KILLSTREAK_TIMER["@s"] = KILL_WINDOW_TICKS
+
+
+append function BATTLEGROUND.tick():
+    """Expire active players' streaks after their refreshed kill window."""
+    execute as @a[tag=PLAYER_TAG,scores={KILLSTREAK_TIMER=1..}]:
+        KILLSTREAK_TIMER["@s"] -= 1
+
+        if KILLSTREAK_TIMER["@s"] <= 0:
+            tellraw @s {text: "Your multikill has expired!", color: "red"}
+            function RESET
+
+
+# Summit lifecycle hooks prevent streaks carrying through a death or session.
+append function PLAYER_ENTER_SUCCESS:
+    function RESET
+
+
+append function PLAYER_DIED:
+    function RESET
+
+
+append function PLAYER_LEAVE:
+    function RESET
+
+
+append function ON_PLAYER_RESET:
+    function RESET

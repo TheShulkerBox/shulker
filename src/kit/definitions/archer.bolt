@@ -4,6 +4,21 @@ from item:definitions/food import Food
 from item:definitions/armor import Armor 
 from item:definitions/weapon import Weapon
 
+
+ARCHER_ON_FIRE: FunctionPath = ./on_fire
+
+function ARCHER_ON_FIRE:
+    SELF.pickup = 2
+
+
+class ArcherBow(KitItem):
+    id = "bow"
+    bow = {
+        fire: ARCHER_ON_FIRE
+    }
+
+
+
 archer = Kit(
     name="Archer",
     tagline="A valiant bowman",

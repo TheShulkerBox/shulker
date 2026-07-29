@@ -1,4 +1,5 @@
 import component:all as _
+import player:services/damage_text as _
 import kit:services/kit_armor_stand_update as _
 import kit:definitions/archer as _
 import kit:definitions/assassin as _
@@ -6,6 +7,7 @@ import kit:definitions/barbarian as _
 import kit:definitions/berserker as _
 import kit:definitions/footman as _
 import kit:definitions/juggernaut as _
+import kit:definitions/random as _
 import kit:definitions/spearfisher as _
 import kit:definitions/witch_doctor as _
 import kit:definitions/swashbuckler as _
@@ -13,13 +15,17 @@ import kit:definitions/ranger as _
 import kit:definitions/warbowman as _
 import kit:definitions/headsman as _
 
+import ./entities as _
 import ./map_display as _
 import ./domination/game as _
 import ./domination/kill as _
-import ./domination/manager as _
+import ./killstreak as _
+import ./domination/battleground_shim as _
 import ./domination/team_safety as _
-from ./domination/registry import BATTLEGROUND, GIVE_RANDOM_KIT
+from ./domination/registry import BATTLEGROUND
+from ./random_kit_stand import PREPARE_RANDOM_KIT_STAND
 from ./stickers import ENTER_BOOTH_STICKER
 
 function ./booth/enter:
+    function PREPARE_RANDOM_KIT_STAND
     advancement grant @s only ENTER_BOOTH_STICKER

@@ -9,7 +9,7 @@ LEAP_TICK: FunctionPath = item:maul/leap/tick
 ARMOR_ATTR = "maul_leap_armor_boost"
 KB_RESIST_ATTR = "maul_leap_kb_resist"
 
-LEAP_TIMER = Scoreboard("item.maul_leap_timer", criteria="dummy")
+LEAP_TIMER = Scoreboard("shulker.item.maul_leap_timer", criteria="dummy")
 
 class MaulDepleted(Weapon):
     id = "netherite_shovel"

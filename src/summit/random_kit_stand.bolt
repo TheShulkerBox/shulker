@@ -1,0 +1,58 @@
+"""Prepare and animate the Random kit stand in the Summit booth."""
+
+from kit:definitions/random import random_kit
+
+from ./entities import BOOTH_ENTITY_TAG
+from ./domination/config import RANDOM_KIT_STAND_UUID
+from ./domination/registry import APPLY_RANDOM_KIT
+
+
+UPDATE_KIT_STAND: FunctionPath = "shulker:kit/services/armor_stand_update/stand"
+PREPARE_RANDOM_KIT_STAND: FunctionPath = ./random_kit_stand/prepare
+TICK_RANDOM_KIT_STAND: FunctionPath = ./random_kit_stand/tick
+SWAP_RANDOM_KIT_STAND: FunctionPath = ./random_kit_stand/swap
+
+
+function PREPARE_RANDOM_KIT_STAND:
+    """Conform the fixed stand and initialize only that stand's passengers."""
+    execute as RANDOM_KIT_STAND_UUID if entity @s[type=armor_stand]:
+        # Summit's production mod neither ticks nor visually updates static
+        # entities. The scheduled equipment swaps require a dynamic stand.
+        tag @s remove summit.static
+        tag @s add summit.dynamic
+        tag @s add KIT_STAND
+        tag @s add BOOTH_ENTITY_TAG
+        SELF.CustomName = random_kit.id
+        execute at @s run function UPDATE_KIT_STAND
+
+
+function TICK_RANDOM_KIT_STAND:
+    """Choose another display loadout on Summit's three-second booth clock."""
+    execute \
+        as RANDOM_KIT_STAND_UUID \
+        if entity @s[type=armor_stand,tag=KIT_STAND,name=random] \
+        run function SWAP_RANDOM_KIT_STAND
+
+
+function SWAP_RANDOM_KIT_STAND:
+    """Replace only the stand's visible equipment with a sampled real kit."""
+    SELF.DisabledSlots = 0
+
+    # Kit application only fills declared slots, so clear sparse leftovers from
+    # the previously displayed kit before installing the next one.
+    for slot in [
+        "armor.head",
+        "armor.chest",
+        "armor.legs",
+        "armor.feet",
+        "armor.body",
+        "weapon.mainhand",
+        "weapon.offhand",
+    ]:
+        item replace entity @s slot with air
+
+    SCORE.temp["#ARMOR_STAND"] = 1
+    function APPLY_RANDOM_KIT
+    SCORE.temp["#ARMOR_STAND"] = 0
+
+    SELF.DisabledSlots = 2039583

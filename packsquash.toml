@@ -1,0 +1,28 @@
+# pack_directory and output_file_path are supplied by plugins.packsquash.
+#
+# The map-display images are generated at 224x128 and quantized to high-quality
+# 256-color palettes. Other PNGs are quantized only when PackSquash determines
+# that doing so is smaller. OGG audio isn't transcoded. See:
+# https://github.com/ComunidadAylas/PackSquash/wiki/Options-files
+
+recompress_compressed_files = true
+zip_compression_iterations = 30
+zip_spec_conformance_level = "pedantic"
+
+# PackSquash v0.4.1 predates Minecraft 26.2's pack.mcmeta shape.
+automatic_minecraft_quirks_detection = false
+automatic_asset_types_mask_detection = false
+validate_pack_metadata_file = false
+
+["assets/shulker/textures/item/map_display/maps/*?.png"]
+image_data_compression_iterations = 15
+color_quantization_target = "eight_bit_depth"
+color_quantization_dithering_level = 1.0
+
+["**/*?.png"]
+image_data_compression_iterations = 15
+color_quantization_target = "auto"
+color_quantization_dithering_level = 0.85
+
+["**/*?.ogg"]
+transcode_ogg = false

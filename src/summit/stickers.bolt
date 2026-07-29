@@ -1,8 +1,81 @@
 """Sticker Book advancements registered by The Shulker Box booth."""
 
+from kit:base import KIT_ID
+
+from ./battlegrounds import PLAYER_TAG, SHULKER_PLAYER_TAG
+from ./domination/kits import DEFAULT_KITS
+
+
 # AUTO-GENERATED STICKERS
 # This path uses the sticker_id from Summit's booth definition.
 ENTER_BOOTH_STICKER: AdvancementPath = "summit.sticker_book:shulker/the_shulker_box"
 KILL_WITH_ALL_KITS_STICKER: AdvancementPath = "summit.sticker_book:shulker/kill_with_all_kits"
 GET_3_KILLS_STICKER: AdvancementPath = "summit.sticker_book:shulker/get_3_kills"
+ASSASSIN_FOX_STICKER: AdvancementPath = "summit.sticker_book:shulker/assassin_fox"
 WIN_A_GAME_STICKER: AdvancementPath = "summit.sticker_book:shulker/win_a_game"
+
+
+# This hidden advancement persists one criterion per kit across matches. Once
+# every criterion is complete, its reward grants Summit's visible sticker.
+KILL_WITH_ALL_KITS_PROGRESS: AdvancementPath = ./internal/kill_with_all_kits
+GRANT_KILL_WITH_ALL_KITS_STICKER: FunctionPath = ./grant/kill_with_all_kits
+TICK_KIT_STICKER_PROGRESS: FunctionPath = ./stickers/tick_kit_progress
+
+IN_BOOTH_TAG = "summit.in_booth.shulker"
+IN_BOOTH_PREDICATE = "summit.booth:shulker/in_booth"
+KIT_INTERACTION_TAG = "KIT_INTERACTION"
+COMPLETED_KIT_PARTICLE_COLOR = [0.2, 1.0, 0.2]
+
+kill_with_all_kits_criteria = {}
+for kit in DEFAULT_KITS:
+    kill_with_all_kits_criteria[kit.id] = {
+        "trigger": "minecraft:player_killed_entity",
+        "conditions": {
+            "player": [
+                {
+                    "condition": "minecraft:entity_properties",
+                    "entity": "this",
+                    "predicate": {
+                        "minecraft:entity_tags": {
+                            "all_of": [PLAYER_TAG, SHULKER_PLAYER_TAG]
+                        }
+                    }
+                },
+                {
+                    "condition": "minecraft:entity_scores",
+                    "entity": "this",
+                    "scores": {KIT_ID.name: kit.hashed_id}
+                }
+            ],
+            "entity": {"entity_type": "minecraft:player"}
+        }
+    }
+
+advancement KILL_WITH_ALL_KITS_PROGRESS {
+    "criteria": kill_with_all_kits_criteria,
+    "rewards": {"function": GRANT_KILL_WITH_ALL_KITS_STICKER}
+}
+
+
+function GRANT_KILL_WITH_ALL_KITS_STICKER:
+    advancement grant @s only KILL_WITH_ALL_KITS_STICKER
+
+
+function TICK_KIT_STICKER_PROGRESS:
+    """Show each visitor which kit-kill criteria they have completed."""
+    for kit in DEFAULT_KITS:
+        execute \
+            as @e[
+                type=interaction,
+                tag=KIT_INTERACTION_TAG,
+                tag=kit.id,
+                predicate=IN_BOOTH_PREDICATE
+            ] \
+            at @s \
+            run particle dust{color:COMPLETED_KIT_PARTICLE_COLOR,scale:0.8} \
+                ~ ~0.5 ~ 0.3 0.45 0.3 0 3 normal \
+                @a[
+                    tag=IN_BOOTH_TAG,
+                    distance=(0, 12),
+                    advancements={KILL_WITH_ALL_KITS_PROGRESS={kit.id=true}}
+                ]

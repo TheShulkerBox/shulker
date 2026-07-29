@@ -11,8 +11,8 @@ from server:events import ON_PLAYER_RESET
 from ./item_enchant import ItemEnchant
 from ./type import Component, ComponentBuildError, RecursiveComponent
 
-LAST_BOW_CHARGE = Scoreboard("component.bow_last_charging", criteria="dummy")
-BOW_CHARGE = Scoreboard("component.bow_charge", criteria="dummy")
+LAST_BOW_CHARGE = Scoreboard("shulker.component.bow_last_charging", criteria="dummy")
+BOW_CHARGE = Scoreboard("shulker.component.bow_charge", criteria="dummy")
 
 BOW_PRECISION = 10000
 BOW_DEFAULT_VELOCITY = 3.0
@@ -49,14 +49,18 @@ class Bow(Component):
 
     def build(self):
         if self.item.id not in ("bow", "minecraft:bow"):
-            raise CustomComponentError("Bow component can only be applied to items with id 'minecraft:bow'")
+            raise CustomComponentError(
+                "Bow component can only be applied to items with id 'minecraft:bow'",
+                self,
+            )
 
         if isinstance(self.accuracy, (int, float)) and self.accuracy <= 0:
-            raise CustomComponentError("Bow accuracy must be greater than 0")
+            raise CustomComponentError("Bow accuracy must be greater than 0", self)
 
         if not (self.nock or self.charging or self.charged or self.unnock or self.fire or self.hit or (self.accuracy is not None)):
             raise CustomComponentError(
-                "At least one of `nock`, `charging`, `charged`, `unnock`, `fire`, `hit`, or `accuracy` must be defined"
+                "At least one of `nock`, `charging`, `charged`, `unnock`, `fire`, `hit`, or `accuracy` must be defined",
+                self,
             )
 
         # helps track while we are charging

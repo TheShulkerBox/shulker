@@ -5,7 +5,6 @@ from component:type import Component
 from item:type import ItemType
 from lib:errors import CustomComponentError
 from lib:helpers import deep_merge_dicts
-from server:services/playerdb import PlayerDB
 from server:core import ROOT_ADVANCEMENT
 
 
