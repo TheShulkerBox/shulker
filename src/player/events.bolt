@@ -1,3 +1,5 @@
+from lib:predicates import entity_condition
+
 DEATH_SCORE = Scoreboard("player.death_count", criteria="deathCount")
 
 ON_DEATH = ./on_death
@@ -12,7 +14,7 @@ advancement ON_KILL {
     "kill": {
       "trigger": "minecraft:player_killed_entity",
       "conditions": {
-        "entity": { "entity_type": "minecraft:player" }
+        "entity": entity_condition({"entity_type": "minecraft:player"})
       }
     }
   },
@@ -29,7 +31,7 @@ advancement ON_DEATH {
     "kill": {
       "trigger": "minecraft:entity_killed_player",
       "conditions": {
-        "entity": { "entity_type": "minecraft:player" }
+        "entity": entity_condition({"entity_type": "minecraft:player"})
       }
     }
   },
@@ -46,7 +48,7 @@ advancement ON_HURT {
     "hurt": {
       "trigger": "minecraft:entity_hurt_player",
       "conditions": {
-        "entity": { "entity_type": "minecraft:player" }
+        "damage": {"source_entity": {"entity_type": "minecraft:player"}}
       }
     }
   },
@@ -61,7 +63,7 @@ advancement ON_DAMAGE_DEALT {
     "hurt": {
       "trigger": "minecraft:player_hurt_entity",
       "conditions": {
-        "entity": { "entity_type": "minecraft:player" }
+        "entity": entity_condition({"entity_type": "minecraft:player"})
       }
     }
   },
@@ -77,8 +79,7 @@ advancement ON_HURT_BY_PLAYER {
     "hurt": {
       "trigger": "minecraft:entity_hurt_player",
       "conditions": {
-        "entity": { "entity_type": "minecraft:player" },
-        "damage_source": { "type": "player" }
+        "damage": {"source_entity": {"entity_type": "minecraft:player"}}
       }
     }
   },

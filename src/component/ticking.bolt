@@ -24,24 +24,18 @@ class Ticking(Component, base_type=list[TickingEntry]):
         
         effects = {}
         for entry in self.base_type:
-            effects["minecraft:tick"] = [{
-                "requirements": [
-                    {
-                        "condition": "minecraft:time_check",
-                        "clock": "minecraft:overworld",
-                        "value": 0,
-                        "period": (ticks(entry.period))
-                    }
-                ],
-                "effect": {
-                    "type": "minecraft:run_function",
-                    "function": entry.callback
+            requirements = [
+                {
+                    "type": "minecraft:time_check",
+                    "clock": "minecraft:overworld",
+                    "value": 0,
+                    "period": ticks(entry.period)
                 }
-            }]
+            ]
 
             if entry.slot:
-                effects["minecraft:tick"]["requirements"].prepend({
-                    "condition": "minecraft:entity_properties",
+                requirements.insert(0, {
+                    "type": "minecraft:entity_properties",
                     "entity": "this",
                     "predicate": {
                         "minecraft:slots": {
@@ -49,5 +43,13 @@ class Ticking(Component, base_type=list[TickingEntry]):
                         }
                     }
                 })
+
+            effects.setdefault("minecraft:tick", []).append({
+                "requirements": {"type": "minecraft:all_of", "terms": requirements},
+                "effect": {
+                    "type": "minecraft:run_function",
+                    "function": entry.callback
+                }
+            })
                 
         return {item_enchant: RecursiveComponent(ItemEnchant, effects)}

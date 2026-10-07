@@ -124,7 +124,7 @@ def cutlass_damage_score(damage: float):
 
 
 def glint(val: bool = True):
-    item modify entity @s weapon.mainhand {function: "set_components", components: {enchantment_glint_override: val}}
+    item modify entity @s weapon.mainhand {type: "set_components", components: {enchantment_glint_override: val}}
 
 
 class _Copper(Weapon):

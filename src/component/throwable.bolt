@@ -17,7 +17,7 @@ THROWABLE_ITEM_TAG = "component.throwable.item"
 THROWABLE_ITEM_TAG_INIT = "component.throwable.item_init"
 THROWABLE_CHARGE_SCALE = 1000
 
-REDUCE_COUNT_MODIFIER = {function: "minecraft:set_count", count: -1, add: true}
+REDUCE_COUNT_MODIFIER = {type: "minecraft:set_count", count: -1, add: true}
 
 
 class Throwable(Using):

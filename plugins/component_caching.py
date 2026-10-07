@@ -1,15 +1,11 @@
-from pydantic import BaseModel, Field, RootModel, model_validator
+from pydantic import BaseModel, Field, RootModel, ValidationInfo, model_validator
 from beet import Context, JsonFile
 from typing import Any, Iterable, Literal, Self, Union
 
 MCDOC_URL = "https://api.spyglassmc.com/vanilla-mcdoc/symbols"
-MCMETA_URL = "https://raw.githubusercontent.com/misode/mcmeta/refs/heads/summary/item_components/data.json"
+MCMETA_URL = "https://raw.githubusercontent.com/misode/mcmeta/{version}-summary/item_components/data.json"
 
 type Json = dict[str, Json] | list[Json] | str | int | float | bool | None
-
-# Define the VERSION constant
-VERSION = "26.2"
-
 
 def compare_versions(v1: str, v2: str) -> int:
     v1_parts = tuple(int(part) for part in v1.split("."))
@@ -25,7 +21,7 @@ def compare_versions(v1: str, v2: str) -> int:
 
 
 def is_valid_with_attributes(
-    attributes: list["Attribute"] | None, current_version: str = VERSION
+    attributes: list["Attribute"] | None, current_version: str
 ) -> bool:
     """
     Checks if an object is valid based on its 'since' and 'until' attributes
@@ -201,12 +197,14 @@ class StructSchema(BaseSchema):
     attributes: list[Attribute] | None = None
 
     @model_validator(mode="after")
-    def prune_on_version(self) -> Self:
+    def prune_on_version(self, info: ValidationInfo) -> Self:
         fields = []
         for field in self.fields:
             match field:
                 case PairField(attributes=attributes):
-                    if is_valid_with_attributes(attributes):
+                    if is_valid_with_attributes(
+                        attributes, info.context["minecraft_version"]
+                    ):
                         fields.append(field)
                 case _:
                     fields.append(field)
@@ -275,8 +273,10 @@ class Schema(RootModel):
     ) = Field(discriminator="kind")
 
     @model_validator(mode="after")
-    def prune_on_version(self) -> Self:
-        if self.root is not None and is_valid_with_attributes(self.root.attributes):
+    def prune_on_version(self, info: ValidationInfo) -> Self:
+        if self.root is not None and is_valid_with_attributes(
+            self.root.attributes, info.context["minecraft_version"]
+        ):
             return self
 
         self.root = None
@@ -286,19 +286,28 @@ class Schema(RootModel):
 Schema.model_rebuild()
 
 
-def create_schemas(data: dict[str, Any]) -> Iterable[tuple[str, Schema]]:
+def create_schemas(
+    data: dict[str, Any], minecraft_version: str
+) -> Iterable[tuple[str, Schema]]:
     for key, val in data.items():
-        yield key, Schema.model_validate(val)
+        yield key, Schema.model_validate(
+            val, context={"minecraft_version": minecraft_version}
+        )
 
 
 def beet_default(ctx: Context):
-    mcdoc_path = ctx.cache[f"mcdoc/{VERSION}"].download(MCDOC_URL)
-    mcmeta_path = ctx.cache[f"mcmeta_item_components/{VERSION}"].download(MCMETA_URL)
+    version = ctx.minecraft_version
+    mcdoc_path = ctx.cache[f"mcdoc/{version}"].download(MCDOC_URL)
+    mcmeta_path = ctx.cache[f"mcmeta_item_components/{version}"].download(
+        MCMETA_URL.format(version=version)
+    )
     mcdoc_file = JsonFile(source_path=mcdoc_path)
     mcmeta_file = JsonFile(source_path=mcmeta_path)
 
     ctx.meta["mcdoc"] = mcdoc_file.data
     ctx.meta["item_component_schemas"] = dict(
-        create_schemas(mcdoc_file.data["mcdoc/dispatcher"]["minecraft:data_component"])
+        create_schemas(
+            mcdoc_file.data["mcdoc/dispatcher"]["minecraft:data_component"], version
+        )
     )
     ctx.meta["item_component_defaults"] = mcmeta_file.data

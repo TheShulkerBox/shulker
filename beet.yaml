@@ -1,5 +1,5 @@
 id: shulkerbox
-minecraft: 1.21.11
+minecraft: "26.3"
 
 require:
   # it needs to go first so that exit phase happens last
@@ -24,6 +24,8 @@ pipeline:
   - plugins.cleanup_empty_functions
 
 data_pack:
+  min_format: [121, 0]
+  max_format: [121, 0]
   load: [ vendor/* ]
 
   filter:
@@ -40,10 +42,6 @@ output: dist
 meta:
   deploy: false
   generate_namespace: "server"
-
-  mecha:
-    formatting:
-      snbt_ensure_ascii: false
 
   bolt:
     entrypoint: "*"

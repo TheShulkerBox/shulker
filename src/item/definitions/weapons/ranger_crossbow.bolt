@@ -71,12 +71,12 @@ def crossbow_reload(projectile_count: int) -> dict[str, Any]:
     """Reloads crossbow with x projectiles (removing if none)"""
     if projectile_count <= 0:
         return {
-            function: "minecraft:set_components",
+            type: "minecraft:set_components",
             components: { "!minecraft:charged_projectiles": {} }
         }
 
     output = {
-        function: "minecraft:set_components",
+        type: "minecraft:set_components",
         components: {
             "minecraft:charged_projectiles": []
         }
@@ -159,7 +159,7 @@ def replace_held(variant: ItemType, projectile_count = None):
     """Replace whichever hand holds a ranger crossbow with `variant`"""
     variant_table = variant.as_loot_table()
     if projectile_count is not None:
-        variant_table["functions"] = [crossbow_reload(projectile_count)]
+        variant_table["modifier"] = [crossbow_reload(projectile_count)]
 
     execute if items entity @s weapon.mainhand (-RangerCrossbow) return run loot replace entity @s weapon.mainhand loot variant_table
     execute if items entity @s weapon.offhand (-RangerCrossbow) return run loot replace entity @s weapon.offhand loot variant_table

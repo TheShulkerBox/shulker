@@ -4,6 +4,7 @@ from server:core import ROOT_ADVANCEMENT
 from lib:errors import CustomComponentError
 from lib:helpers import nbt_dump
 from lib:const import HAND_SLOTS
+from lib:predicates import entity_condition
 
 from ./type import Component
 from ./kill import item_match
@@ -25,8 +26,6 @@ class Strike(Component):
                 "One and only one of `attacker` or `victim` must be defined"
             )
 
-        # TODO: update advancement logic in 26.2 as it's changed syntax
-        
         criteria = {}
         requirements = []
 
@@ -34,7 +33,7 @@ class Strike(Component):
         if self.attacker:
             criteria["attacker"] = {
                 "trigger": "minecraft:player_hurt_entity",
-                "conditions": { "entity": { "entity_type": "player" }, "player": item_match(self.item, self.slot) }
+                "conditions": { "entity": entity_condition({"entity_type": "player"}), "player": entity_condition(item_match(self.item, self.slot)) }
             }
             requirements.append("attacker")
 

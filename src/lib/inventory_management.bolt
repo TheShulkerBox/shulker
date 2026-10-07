@@ -54,9 +54,9 @@ def slot_pool(slot_name: str) -> dict[str, Any]:
                         "type": "minecraft:item",
                         # this item does not matter
                         "name": "minecraft:stone",
-                        "conditions": [
+                        "condition": {"type": "minecraft:all_of", "terms": [
                             {
-                                "condition": "minecraft:entity_properties",
+                                "type": "minecraft:entity_properties",
                                 "entity": "this",
                                 "predicate": {
                                     "slots": {
@@ -64,8 +64,8 @@ def slot_pool(slot_name: str) -> dict[str, Any]:
                                     }
                                 }
                             }
-                        ],
-                        "functions": [{"function": "minecraft:discard"}]
+                        ]},
+                        "modifier": [{"type": "minecraft:discard"}]
                     },
                     # Otherwise → yield whatever is in the slot
                     {
@@ -89,7 +89,7 @@ def gap_pool(gap_size: int) -> dict:
             {
                 "type": "minecraft:item",
                 "name": "minecraft:stone",
-                "functions": [{"function": "minecraft:discard"}]
+                "modifier": [{"type": "minecraft:discard"}]
             }
         ]
     }
@@ -142,7 +142,7 @@ HOTBAR_WITH_SLOT = lib:mass_modify/inventory_with_slot
 pools = []
 for index, slot in slot_groups(hotbar=True):
     pools.append(slot_pool(slot))
-    pools[-1]["entries"][0]["children"][1]["functions"] = [{"function": "set_custom_data", "tag": {"meta": {"original_slot": slot}}}]
+    pools[-1]["entries"][0]["children"][1]["modifier"] = [{"type": "set_custom_data", "tag": {"meta": {"original_slot": slot}}}]
 
 loot_table HOTBAR_WITH_SLOT {"pools": pools}
 
@@ -190,7 +190,7 @@ macro mass_modify slot_groups=minecraft:nbt_tag loot_modifier=minecraft:loot_mod
                 ]
             }
         ],
-        functions: loot_modifier,
+        modifier: loot_modifier,
     }
 
 
@@ -207,7 +207,7 @@ macro hotbar_with_slots_modify loot_modifier=minecraft:loot_modifier:
                 ]
             }
         ],
-        functions: loot_modifier,
+        modifier: loot_modifier,
     }
 
 

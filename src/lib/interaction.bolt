@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from functools import cached_property
 from contextlib import contextmanager
 from typing import ClassVar
+from ./predicates import entity_condition
 
 @dataclass
 class Interaction:
@@ -30,23 +31,23 @@ class Interaction:
                 "interact": {
                     "trigger": "minecraft:player_interacted_with_entity",
                     "conditions": {
-                        "entity": {
+                        "entity": entity_condition({
                             "entity_type": "minecraft:interaction",
                             "entity_tags": {
                                 "all_of": [self.global_tag, self.tag]
                             }
-                        }
+                        })
                     }
                 },
                 "attack": {
                     "trigger": "minecraft:player_hurt_entity",
                     "conditions": {
-                        "entity": {
+                        "entity": entity_condition({
                             "entity_type": "minecraft:interaction",
                             "entity_tags": {
                                 "all_of": [self.global_tag, self.tag]
                             }
-                        }
+                        })
                     }
                 }
             },

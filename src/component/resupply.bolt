@@ -21,14 +21,16 @@ class Resupply(Component):
             return
 
         def modifier(pool: dict[str, Any], slot: str):
-            pool["entries"][0]["children"][1]["functions"] = [
+            pool["entries"][0]["children"][1]["modifier"] = [
                 self.modifier
                 | {
-                    "condition": "minecraft:entity_properties",
-                    "entity": "this",
-                    "predicate": {
-                        "minecraft:slots": {
-                            slot: { "predicates": item_obj.conditional_dict() }
+                    "condition": {
+                        "type": "minecraft:entity_properties",
+                        "entity": "this",
+                        "predicate": {
+                            "minecraft:slots": {
+                                slot: item_obj.conditional_dict()
+                            }
                         }
                     }
                 }

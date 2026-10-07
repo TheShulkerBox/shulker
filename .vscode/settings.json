@@ -2,5 +2,7 @@
     "files.associations": {
         "*.bolt": "mcfunction"
     },
-    "python.terminal.activateEnvironment": true
+    "python.terminal.activateEnvironment": true,
+    "mc-dp-icons.subfolderIcons": false,
+    "explorer.compactFolders": false
 }

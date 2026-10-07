@@ -2,20 +2,20 @@ from lib:inventory_management import generate_loot_table, hotbar_with_slots_modi
 
 
 def apply_modifier(pool: dict[str, Any], slot: str) -> dict[str, Any]:
-    pool["entries"][0]["children"][1]["functions"] = [
+    pool["entries"][0]["children"][1]["modifier"] = [
         {
-            "function": "minecraft:set_item",
+            "type": "minecraft:set_item",
             "item": "minecraft:stick"
         },
         {
-            "function": "minecraft:set_components",
+            "type": "minecraft:set_components",
             "components": {
                 "item_name": "<< DISABLED ITEM >>",
                 "item_model": "barrier"
             }
         },
         {
-            "function": "minecraft:set_contents",
+            "type": "minecraft:set_contents",
             "component": "minecraft:bundle_contents",
             "entries": [
                 {
@@ -31,7 +31,7 @@ def apply_modifier(pool: dict[str, Any], slot: str) -> dict[str, Any]:
     ]
 
     if "armor" in slot:
-        pool["entries"][0]["children"][1]["functions"][1]["components"]["equippable"] = {
+        pool["entries"][0]["children"][1]["modifier"][1]["components"]["equippable"] = {
             "slot": slot.replace("armor.", ""),
             "equip_sound": {"sound_id": ""}
         }

@@ -12,7 +12,7 @@ SAFE_FALL_ATTR = "assassin_safe_fall_distance"
 
 def jump_boost_attribute_modifier(extra_jump_height: float, safe_fall_distance: float) -> dict[str, Any]:
     return {
-        "function": "minecraft:set_attributes",
+        "type": "minecraft:set_attributes",
         "modifiers": [
             {
                 "attribute": "minecraft:jump_strength",

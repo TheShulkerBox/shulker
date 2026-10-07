@@ -4,7 +4,7 @@ from lib:inventory_management import mass_modify
 
 function ./test:
     mass_modify [inventory, hotbar] {
-        function: "filtered", 
+        type: "filtered",
         item_filter: {
             predicates: {
                 custom_data: {
@@ -13,11 +13,11 @@ function ./test:
             }
         },
         on_pass: {
-            function: "set_name",
+            type: "set_name",
             name: "taco salad"
         },
         on_fail: {
-            function: "set_name",
+            type: "set_name",
             name: "sad salad"
         }
     }

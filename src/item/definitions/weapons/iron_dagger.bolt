@@ -26,7 +26,8 @@ class IronDaggerStab(IronDaggerBase):
         speed: 1.6, 
         weight: "medium"
     }
-    swing_animation = {type: "stab", duration: 10}
+    attack_animation = {type: "stab", duration: 10}
+    interact_animation = {type: "stab", duration: 10}
     strike = {slot: "weapon.mainhand", victim: ATTEMPT_ASSASSINATE}
     enchantment_glint_override = True
     useable = {
@@ -63,7 +64,7 @@ function ATTEMPT_ASSASSINATE:
     execute 
         on attacker 
         unless predicate {
-            "condition": "minecraft:entity_properties",
+            "type": "minecraft:entity_properties",
             "entity": "this",
             "predicate": {
                 "minecraft:flags": {

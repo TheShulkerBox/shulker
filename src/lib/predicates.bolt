@@ -1,40 +1,44 @@
-ON_GROUND_PREDICATE = {condition: "minecraft:entity_properties", entity: "this", predicate: {"minecraft:flags": {is_on_ground: true}}}
-SNEAKING_PREDICATE = {condition: "minecraft:entity_properties", entity: "this", predicate: {flags: {is_sneaking: true}}}
+ON_GROUND_PREDICATE = {type: "minecraft:entity_properties", entity: "this", predicate: {"minecraft:flags": {is_on_ground: true}}}
+SNEAKING_PREDICATE = {type: "minecraft:entity_properties", entity: "this", predicate: {flags: {is_sneaking: true}}}
+
+def entity_condition(predicate: dict[str, Any]):
+    """Wrap entity properties in the explicit predicate required by advancement filters."""
+    return {"type": "minecraft:entity_properties", "entity": "this", "predicate": predicate}
 
 def has_item_predicate(pred: dict[str, Any]):
     return {
-        condition: "minecraft:any_of",
+        type: "minecraft:any_of",
         terms: [
             {
-                condition: "minecraft:entity_properties",
+                type: "minecraft:entity_properties",
                 entity: "this",
                 predicate: {
                     "minecraft:slots": { "inventory.*": pred }
                 }
             },
             {
-                condition: "minecraft:entity_properties",
+                type: "minecraft:entity_properties",
                 entity: "this",
                 predicate: {
                     "minecraft:slots": { "hotbar.*": pred }
                 }
             },
             {
-                condition: "minecraft:entity_properties",
+                type: "minecraft:entity_properties",
                 entity: "this",
                 predicate: {
                     "minecraft:slots": { "weapon.*": pred }
                 }
             },
             {
-                condition: "minecraft:entity_properties",
+                type: "minecraft:entity_properties",
                 entity: "this",
                 predicate: {
                     "minecraft:slots": { "player.cursor": pred }
                 }
             },
             {
-                condition: "minecraft:entity_properties",
+                type: "minecraft:entity_properties",
                 entity: "this",
                 predicate: {
                     "minecraft:slots": { "player.crafting.*": pred }

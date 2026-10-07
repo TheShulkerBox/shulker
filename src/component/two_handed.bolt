@@ -1,4 +1,5 @@
 from lib:inventory_management import SWAP_MAINHAND_OFFHAND, slot_pool
+from lib:predicates import entity_condition
 from ./type import Component
 
 class TwoHanded(Component):
@@ -20,25 +21,25 @@ class TwoHanded(Component):
                 "holding_two_items": {
                     "trigger": "minecraft:inventory_changed",
                     "conditions": {
-                        "player": {
+                        "player": entity_condition({
                             "slots": {
                                 # are we holding a two-handed function
                                 "weapon.mainhand": self.item.conditional_dict(),
                                 # and do we have something in the offhand
                                 "weapon.offhand": { "count": { "min": 1 } }
                             }
-                        }
+                        })
                     }
                 },
                 "offhanding_item": {
                     "trigger": "minecraft:inventory_changed",
                     "conditions": {
-                        "player": {
+                        "player": entity_condition({
                             "slots": {
                                 # is this in the offhand
                                 "weapon.offhand": self.item.conditional_dict()
                             }
-                        }
+                        })
                     }
                 }
             },

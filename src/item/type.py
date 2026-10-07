@@ -1035,9 +1035,9 @@ class ItemType(type):
                         {
                             "type": "minecraft:item",
                             "name": self.id,
-                            "functions": [
+                            "modifier": [
                                 {
-                                    "function": "minecraft:set_components",
+                                    "type": "minecraft:set_components",
                                     "components": self.as_dict()["components"]
                                 }
                             ]

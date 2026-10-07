@@ -25,7 +25,7 @@ NET_WEAKNESS_ATTR = "item.net_weakness"
 
 def weakness_modifier(value: int) -> dict[str, Any]:
     return {
-        "function": "minecraft:set_attributes",
+        "type": "minecraft:set_attributes",
         "modifiers": [
             {
                 "attribute": "minecraft:attack_damage",
@@ -67,7 +67,7 @@ function NET_THROW:
         execute summon block_display:
             SELF.merge({
                 Tags: [NET_DISPLAY_TAG],
-                block_state: {Name: "minecraft:cobweb"},
+                block_state: {id: "minecraft:cobweb"},
                 transformation: {
                     translation: [-0.5, -0.5, -0.5],
                     scale: [1.0, 1.0, 1.0],
@@ -83,7 +83,7 @@ function NET_TICK:
     execute as @e[type=item, tag=NET_ITEM_TAG] at @s:
         schedule function NET_TICK 1t replace
 
-        execute if predicate {condition: "minecraft:random_chance", chance: 0.35}:
+        execute if predicate {type: "minecraft:random_chance", chance: 0.35}:
             particle minecraft:cloud ~ ~.125 ~ 0.2 0.1 0.2 0.025 1 normal
 
         # Once the projectile lands, the grounded net can catch nearby players.

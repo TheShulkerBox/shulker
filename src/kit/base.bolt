@@ -109,7 +109,7 @@ class Kit:
                         item replace entity @s slot with item item.count
                     else:
                         item replace entity @s slot with item
-                hotbar_with_slots_modify {function: "set_custom_data", tag: {taco: bell}}
+                hotbar_with_slots_modify {type: "set_custom_data", tag: {taco: bell}}
 
             function ~/{self.id}/resupply:
                 for slot, item in self:
@@ -128,7 +128,7 @@ class Kit:
                     callback = resupply.get("callback")
                     if callback:
                         function callback
-                hotbar_with_slots_modify {function: "set_custom_data", tag: {taco: bell}}
+                hotbar_with_slots_modify {type: "set_custom_data", tag: {taco: bell}}
 
             function ~/{self.id}/mannequin:
                 execute summon mannequin function ~/../apply

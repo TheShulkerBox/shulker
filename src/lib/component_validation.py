@@ -65,7 +65,10 @@ class McdocValidator:
         """
 
         try:
-            return Schema.model_validate(data := self.mcdoc["mcdoc"][path])
+            return Schema.model_validate(
+                data := self.mcdoc["mcdoc"][path],
+                context={"minecraft_version": self.ctx.minecraft_version},
+            )
         except Exception as err:
             # TODO: clean up
             logger.debug(json.dumps(data))
@@ -82,7 +85,12 @@ class McdocValidator:
 
         try:
             data = self.mcdoc["mcdoc/dispatcher"][path]
-            return {key: Schema.model_validate(value) for key, value in data.items()}
+            return {
+                key: Schema.model_validate(
+                    value, context={"minecraft_version": self.ctx.minecraft_version}
+                )
+                for key, value in data.items()
+            }
 
         except Exception as err:
             # TODO: clean up

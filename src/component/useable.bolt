@@ -64,12 +64,12 @@ class Useable(Component):
             # (we've used infinite here, but not strictly necessary) to cause the item to persist when used
             if self.infinite:
                 unless items entity @s weapon.mainhand self.item.conditional_string():
-                    item modify entity @s weapon.offhand {function: "set_custom_data", tag: {infinite: false}}
-                    item modify entity @s weapon.offhand {function: "set_custom_data", tag: {infinite: true}}
+                    item modify entity @s weapon.offhand {type: "set_custom_data", tag: {infinite: false}}
+                    item modify entity @s weapon.offhand {type: "set_custom_data", tag: {infinite: true}}
 
                 if items entity @s weapon.mainhand self.item.conditional_string():
-                    item modify entity @s weapon.mainhand {function: "set_custom_data", tag: {infinite: false}}
-                    item modify entity @s weapon.mainhand {function: "set_custom_data", tag: {infinite: true}}
+                    item modify entity @s weapon.mainhand {type: "set_custom_data", tag: {infinite: false}}
+                    item modify entity @s weapon.mainhand {type: "set_custom_data", tag: {infinite: true}}
             
             if self.callback:
                 function self.callback

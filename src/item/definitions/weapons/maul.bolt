@@ -36,7 +36,7 @@ class Maul(MaulDepleted):
 
 def leap_attribute_modifier(armor_amt: int, kb_res_amt: int) -> dict[str, Any]:
     return {
-        "function": "minecraft:set_attributes",
+        "type": "minecraft:set_attributes",
         "modifiers": [
             {
                 "attribute": "minecraft:armor",
@@ -57,7 +57,7 @@ def leap_attribute_modifier(armor_amt: int, kb_res_amt: int) -> dict[str, Any]:
 
 def enchantment_glint_toggle(override_state: bool):
     return {
-        "function": "minecraft:set_components",
+        "type": "minecraft:set_components",
         "components": {
             "minecraft:enchantment_glint_override": override_state
         }
