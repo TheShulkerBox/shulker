@@ -111,6 +111,21 @@ class Kit:
                         item replace entity @s slot with item
                 hotbar_with_slots_modify {type: "set_custom_data", tag: {taco: bell}}
 
+            function ~/{self.id}/display/apply:
+                for slot in ["armor.head", "armor.chest", "armor.legs", "armor.feet", "armor.body", "weapon.mainhand", "weapon.offhand"]:
+                    item replace entity @s slot with air
+
+                display_items = list(self.armor_items)
+                display_items.extend(self.offhand_items)
+                if self.hotbar:
+                    display_items.append(("weapon.mainhand", self.hotbar[0]))
+
+                for slot, item in display_items:
+                    if isinstance(item, ItemStack):
+                        item replace entity @s slot with item item.count
+                    else:
+                        item replace entity @s slot with item
+
             function ~/{self.id}/resupply:
                 for slot, item in self:
                     resupply = item.components.get("custom_data", {}).get("component", {}).get("resupply", {})

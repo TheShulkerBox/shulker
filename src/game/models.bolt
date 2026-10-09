@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 
 from server:core import SERVER_LOAD
-from lib:custom_resources import CustomResource
+from lib:custom_resources import CustomResource, CustomBaseModel
 
 
 # Schema: {
@@ -13,36 +13,77 @@ from lib:custom_resources import CustomResource
 GAME_META = Data.storage("game:meta")
 
 
-class Gamemode:
-    Duels = "duels"
-    FTM = "ftm"
-    TDM = "tdm"
-    CTF = "ctf"
 
 
-class Tag:
-    """Organizational tags for maps. Used for map queuing and map pools."""
 
-    All = "all"
-    Competitive = "competitive"
-    CTF = "ctf"
-    FTM = "ftm"
-    TDM = "tdm"
-    Duels = "duels"
-    Active = "active"
-    Inactive = "inactive"
+# class Tag:
+#     """Organizational tags for maps. Used for map queuing and map pools."""
+
+#     All = "all"
+#     Competitive = "competitive"
+#     CTF = "ctf"
+#     FTM = "ftm"
+#     TDM = "tdm"
+#     Duels = "duels"
+#     Active = "active"
+#     Inactive = "inactive"
+
+
+class PlayerCount(CustomBaseModel):
+    min: int = 2
+    max: int = 100
+
+    @model_validator(mode='after')
+    def max_at_least_min(self):
+        if self.max < self.min:
+            raise ValueError(
+                f"max ({self.max}) must be >= min ({self.min})"
+            )
+        
+        return self
+
+
+class Gamemode(CustomBaseModel):
+    id: str
+    player_count: PlayerCount()
+
+
+class Team(CustomBaseModel):
+    id: str
+
+    @property
+    def name(self) -> str:
+        return self.id.replace("_", " ").title()
 
 
 class Map(CustomResource, storage=STORAGE.rom.game.maps):
-    name: str
-    gamemode: str
-    tags: list[str] = Field(default_factory=list, validate_default=True)
+    id: str
+    gamemode: Gamemode
 
+    # eventually, all maps will be '0 0 0' in a custom dimension
+    location: str
+    dimension: str = "overworld"
+    # tags: list[str] = Field(default_factory=list, validate_default=True)
+
+    # TODO: store name on map generated dynamically
+    @property                                   
+    def name(self) -> str:                      
+        return self.id.replace("_", " ").title()
+    
     def on_load(self):
         super().on_load()
 
-        if self.gamemode != Tag.Duels:
-            append function game:map/init:
-                # add map ids to their respective pools
-                for map_tag in self.tags:
-                    GAME_META.map_pools[map_tag].append(self.id)
+
+map ctf:dwarven {
+    name: "Dwarven",
+    location: "~ ~ ~ ~ ~",
+    gamemode: {
+        id: "ctf",
+        player_count: {min: 4, max: 10},
+        duration: seconds(300),
+        teams: [
+            {name: "dwarves", team_color: "purple", head_block: "red_wool", spawn: "~ ~ ~ ~ ~"},
+            {name: "goblins", team_color: "gold", head_block: "red_wool", spawn: "~ ~ ~ ~ ~"}
+        ]
+    }
+}

@@ -71,7 +71,7 @@ function ./armor_stand_update/stand:
     # 1: Update Kit Loadouts using name data
     with var kit_metadata:
         SELF.DisabledSlots = 0
-        $function kit:loadout/$(id)/apply
+        $function kit:loadout/$(id)/display/apply
         SELF.DisabledSlots = 2039583
     
     

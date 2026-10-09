@@ -20,6 +20,7 @@ are currently in.
 from contextlib import contextmanager
 
 from lib:db import Database
+from lib:types import IntLike
 from server:core import SERVER_LOAD, SERVER_TICK
 
 from ./models import Map, GAME_META
@@ -40,50 +41,46 @@ append function ON_LEAVE_GAME:
     INSTANCE_ID["@s"].reset()
 
 
-def new_instance(map: Map) -> ScoreSource:
-    """Attempts to add a new instance.
+def new_instance(map_id: StringLike) -> IntLike:
+    """Attempts to add a new instance based on a stored map_id
     
     First checks if a map is currently being instanced.
     Adds the map if not, otherwise return an -1.
     """
-    # We store the result of whether we find an instance or not in a temp scoreboard.
-    # This makes it easy to return it at runtime.
-    if INSTANCE_META.get(map_id=map.id) != false:
-        SCORE.temp["#output"] = -1
-    else:
-        INSTANCE_ID["#latest"] += 1
-        INSTANCE_META.append(
-            {
-                id: INSTANCE_ID["#latest"],
-                gamemode: map.gamemode,
-                map_id: map.id,
-            }
-        )
-        SCORE.temp["#output"] = INSTANCE_ID["#latest"]
+    # we do not want to allow new instances on maps currently being played
+    if INSTANCE_META.get(map_id=map_id) != false:
+        # TODO: debug print system
+        return -1
     
-    return SCORE.temp["#output"]
+    # only allow starting instances on maps that exist in ROM
+    map = Map.get(id=map_id)
+    if not map:
+        # TODO: debug print system
+        return -1
 
-
-def new_instance_unsafe(map: Map) -> ScoreSource:
-    """Adds a new instance without checking for existing instances."""
+    # bump our latest id
     INSTANCE_ID["#latest"] += 1
     INSTANCE_META.append(
         {
             id: INSTANCE_ID["#latest"],
-            gamemode: map.gamemode,
-            map_id: map.id,
+            state: {}
         }
     )
-    return INSTANCE_ID["#latest"]
+    INSTANCE_META[-1].map = map
+    SCORE.temp["#output"] = INSTANCE_ID["#latest"]
+    
+    # We store the result of whether we find an instance or not in a temp scoreboard.
+    # This makes it easy to return it at runtime.
+    return SCORE.temp["#output"]
 
 
-def remove_instance(instance_id: int | ScoreSource | DataSource) -> DataSource:
+def remove_instance(instance_id: IntLike) -> DataSource:
     """Attempts to remove a new instance."""
     return INSTANCE_META.pop(id=instance_id)
 
 
 @contextmanager
-def select_instance_players(instance_id: int | ScoreSource | DataSource) -> str:
+def select_instance_players(instance_id: IntLike) -> str:
     """Selects players in the same instance and adds a tag (auto-removes).
     
     ```bolt

@@ -1,8 +1,0 @@
-from server:core import SERVER_LOAD, SERVER_TICK
-
-DUELS_LOBBY_TEAM = "duels.lobby"
-DUELS_LOBBY_LOCATION = "3000 39 3000"
-
-
-append function SERVER_LOAD:
-    team add DUELS_LOBBY_TEAM "Duels Lobby:"

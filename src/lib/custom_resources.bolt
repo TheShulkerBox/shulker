@@ -9,6 +9,11 @@ from ./helpers import id_to_number
 from ./rom import LOAD_ROM
 
 from server:core import SERVER_LOAD
+from lib:types import StringLike, IntLike
+
+
+# A resource id can be a string id or a hashed string id
+ResourceId = StringLike | IntLike
 
 
 class CustomBaseModel(BaseModel):

@@ -1,56 +1,36 @@
-from pydantic import BaseModel, field_validator, model_validator
+from pydantic import field_validator, model_validator
 
+from lib:custom_resources import CustomBaseModel
 from lib:const import TEAM_COLORS
 
-from ../models import Map, Tag
+from ../models import Gamemode, Map, Team, Tag, PlayerCount
 
-class Team(BaseModel):
-    id: str
-    color: str
-    spawn: str  # coords, yaw, pitch
+class CTFTeam(Team):
+    team_color: str
+    head_item: ItemType
+    spawn: str
 
-    @field_validator("color")
-    def validate_color(cls, color: str):
-        if color not in TEAM_COLORS:
-            raise ValueError(f"{color!r} needs to be one of: {TEAM_COLORS}")
+    @field_validator("team_color")
+    def validate_color(cls, team_color: str):
+        if team_color not in TEAM_COLORS:
+            raise ValueError(f"{team_color!r} needs to be one of: {TEAM_COLORS}")
 
         return color
 
-    @property
-    def name(self) -> str:
-        return self.id.replace("_", " ").title()
 
-
-class CTFMap(Map):
-    gamemode: str = "ctf"
+class CTF(Gamemode):
+    id: str = "ctf"
 
     teams: list[Team]
-    min_player_count: int = 4
-    max_player_count: int = 100
+    player_count: PlayerCount(min=4)
 
-    # eventually, all maps will be 0 0 0 in their own dimension
-    location: str
-    dimension: str = "overworld"
-
-    @field_validator("tags", mode="after")
-    @classmethod
-    def default_tags(cls, v: list[str]) -> list[str]:
-        default_tags = [Tag.All, Tag.CTF]
+    # @field_validator("tags", mode="after")
+    # @classmethod
+    # def default_tags(cls, v: list[str]) -> list[str]:
+    #     default_tags = [Tag.All, Tag.CTF]
         
-        if Tag.Inactive not in v:
-            default_tags += [Tag.Active]
+    #     if Tag.Inactive not in v:
+    #         default_tags += [Tag.Active]
         
-        return v + default_tags
+    #     return v + default_tags
     
-    @model_validator(mode='after')
-    def max_at_least_min(self):
-        if self.max_player_count < self.min_player_count:
-            raise ValueError(
-                f"max_player_count ({self.max_player_count}) must be >= min_player_count ({self.min_player_count})"
-            )
-        
-        return self
-
-
-macro ctf_map path=brigadier:string data=mecha:nested_json:
-    CTFMap.generate(id=path, data=data)

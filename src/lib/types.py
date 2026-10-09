@@ -36,7 +36,9 @@ SlotLiteral: TypeAlias = Literal[
 ]
 """A slot in the player's inventory"""
 
+
 class Remove:
     """Sentinel class for removal operations. do not instantiate."""
+
     def __init__(self):
         raise NotImplementedError("Do not instantiate `Remove`")
