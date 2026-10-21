@@ -1,7 +1,8 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from server:core import SERVER_LOAD
 from lib:custom_resources import CustomResource, CustomBaseModel
+from lib:helpers import seconds
 
 
 # Schema: {
@@ -11,6 +12,8 @@ from lib:custom_resources import CustomResource, CustomBaseModel
 #   map_pools: dict[str, list[str]],  # tag -> list of map ids
 # }
 GAME_META = Data.storage("game:meta")
+
+PREGAME_TIMER = seconds(30)
 
 
 
@@ -45,7 +48,7 @@ class PlayerCount(CustomBaseModel):
 
 class Gamemode(CustomBaseModel):
     id: str
-    player_count: PlayerCount()
+    player_count: PlayerCount = Field(default_factory=PlayerCount)
 
 
 class Team(CustomBaseModel):
@@ -74,16 +77,16 @@ class Map(CustomResource, storage=STORAGE.rom.game.maps):
         super().on_load()
 
 
-map ctf:dwarven {
-    name: "Dwarven",
-    location: "~ ~ ~ ~ ~",
-    gamemode: {
-        id: "ctf",
-        player_count: {min: 4, max: 10},
-        duration: seconds(300),
-        teams: [
-            {name: "dwarves", team_color: "purple", head_block: "red_wool", spawn: "~ ~ ~ ~ ~"},
-            {name: "goblins", team_color: "gold", head_block: "red_wool", spawn: "~ ~ ~ ~ ~"}
-        ]
-    }
-}
+# map ctf:dwarven {
+#     name: "Dwarven",
+#     location: "~ ~ ~ ~ ~",
+#     gamemode: {
+#         id: "ctf",
+#         player_count: {min: 4, max: 10},
+#         duration: seconds(300),
+#         teams: [
+#             {name: "dwarves", team_color: "purple", head_block: "red_wool", spawn: "~ ~ ~ ~ ~"},
+#             {name: "goblins", team_color: "gold", head_block: "red_wool", spawn: "~ ~ ~ ~ ~"}
+#         ]
+#     }
+# }

@@ -3,9 +3,9 @@ This handles sysadmin related things such as:
 - on server startup
 
 Functions:
-- `sys:tick` runs every tick
-- `sys:load` runs on load
-- `sys:tick/players` run for every player (ordered last in the tick cycle)
+- `server:tick` runs every tick
+- `server:load` runs on load
+- `server:tick/players` run for every player (ordered last in the tick cycle)
 """
 
 from functools import cache

@@ -10,7 +10,7 @@ FloatLike: TypeAlias = float | ScoreSource | DataSource
 NumberLike: TypeAlias = IntLike | FloatLike
 """Works as an IntLike or a FloatLike"""
 
-StringLike: TypeAlias = str | DataSource
+StrLike: TypeAlias = str | DataSource
 """Works like a str for runtime data"""
 
 TextComponentLike: TypeAlias = (
@@ -31,10 +31,14 @@ AdvancementPath: TypeAlias = str
 PredicatePath: TypeAlias = str
 """Path to a predicate"""
 
+# Other
 SlotLiteral: TypeAlias = Literal[
     "mainhand", "offhand", "head", "chest", "legs", "feet", "any"
 ]
 """A slot in the player's inventory"""
+
+LocationStr: TypeAlias = str
+"""A string representing a location"""
 
 
 class Remove:

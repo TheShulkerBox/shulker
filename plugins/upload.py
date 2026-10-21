@@ -1,3 +1,4 @@
+from pathlib import Path
 import asyncio
 from contextlib import suppress
 from datetime import datetime
@@ -91,7 +92,7 @@ async def recover_from_bad_gateway():
     await wait_for_server_startup()
 
 
-async def push_to_server_once(path: str):
+async def push_to_server_once(path: Path):
     resp = await make_request("websocket")
     data = resp.json()["data"]
     task = asyncio.create_task(watch_for_errors(data["socket"], data["token"]))
@@ -99,7 +100,7 @@ async def push_to_server_once(path: str):
     try:
         await make_request(
             route=rf"files/write?file={TARGET.replace('/', '%2F')}",
-            data=(path).read_bytes(),
+            data=path.read_bytes(),
         )
         await asyncio.sleep(0.1)
         await make_request(
@@ -137,7 +138,7 @@ async def push_to_server_once(path: str):
                 await task
 
 
-async def push_to_server(path: str):
+async def push_to_server(path: Path):
     try:
         await push_to_server_once(path)
     except Exception as err:

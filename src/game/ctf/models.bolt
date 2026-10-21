@@ -1,28 +1,39 @@
-from pydantic import field_validator, model_validator
+from pydantic import InstanceOf, field_serializer, field_validator, model_validator
 
+from item:type import ItemType
 from lib:custom_resources import CustomBaseModel
 from lib:const import TEAM_COLORS
+from lib:types import LocationStr
 
-from ../models import Gamemode, Map, Team, Tag, PlayerCount
+from ../models import Gamemode, Map, Team, PlayerCount
+
 
 class CTFTeam(Team):
     team_color: str
-    head_item: ItemType
-    spawn: str
+    head_item: InstanceOf[ItemType]
+    flag_location: LocationStr
+    player_spawn: LocationStr
+
+    @field_serializer("head_item")
+    def serialize_head_item(self, head_item: ItemType):
+        return head_item.as_dict()
 
     @field_validator("team_color")
     def validate_color(cls, team_color: str):
         if team_color not in TEAM_COLORS:
             raise ValueError(f"{team_color!r} needs to be one of: {TEAM_COLORS}")
 
-        return color
+        return team_color
 
 
 class CTF(Gamemode):
     id: str = "ctf"
-
-    teams: list[Team]
-    player_count: PlayerCount(min=4)
+    name: str = "Capture the Flag"
+    
+    teams: list[CTFTeam]
+    kill_points_awarded: int = 1
+    flag_points_awarded: int = 20
+    player_count: PlayerCount = PlayerCount(min=4)
 
     # @field_validator("tags", mode="after")
     # @classmethod
@@ -33,4 +44,3 @@ class CTF(Gamemode):
     #         default_tags += [Tag.Active]
         
     #     return v + default_tags
-    

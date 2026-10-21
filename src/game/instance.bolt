@@ -1,26 +1,15 @@
 """
 This file manages the game instance system.
 
-A game instance represents the lifecycle of any game (pre-game, starting, in-progress, ending, etc.)
-It gets created the moment a game is being configured (joining a duels arena, players sitting in the
-box, etc.) Each instance gets attached an id that can be used to identify related data such as
-state or status. This data can sit in either scoreboards, tags, or storage.
-
-The instance metadata will sit in storage which handles the management of itself. Then, games can
-register new data via scoreboards that can be indexed via macro-ing fakeplayers or objectives,
-tags with macro'd names, or storage with macro'd indexing (via `Database`, etc).
-
-While the main box selection of games will be limited to 1 instance at a time, games such as
-duels will allow multiple instancing. This system will be designed to support both cases.
-
-Players will also be assigned to the INSTANCE_ID scoreboard to keep track of what instance they
-are currently in.
+All games on shulker run as unique instances of maps. This system helps
+create, manage, and clean up instances of maps that keep track of live
+game data (including metadata, game state, players in said game, etc.)
 """
 
 from contextlib import contextmanager
 
 from lib:db import Database
-from lib:types import IntLike
+from lib:types import IntLike, StrLike
 from server:core import SERVER_LOAD, SERVER_TICK
 
 from ./models import Map, GAME_META
@@ -28,6 +17,7 @@ from ./events import ON_LEAVE_GAME
 
 INSTANCE_META = Database(GAME_META.active_instances)
 INSTANCE_ID = Scoreboard("game.instance_id", criteria="dummy")
+INSTANCE_TEMP = STORAGE.temp.instance_manager
 
 SAME_INSTANCE_TAG = "game.in_same_instance"
 
@@ -41,22 +31,28 @@ append function ON_LEAVE_GAME:
     INSTANCE_ID["@s"].reset()
 
 
-def new_instance(map_id: StringLike) -> IntLike:
+def new_instance(map_id: StrLike) -> DataSource:
     """Attempts to add a new instance based on a stored map_id
     
-    First checks if a map is currently being instanced.
-    Adds the map if not, otherwise return an -1.
+    Requirements:
+        Map must not be currently instanced -> `false`
+        Instance must be of a registerd map -> `false`
+    
+    Returns:
+        Storage of new instanced map
     """
     # we do not want to allow new instances on maps currently being played
     if INSTANCE_META.get(map_id=map_id) != false:
         # TODO: debug print system
-        return -1
+        INSTANCE_TEMP.instance = false
+        return INSTANCE_TEMP.instance
     
     # only allow starting instances on maps that exist in ROM
     map = Map.get(id=map_id)
     if not map:
         # TODO: debug print system
-        return -1
+        INSTANCE_TEMP.instance = false
+        return INSTANCE_TEMP.instance
 
     # bump our latest id
     INSTANCE_ID["#latest"] += 1
@@ -71,36 +67,24 @@ def new_instance(map_id: StringLike) -> IntLike:
     
     # We store the result of whether we find an instance or not in a temp scoreboard.
     # This makes it easy to return it at runtime.
-    return SCORE.temp["#output"]
+    return INSTANCE_META[-1]
 
 
 def remove_instance(instance_id: IntLike) -> DataSource:
-    """Attempts to remove a new instance."""
+    """Attempts to remove a new instance.
+    
+    Requirements:
+        Instance must be running -> `false`
+
+    Returns:
+        Removed instance
+    """
     return INSTANCE_META.pop(id=instance_id)
 
 
 @contextmanager
 def select_instance_players(instance_id: IntLike) -> str:
-    """Selects players in the same instance and adds a tag (auto-removes).
-    
-    ```bolt
-    # assume instance_id is a scoreboard or storage value of an instance.
-    with select_instance_players(instance_id) as instance_tag:
-        say @a[tag=instance_tag]
-    ```
-    ->
-    ```mcfunction
-    scoreboard players operation #instance_id temp = @s game.instance_id
-    execute
-        as @a[scores={game.instance_id=1..}]
-        if score @s game.instance_id = #instance_id temp
-        run tag @s add game.in_same_instance
-    
-    say @a[tag=game.in_same_instance]
-
-    tag @a remove game.in_same_instance
-    ```
-    """
+    """Selects players in the same instance and adds a tag (auto-removes)."""
     SCORE.temp["#instance_id"] = instance_id
     execute
         as @a[scores={INSTANCE_ID=1..}]
@@ -114,6 +98,9 @@ def select_instance_players(instance_id: IntLike) -> str:
 
 append function SERVER_TICK:
     execute function ./instance_tick:
+        """
+        Tick all instances and remove those who have no players actively within them.
+        """
         for instance in INSTANCE_META.loop(name=~/loop):
             with select_instance_players(instance.id) as instance_tag:
                 # if we find no one, kill the instance and skip the rest of this loop

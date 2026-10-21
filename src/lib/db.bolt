@@ -75,7 +75,7 @@ class Database:
             yield output
             data modify var self.data[{key: $(value)}] set from var output
     
-    def pop(self, **kwargs):
+    def pop(self, **kwargs) -> DataSource:
         """remove and return a value from the database by key and value.
         
         ```py

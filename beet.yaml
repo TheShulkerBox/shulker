@@ -9,6 +9,7 @@ require:
   - bolt_expressions.contrib.commands
   - bolt.contrib.defer
   - bolt
+  - bolt_anchors
   - bolt_native_macros
   - bolt_selectors
   - mecha.contrib.nesting
@@ -19,6 +20,7 @@ require:
 
 pipeline:
   - plugins.component_import
+  - plugins.source_map
   - mecha
   - plugins.minecraft_namespace_checker
   - plugins.cleanup_empty_functions

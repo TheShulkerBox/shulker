@@ -10,11 +10,12 @@ from ./models import GAME_META, Map
 
 LEAVE_GAME_TRIGGER = Scoreboard("leave_game", criteria="trigger")
 
-ON_LEAVE_GAME = ~/on_leave_game
-ON_JOIN_GAME = ~/on_join_game
+anchor game:event:
+    ON_LEAVE_GAME = ~/on_leave_game
+    ON_JOIN_GAME = ~/on_join_game
 
-ON_START_GAME = ~/on_start_game
-ON_STOP_GAME = ~/on_stop_game
+    ON_START_GAME = ~/on_start_game
+    ON_STOP_GAME = ~/on_stop_game
 
 
 #>

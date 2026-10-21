@@ -25,6 +25,7 @@ dependencies = [
   "bolt-selectors>=0.4.0",
   "lectern>=0.35.0",
   "dacite>=1.9.2",
+  "bolt-anchors>=0.3.0",
 ]
 description = "Add your description here"
 name = "shulker"

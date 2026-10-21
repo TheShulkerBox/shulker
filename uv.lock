@@ -77,6 +77,20 @@ wheels = [
 ]
 
 [[package]]
+name = "bolt-anchors"
+version = "0.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "beet" },
+    { name = "bolt" },
+    { name = "mecha" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/51/64/f55278014f3dd632b170526fe7fa077fe75140acfe8197637ca569081dfd/bolt_anchors-0.3.0.tar.gz", hash = "sha256:8cde408d82a537416d17db3a96e179e2eca9c5d464baefc86757b15b4a7a086f", size = 6568, upload-time = "2026-09-23T17:11:43.887Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ee/ca/fed3375e76a568a3ea060aef3a3cd7f4bccf373f93d6b28087f3c59a2d6b/bolt_anchors-0.3.0-py3-none-any.whl", hash = "sha256:56334975dc75a328f0ce458c8c4821933257722b9a7118af82f10480e040b23b", size = 8305, upload-time = "2026-09-23T17:11:42.788Z" },
+]
+
+[[package]]
 name = "bolt-control-flow"
 version = "0.4.0"
 source = { registry = "https://pypi.org/simple" }
@@ -726,6 +740,7 @@ dependencies = [
     { name = "beet" },
     { name = "beet-plugins" },
     { name = "bolt" },
+    { name = "bolt-anchors" },
     { name = "bolt-expressions" },
     { name = "bolt-native-macros" },
     { name = "bolt-selectors" },
@@ -757,6 +772,7 @@ requires-dist = [
     { name = "beet", specifier = ">=0.119.1" },
     { name = "beet-plugins", git = "https://github.com/thewii/beet-plugins" },
     { name = "bolt", specifier = ">=0.51.0" },
+    { name = "bolt-anchors", specifier = ">=0.3.0" },
     { name = "bolt-expressions", specifier = ">=0.17.0" },
     { name = "bolt-native-macros", specifier = ">=0.4.0" },
     { name = "bolt-selectors", specifier = ">=0.4.0" },
