@@ -1,6 +1,7 @@
 """
 Events related to general game functionality, such as joining and leaving games.
 """
+
 from server:events import ON_JOIN
 from server:core import clock
 from player:services import PLAYER_TICK
@@ -10,12 +11,31 @@ from ./models import GAME_META, Map
 
 LEAVE_GAME_TRIGGER = Scoreboard("leave_game", criteria="trigger")
 
-anchor game:event:
-    ON_LEAVE_GAME = ~/on_leave_game
-    ON_JOIN_GAME = ~/on_join_game
+anchor game:event as EVENTS:
+    ON_INIT_GAME = EVENTS / "on_init_game"
+    """Game has started to initialize (players have not joined yet)"""
 
-    ON_START_GAME = ~/on_start_game
-    ON_STOP_GAME = ~/on_stop_game
+    ON_START_GAME = EVENTS / "on_start_game"
+    """Game has started, players have joined, respawn timers start"""
+
+    MOVE_PLAYERS_TO_GAME = ON_START_GAME / "move_players_to_game"
+
+    ON_STOP_GAME = EVENTS / "on_stop_game"
+
+    ON_END_GAME = EVENTS / "on_end_game"
+    """Game has ended, winning players / team chosen, end-game sequence (anim, stats)"""
+
+    ON_CLOSE_GAME = EVENTS / "on_close_game"
+    """Game has closed, removed from live instances, players sent to lobby"""
+
+    ON_LEAVE_GAME = EVENTS / "on_leave_game"
+    """Player has left the game"""
+
+    ON_JOIN_GAME = EVENTS / "on_join_game"
+    """Player has joined the game"""
+
+    ON_REJOIN_GAME = ON_JOIN_GAME / "rejoin"
+    """Player has rejoined the game"""
 
 
 #>
@@ -60,7 +80,7 @@ function ON_START_GAME:
     GAME_META.running = true
 
 
-MOVE_PLAYERS_TO_GAME = ~/move_players_to_game
+
 append function clock("1s"):
     execute
         positioned BOX_COORDS
