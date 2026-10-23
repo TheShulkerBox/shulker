@@ -1,0 +1,25 @@
+from server:main import clock
+from lobby:core import BOX_COORDS, BOX_SIZE, IN_BOX_TAG
+
+from ../events import ON_INIT_GAME, ON_JOIN_GAME
+from ../models import GAME_META
+
+
+anchor game:handle_box as HANDLE_BOX:
+    append function clock("1s"):
+        # tag players in box
+        execute
+            positioned BOX_COORDS
+            store result score #count temp  # TODO: bolt-expressions bug
+            run tag @a[dx=BOX_SIZE[0], dy=BOX_SIZE[1], dz=BOX_SIZE[2]] add IN_BOX_TAG
+        
+        # move em to the game
+        function HANDLE_BOX / "move_players_to_game" as MOVE_TO_GAME:                           
+            execute as @a[tag=IN_BOX_TAG] at @s run function ON_JOIN_GAME
+            tag @a remove IN_BOX_TAG
+
+        if not GAME_META.running:
+            if GAME_META.dev_mode or (SCORE.temp["#count"] >= GAME_META.current.min_players):
+                function ON_INIT_GAME
+        else:
+            function MOVE_TO_GAME

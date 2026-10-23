@@ -1,0 +1,7 @@
+anchor game:ctf/events as EVENTS:
+    ON_FLAG_PICKUP = EVENTS / "on_flag_pickup"
+    """When a player picks up an opposing flag"""
+
+    ON_FLAG_CAP = EVENTS / "on_flag_cap"
+    """When a player returns a flag back to their flag"""
+

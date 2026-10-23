@@ -18,10 +18,6 @@ anchor game:event as EVENTS:
     ON_START_GAME = EVENTS / "on_start_game"
     """Game has started, players have joined, respawn timers start"""
 
-    MOVE_PLAYERS_TO_GAME = ON_START_GAME / "move_players_to_game"
-
-    ON_STOP_GAME = EVENTS / "on_stop_game"
-
     ON_END_GAME = EVENTS / "on_end_game"
     """Game has ended, winning players / team chosen, end-game sequence (anim, stats)"""
 
@@ -80,26 +76,9 @@ function ON_START_GAME:
     GAME_META.running = true
 
 
-
-append function clock("1s"):
-    execute
-        positioned BOX_COORDS
-        store result score #count temp  # TODO: bolt-expressions bug
-        run tag @a[dx=BOX_SIZE[0], dy=BOX_SIZE[1], dz=BOX_SIZE[2]] add IN_BOX_TAG
-    
-    if not GAME_META.running:
-        if GAME_META.dev_mode or (SCORE.temp["#count"] >= GAME_META.current.min_players):
-            function ON_START_GAME
-            execute function MOVE_PLAYERS_TO_GAME:
-                execute as @a[tag=IN_BOX_TAG] at @s run function ON_JOIN_GAME
-                tag @a remove IN_BOX_TAG
-    else:
-        function MOVE_PLAYERS_TO_GAME
-
-
 #>
 #> Event: on_stop_game
 #> 
-function ON_STOP_GAME:
-    """Called when a game stops."""
+function ON_CLOSE_GAME:
+    """Called when a game closed."""
     GAME_META.running = false
